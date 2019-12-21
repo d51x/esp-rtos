@@ -2,9 +2,10 @@
 #define __MAIN_H__
 
 #include "dht.h"
+#include "ir_receiver.h"
 
-#define FW_VER "1.6.6"
-#define CORE_FW_VER "1.5"
+#define FW_VER "1.7.1"
+#define CORE_FW_VER "1.7"
 
 
 #define UPLOAD_BUFFER_SIZE 1024 //512 уже не вытягивает
@@ -30,7 +31,7 @@
 dht_t dht;
 
 #define IR_RX_PIN 5
-
+ir_rx_t ir_rx;
 //------------- GLOBAL DEFINES END ------------------------------------------
 
 #define WIFI1

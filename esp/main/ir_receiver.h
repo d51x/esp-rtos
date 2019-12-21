@@ -9,7 +9,12 @@
 #include "driver/ir_rx.h"
 
 // TSOP4838
-void ir_receiver_init(uint8_t pin);
+typedef struct {
+    uint8_t pin;
+    uint32_t code;
+} ir_rx_t;
+
+void ir_receiver_init(ir_rx_t *ir_rx);
 esp_err_t ir_receiver_get(uint32_t *code);
 
 #endif

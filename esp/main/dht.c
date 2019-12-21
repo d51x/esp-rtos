@@ -52,16 +52,16 @@ esp_err_t ICACHE_FLASH_ATTR dht_read(dht_t *dht){
     gpio_set_direction(dht->pin, GPIO_MODE_OUTPUT);
     gpio_set_level(dht->pin, 1);    
 	////sleepms(250);
-    ets_delay_us(20000);
+    ets_delay_us(DHT_WAKEUP_DELAY);
 
     // Hold low for 20ms
     gpio_set_level(dht->pin, 0);     
-    ets_delay_us( 20000 );
+    ets_delay_us( DHT_HOLDLOW_DELAY );
 
     // High for 40ns
     taskENTER_CRITICAL();
     gpio_set_level(dht->pin, 1); 
-    ets_delay_us( 40 );
+    ets_delay_us( DHT_HOLDHIGH_DELAY );
     taskEXIT_CRITICAL();  
 
 	// Set DHT_PIN pin as an input

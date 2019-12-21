@@ -41,7 +41,7 @@
     #include "pwm.h"
 #endif
 
-#include "ir_receiver.h"
+
 
 static const char *TAG = "MAIN";
 
@@ -77,8 +77,13 @@ void read_gpio_task(void *arg){
 }
 
 void read_sensors_task(void *arg){
-    ESP_LOGI(TAG, "%s: started\n", __func__);
+    ESP_LOGD(TAG, "%s: started\n", __func__);
+    
     ds18b20_init(DS18B20_PIN);
+    ds18b20[0].addr[0] = 0x28; ds18b20[0].addr[1] = 0xFF; ds18b20[0].addr[2] = 0x81; ds18b20[0].addr[3] = 0xE9; ds18b20[0].addr[4] = 0x74; ds18b20[0].addr[5] = 0x16; ds18b20[0].addr[6] = 0x03; ds18b20[0].addr[7] = 0x41;
+    ds18b20[1].addr[0] = 0x28; ds18b20[1].addr[1] = 0xFF; ds18b20[1].addr[2] = 0x05; ds18b20[1].addr[3] = 0xC6; ds18b20[1].addr[4] = 0x74; ds18b20[1].addr[5] = 0x16; ds18b20[1].addr[6] = 0x04; ds18b20[1].addr[7] = 0xFC;
+    ds18b20[2].addr[0] = 0x28; ds18b20[2].addr[1] = 0xFF; ds18b20[2].addr[2] = 0x6D; ds18b20[2].addr[3] = 0x19; ds18b20[2].addr[4] = 0x75; ds18b20[2].addr[5] = 0x16; ds18b20[2].addr[6] = 0x04; ds18b20[2].addr[7] = 0xE3;
+
 
     dht.pin = DHT_PIN;
     dht.type = DHT22;
@@ -93,28 +98,19 @@ void read_sensors_task(void *arg){
             ESP_LOGE(TAG, "DHT (gpio%d) data read error", dht.pin);
         }   
 
-vTaskDelay(5000 / portTICK_RATE_MS);
-ds18b20[0].addr[0] = 0x28; ds18b20[0].addr[1] = 0xFF; ds18b20[0].addr[2] = 0x81; ds18b20[0].addr[3] = 0xE9;
-ds18b20[0].addr[4] = 0x74; ds18b20[0].addr[5] = 0x16; ds18b20[0].addr[6] = 0x03; ds18b20[0].addr[7] = 0x41;
+        vTaskDelay(5000 / portTICK_RATE_MS);
 
-ds18b20[1].addr[0] = 0x28; ds18b20[1].addr[1] = 0xFF; ds18b20[1].addr[2] = 0x05; ds18b20[1].addr[3] = 0xC6;
-ds18b20[1].addr[4] = 0x74; ds18b20[1].addr[5] = 0x16; ds18b20[1].addr[6] = 0x04; ds18b20[1].addr[7] = 0xFC;
-
-ds18b20[2].addr[0] = 0x28; ds18b20[2].addr[1] = 0xFF; ds18b20[2].addr[2] = 0x6D; ds18b20[2].addr[3] = 0x19;
-ds18b20[2].addr[4] = 0x75; ds18b20[2].addr[5] = 0x16; ds18b20[2].addr[6] = 0x04; ds18b20[2].addr[7] = 0xE3;
-
-
-        ESP_LOGI(TAG, "Get DSW data:");
         for (uint8_t i=0;i<DSW_COUNT;i++) {
 			float temp;
 			if ( ds18b20[i].addr[0] ) {
 				if (ds18b20_getTemp(ds18b20[i].addr, &temp) == ESP_OK) {
 				if ( temp != 125.f) ds18b20[i].temp = temp;	
-				ESP_LOGI(TAG, "addr %02x %02x %02x %02x %02x %02x %02x %02x  temp: %.2f C", ds18b20[i].addr[0], 
-															ds18b20[i].addr[1], ds18b20[i].addr[2], ds18b20[i].addr[3], ds18b20[i].addr[4], 
-															ds18b20[i].addr[5], ds18b20[i].addr[6], ds18b20[i].addr[7], ds18b20[i].temp);
+				ESP_LOGD(TAG, "addr %02x %02x %02x %02x %02x %02x %02x %02x  temp: %.2f C", 
+                                                    ds18b20[i].addr[0], ds18b20[i].addr[1], ds18b20[i].addr[2], ds18b20[i].addr[3], 
+                                                    ds18b20[i].addr[4], ds18b20[i].addr[5], ds18b20[i].addr[6], ds18b20[i].addr[7], 
+                                                    ds18b20[i].temp);
                 } else {
-                    ESP_LOGE(TAG, "ds18b20_getTemp FAIL!");
+                    ESP_LOGE(TAG, "DS18B20 getting temperature FAILED!!!!");
                 }                                                            
 			}
 
@@ -129,16 +125,16 @@ void load_params_from_nvs() {
     // load from nvs 
     nvs_handle i2c_handle;
     if ( nvs_open("i2c", NVS_READONLY, &i2c_handle) == ESP_OK) {
-        ESP_LOGI(TAG, "NVS i2c section open success");
+        ESP_LOGD(TAG, "NVS i2c section open success");
         if ( nvs_get_u8(i2c_handle, "sda", &sda) == ESP_OK) {
-            ESP_LOGI(TAG, "NVS i2c.sda param read success: %d", sda);
+            ESP_LOGD(TAG, "NVS i2c.sda param read success: %d", sda);
         } else {
             ESP_LOGE(TAG, "NVS i2c.sda param read error");
             ESP_LOGE(TAG, "NVS i2c.sda = %d", sda);
         }
 
         if ( nvs_get_u8(i2c_handle, "scl", &scl) == ESP_OK) {
-            ESP_LOGI(TAG, "NVS i2c.scl param read success: %d", scl);
+            ESP_LOGD(TAG, "NVS i2c.scl param read success: %d", scl);
         } else {
             ESP_LOGE(TAG, "NVS i2c.scl param read error");
             ESP_LOGE(TAG, "NVS i2c.scl = %d", scl);
@@ -159,11 +155,11 @@ void load_params_from_nvs() {
     nvs_close(i2c_handle);
 }
 
-void app_main(void)
-{
-#ifdef DEBUG
-    printf("\n\n*******  FW_VER: %s\n\n", FW_VER);
-#endif
+void app_main(void){
+
+    ESP_LOGI("*******  FW_VER: %s", FW_VER);
+    ESP_LOGI("*******  CORE_VER: %s", CORE_FW_VER);
+
 
 
     esp_err_t ret = nvs_flash_init();
@@ -229,18 +225,18 @@ void app_main(void)
 
 void ir_receiver_task(void *arg) {
 	
-	ir_receiver_init(IR_RX_PIN);
+    ir_rx.pin = IR_RX_PIN;
+	ir_receiver_init(&ir_rx);
 	
-	uint32_t cmd = 0;
 	while (1) {
 		xEventGroupWaitBits(ota_event_group, OTA_IDLE_BIT, false, true, portMAX_DELAY);
 		ir_rx_enable();
-		if ( ir_receiver_get(&cmd) == ESP_OK ) {
+		if ( ir_receiver_get(&ir_rx.code) == ESP_OK ) {
 			ir_rx_disable();
-			ESP_LOGI(TAG, "ir rx nec data total int:  %d\t\t0x%08X", (int)cmd, (int)cmd); 
+			ESP_LOGI(TAG, "ir rx nec data total int:  %d\t\t0x%08X", (int)ir_rx.code, (int)ir_rx.code); 
 		}
 		vTaskDelay(100 / portTICK_RATE_MS);
 
 	}
-	//vTaskDelete(NULL);
+	vTaskDelete(NULL);
 }

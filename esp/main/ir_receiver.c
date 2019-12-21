@@ -10,9 +10,9 @@ static esp_err_t ir_rx_nec_code_check(ir_rx_nec_data_t nec_code) {
     return ESP_OK;
 }
 
-void ir_receiver_init(uint8_t pin) {
+void ir_receiver_init(ir_rx_t *ir_rx) {
 	ir_rx_config_t config;
-	config.io_num = pin;
+	config.io_num = ir_rx->pin;
 	config.buf_len = IR_RX_BUF_LEN;
 	if ( ir_rx_init(&config) )
 			ir_rx_enable();

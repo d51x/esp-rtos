@@ -11,6 +11,9 @@
 #include "driver/gpio.h"
 #include "esp_log.h"
 
+#define DHT_WAKEUP_DELAY  20*1000  // 20 ms   // ???? 250 ms
+#define DHT_HOLDLOW_DELAY  20*1000  // 20 ms
+#define DHT_HOLDHIGH_DELAY  40  // 40 us
 #define DHT_MAXTIMINGS	10000
 #define DHT_BREAKTIME	20
 #define DHT_MAXCOUNT	32000
