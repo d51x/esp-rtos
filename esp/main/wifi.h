@@ -10,7 +10,7 @@
 #include "esp_wifi.h"
 #include "esp_wifi_types.h"
 
-#include "global.h"
+#include "main.h"
 #include "utils.h"
 
 

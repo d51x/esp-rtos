@@ -288,8 +288,8 @@ void systemRebootTask(void * parameter)
 		// Did portMAX_DELAY ever timeout, not sure so lets just check to be sure
 		//if ((staBits & REBOOT_BIT) != 0)
 		//{
-			ESP_LOGI("OTA", "Reboot Command, Restarting");
-			vTaskDelay(2000 / portTICK_PERIOD_MS);
+			ESP_LOGI("OTA", "Reboot Command, Restarting within %d", (int)parameter);
+			vTaskDelay((int)parameter / portTICK_PERIOD_MS);
 
 			esp_restart();
 		//}
@@ -336,3 +336,4 @@ void ICACHE_FLASH_ATTR hex_to_rgb(uint32_t color32, volatile color_rgb_t *rgb) {
     rgb->g = (color32 >> 8) & 0xff;
     rgb->b = color32 & 0xff;
 }
+

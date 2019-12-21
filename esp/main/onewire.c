@@ -49,18 +49,18 @@ esp_err_t ICACHE_FLASH_ATTR onewire_reset(uint8_t pin)
 	//if (!_onewire_wait_for_bus(pin, 250)) return ESP_FAIL;
     gpio_set_direction(pin, GPIO_MODE_OUTPUT);
     gpio_set_level(pin, 0);
-	os_delay_us(500);
-	//os_delay_us(480);
+	//etc_delay_us(500);
+	ets_delay_us(480);
 	//GPIO_DIS_OUTPUT(DS18B20_PIN);
 
     gpio_set_direction(pin, GPIO_MODE_INPUT);
 	//os_delay_us(65);
-	os_delay_us(70);
+	ets_delay_us(70);
 	//r = !GPIO_INPUT_GET(DS18B20_PIN);
 	r = !gpio_get_level(pin);
 	//os_delay_us(490);
 	
-	os_delay_us(410);
+	ets_delay_us(410);
 	//if (!_onewire_wait_for_bus(pin, 410)) return ESP_FAIL;
 
 	return r;
@@ -154,21 +154,16 @@ void onewire_reset_search() {
 
 /* pass array of 8 bytes in */
 esp_err_t ICACHE_FLASH_ATTR onewire_search(uint8_t pin, uint8_t *newAddr) {
-	uint8_t id_bit_number;
-	uint8_t last_zero, rom_byte_number;
+	uint8_t id_bit_number = 1;
+	uint8_t last_zero = 0;
+	uint8_t rom_byte_number = 0;
 	uint8_t id_bit, cmp_id_bit;
-	esp_err_t search_result;
+	esp_err_t search_result = ESP_FAIL;
 	int i;
 
-	unsigned char rom_byte_mask, search_direction;
+	unsigned char rom_byte_mask = 1;
+	unsigned char search_direction;
 
-	// initialize for search
-	id_bit_number = 1;
-	last_zero = 0;
-	rom_byte_number = 0;
-	rom_byte_mask = 1;
-	search_result = ESP_FAIL;
-    	
     // if the last call was not the last one
 	if (!LastDeviceFlag)
 	{

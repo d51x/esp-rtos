@@ -9,15 +9,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "driver/gpio.h"
-
-
 #include "esp_log.h"
-
-
-#include "utils.h"
-#include "global.h"
-
-#define DHT_PIN 13
 
 #define DHT_MAXTIMINGS	10000
 #define DHT_BREAKTIME	20
@@ -33,11 +25,11 @@ typedef struct {
 	float hum;
 } dht_t;
 
-dht_t dht;
 
-void dht_init(dht_type_t type);
+
+void dht_init(uint8_t pin, dht_type_t type);
 esp_err_t dht_read(dht_t *dht);
 
-void dht_task(void *arg);
+//void dht_task(void *arg);
 
 #endif /* __DSW_H__ */

@@ -36,119 +36,70 @@ static esp_err_t http_get_key_long(httpd_req_t *req, const char *param_name, lon
 /********************* Basic Handlers Start *******************/
 /* An HTTP GET handler */
 esp_err_t main_get_handler(httpd_req_t *req){
-    ESP_LOGI(TAG, "Free Stack for server task: '%ld'", uxTaskGetStackHighWaterMark(NULL));
-    char page[1024*4];  // выше 2400 не работает, этот размер влият на размер стека задачи  ***ERROR*** A stack overflow in task ppT
+    char page[1024*4];  
     
-    if ( http_get_has_params(req) == ESP_OK ) { 
-        // к параметрам с данными надо передавать доп параметр, который обозначает функцию, которая будет обрабатывать параметры
-        // например st=1, st=2 и т.д. либо имя функции передавать
-        http_get_key_long(req, "sda", &sda);
-        http_get_key_long(req, "scl", &scl);
-            nvs_handle i2c_handle;
-            if ( nvs_open("i2c", NVS_READWRITE, &i2c_handle) == ESP_OK) {
-                ESP_LOGI(TAG, "NVS i2c section open success");
-                if ( nvs_set_u8(i2c_handle, "sda", sda) == ESP_OK) {
-                    ESP_LOGI(TAG, "NVS i2c.sda param save success: %d", sda);
-                } else {
-                    ESP_LOGE(TAG, "NVS i2c.sda param save error");
-                }
+    // const char* resp_str = (const char*) req->user_ctx;
+    print_html_header_data(page, "Main page"); // TODO: взять из context
+    print_html_devinfo(page+strlen(page));
 
-                if ( nvs_set_u8(i2c_handle, "scl", scl) == ESP_OK) {
-                    ESP_LOGI(TAG, "NVS i2c.scl param save success: %d", scl);
-                } else {
-                    ESP_LOGE(TAG, "NVS i2c.scl param save error");
-                    ESP_LOGE(TAG, "NVS i2c.scl = %d", scl);
-                }
-                nvs_commit(i2c_handle);
-            } else {
-                ESP_LOGE(TAG, "NVS i2c section open error");
-            }
-            nvs_close(i2c_handle);
-        strcpy(page, "<head><meta http-equiv=\"refresh\" content=\"0; URL=/\" /></head>");
+    sprintf(page+strlen(page), "<div id=\"sens\">");        
+    #ifdef DS18B20
+        print_html_dsw(page+strlen(page));
+    #endif
+    #ifdef DHT
+        print_html_dht(page+strlen(page));
+    #endif
+    #ifdef GPIO
+        print_html_gpio(page+strlen(page));
+    #endif
+   
+    print_html_menu(page+strlen(page));
+    print_html_footer_data(page+strlen(page)); // TODO: взять из context
+    
+    //httpd_resp_sendstr_chunk(req, NULL);        
+    
       
-    } else {
-        // const char* resp_str = (const char*) req->user_ctx;
-        get_main_page_data(page);
-        ESP_LOGI(TAG, "main page data len = %d", strlen(page));
-    }
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
-    httpd_resp_send(req, page, strlen(page));     
-
-    if (httpd_req_get_hdr_value_len(req, "Host") == 0) {
-        ESP_LOGI(TAG, "Request headers lost");
-    }
+    httpd_resp_send(req, page, strlen(page));
+    //get_main_page_data(page);
     return ESP_OK;
 }
 
 
 esp_err_t setup_get_handler(httpd_req_t *req){
-     ESP_LOGI(TAG, "Free Stack for server task: '%ld'", uxTaskGetStackHighWaterMark(NULL));
     char page[1024];
-    
-    get_setup_page_data(page);
-
+    get_setup_page_data(page);    
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
     httpd_resp_send(req, page, strlen(page));
-    
-    if (httpd_req_get_hdr_value_len(req, "Host") == 0) {
-        ESP_LOGI(TAG, "Request headers lost");
-    }
     return ESP_OK;
 }
 
 esp_err_t debug_get_handler(httpd_req_t *req){
-    ESP_LOGI(TAG, "Free Stack for server task: '%ld'", uxTaskGetStackHighWaterMark(NULL));
     char page[1024];
-    
     get_debug_page_data(page);
-
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
     httpd_resp_send(req, page, strlen(page));
-    
-    if (httpd_req_get_hdr_value_len(req, "Host") == 0) {
-        ESP_LOGI(TAG, "Request headers lost");
-    }
     return ESP_OK;
 }
 
 esp_err_t config_get_handler(httpd_req_t *req){
-    ESP_LOGI(TAG, "Free Stack for server task: '%ld'", uxTaskGetStackHighWaterMark(NULL));
     char page[1024];
-    
-    get_debug_page_data(page);
-
+    get_setup_page_data(page);
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
     httpd_resp_send(req, page, strlen(page));
-    
-    if (httpd_req_get_hdr_value_len(req, "Host") == 0) {
-        ESP_LOGI(TAG, "Request headers lost");
-    }
     return ESP_OK;
 }
 
 esp_err_t tools_get_handler(httpd_req_t *req){
-    ESP_LOGI(TAG, __func__);
-    ESP_LOGI(TAG, "Free Stack for server task: '%ld'", uxTaskGetStackHighWaterMark(NULL));
     char page[1024];
-    
-    tools_page_data(page);
-
+    get_setup_page_data(page);
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
     httpd_resp_send(req, page, strlen(page));
-    
-    if (httpd_req_get_hdr_value_len(req, "Host") == 0) {
-        ESP_LOGI(TAG, "Request headers lost");
-    }
-    return ESP_OK;
+    return ESP_OK;    
 }
 
 
 esp_err_t gpio_get_handler(httpd_req_t *req){
-    ESP_LOGI(TAG, __func__);
-    ESP_LOGI(TAG, "Free Stack for server task: '%ld'", uxTaskGetStackHighWaterMark(NULL));
-
-    ESP_LOGI(TAG, "%s: read content length %d\n", __func__, req->content_len);
- 
     uint8_t pin = 255;
     uint8_t st = 0;
     uint8_t redirect = 0;   
@@ -159,24 +110,24 @@ esp_err_t gpio_get_handler(httpd_req_t *req){
     if (buf_len > 1) {
         buf = malloc(buf_len);
         if (httpd_req_get_url_query_str(req, buf, buf_len) == ESP_OK) {
-            ESP_LOGI(TAG, "Found URL query => %s", buf);
+            //ESP_LOGI(TAG, "Found URL query => %s", buf);
             char param[32];
             /* Get value of expected key from query string */
             if (httpd_query_key_value(buf, "pin", param, sizeof(param)) == ESP_OK) {
-                ESP_LOGI(TAG, "Found URL query parameter => pin=%s", param);
+                //ESP_LOGI(TAG, "Found URL query parameter => pin=%s", param);
                 error = str_to_uint8(&pin, param, 10);
-                ESP_LOGI(TAG, "pin = %d", pin);
+                //ESP_LOGI(TAG, "pin = %d", pin);
             }    
             if (httpd_query_key_value(buf, "st", param, sizeof(param)) == ESP_OK) {
-                ESP_LOGI(TAG, "Found URL query parameter => st=%s", param);
+                //ESP_LOGI(TAG, "Found URL query parameter => st=%s", param);
                 error = error || str_to_uint8(&st, param, 10);
                 if ( st > 1) error = 1;
-                ESP_LOGI(TAG, "st = %d", st);
+                //ESP_LOGI(TAG, "st = %d", st);
             }        
             if (httpd_query_key_value(buf, "rdct", param, sizeof(param)) == ESP_OK) {
-                ESP_LOGI(TAG, "Found URL query parameter => rdct=%s", param);
+                //ESP_LOGI(TAG, "Found URL query parameter => rdct=%s", param);
                 error = error || str_to_uint8(&redirect, param, 10);
-                ESP_LOGI(TAG, "rdct = %d", redirect);
+                //ESP_LOGI(TAG, "rdct = %d", redirect);
             }        
         }
         free(buf);
@@ -193,19 +144,11 @@ esp_err_t gpio_get_handler(httpd_req_t *req){
         strcpy(page, "<head><meta http-equiv=\"refresh\" content=\"0; URL=/\" /></head>");
     }  
     httpd_resp_send(req, page, strlen(page));
-
-    if (httpd_req_get_hdr_value_len(req, "Host") == 0) {
-        ESP_LOGI(TAG, "Request headers lost");
-    }    
+   
     return ESP_OK;
 }
 
 esp_err_t gpio_post_handler(httpd_req_t *req){
-    //ESP_LOGI(TAG, __func__);
-    //ESP_LOGI(TAG, "Free Stack for server task: '%ld'", uxTaskGetStackHighWaterMark(NULL));
-
-    //ESP_LOGI(TAG, "%s: read content length %d\n", __func__, req->content_len);
-
     char*  buf = malloc(req->content_len + 1);
     size_t off = 0;
     int    ret;
@@ -240,22 +183,14 @@ esp_err_t gpio_post_handler(httpd_req_t *req){
 }
 
 esp_err_t gpioprint_get_handler(httpd_req_t *req){
-    //ESP_LOGI(TAG, "Free Stack for server task: '%ld'", uxTaskGetStackHighWaterMark(NULL));
     char page[1024];
-    
     gpioprint_page_data(page);
-
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
     httpd_resp_send(req, page, strlen(page));
-    
-    if (httpd_req_get_hdr_value_len(req, "Host") == 0) {
-        //ESP_LOGI(TAG, "Request headers lost");
-    }
     return ESP_OK;
 }
 
 esp_err_t restart_get_handler(httpd_req_t *req){
-    //ESP_LOGI(TAG, "Free Stack for server task: '%ld'", uxTaskGetStackHighWaterMark(NULL));
     char page[1024];
     // определить наличие параметров get
     size_t buf_len;
@@ -263,56 +198,77 @@ esp_err_t restart_get_handler(httpd_req_t *req){
     uint8_t found = 0;
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
 
-    buf_len = httpd_req_get_url_query_len(req) + 1;    
-    if (buf_len > 1) {   
-        ESP_LOGI(TAG, "restart page has get params");
-        buf = malloc(buf_len);
-        if (httpd_req_get_url_query_str(req, buf, buf_len) == ESP_OK) {
-            ESP_LOGI(TAG, "Found URL query => %s", buf);
-            char param[32];
-            /* Get value of expected key from query string */
-            if (httpd_query_key_value(buf, "st", param, sizeof(param)) == ESP_OK) {
-                ESP_LOGI(TAG, "Found URL query parameter => st=%s", param);
-                uint8_t st;
-                found = !str_to_uint8(&st, param, 10);
-                ESP_LOGI(TAG, "st = %d", st);
-                found = (st == 1);
-            }              
-        }        
-        free(buf);
-    } else {
-        ESP_LOGI(TAG, "restart page without params");
-    }
-
+    if ( http_get_has_params(req) == ESP_OK) {
+        uint8_t st;
+        if ( http_get_key_long(req, "st", &st) == ESP_OK ) {
+            found = (st == 1);        
+        }
+    }              
+    
     if ( found ) {  
         // restart esp and redirect to mainpage after X sec
+        xTaskCreate(systemRebootTask, "systemRebootTask", 1024, 2000, 10, NULL);
         strcpy(page, html_restart_header);
         restarting_page_data(page);  
     } else {
-        restart_page_data(page);  
-        
+        restart_page_data(page);          
     }
     httpd_resp_send(req, page, strlen(page));  
-    if (httpd_req_get_hdr_value_len(req, "Host") == 0) {
-        //ESP_LOGI(TAG, "Request headers lost");
-    }
-    if ( found ) xTaskCreate(restart_task, "restart_task", 1024, NULL, 10, NULL);
+    //if ( found ) xTaskCreate(restart_task, "restart_task", 1024, NULL, 10, NULL);
     return ESP_OK;
 }
 
 esp_err_t ota_get_handler(httpd_req_t *req){
+    ESP_LOGI(TAG, __func__);
     char page[2048];
-    get_ota_page_data(page);
-    httpd_resp_send(req, page, strlen(page));  
-    if (httpd_req_get_hdr_value_len(req, "Host") == 0) {
-        //ESP_LOGI(TAG, "Request headers lost");
+    uint8_t found = 0;
+    // check params
+    ESP_LOGI(TAG, "httpd_req_get_url_query_len(req) = %d", httpd_req_get_url_query_len(req));
+    if ( http_get_has_params(req) == ESP_OK) {
+        ESP_LOGI(TAG, "params found");
+        uint8_t st;
+        if ( http_get_key_long(req, "st", &st) == ESP_OK ) {
+            ESP_LOGI(TAG, "param st found");
+            found = (st == 1);      
+            ESP_LOGI(TAG, "param st found- value %d", st);
+        } else {
+            ESP_LOGI(TAG, "param st not found");
+        }
+    } else {
+        ESP_LOGI(TAG, "params not found");
     }
+
+    if ( found ) {  
+        // download bin from url
+        // show upgrading dialog or page
+        uint32_t start_time = millis();
+        ESP_LOGI(TAG, "start upgrade from url");
+        if ( ota_task_uptade_from_url("url") == ESP_OK ) {
+            // upgrading is OK, restart esp and redirect to main page in 10
+            strcpy(page, "<head><meta http-equiv=\"refresh\" content=\"10; URL=/\" /></head>");
+            sprintf(page+strlen(page), "File uploaded, time left %d sec. Restarting....", (uint32_t)(millis()-start_time)/1000);
+            ESP_LOGI(TAG, tmp);
+            xTaskCreate(&systemRebootTask, "rebootTask", 1024, 3000, 5, NULL);    
+        } else {
+            // upgrading fail show ota page again
+            // show upgrade fail and redirect to ota page in 10 sec
+            strcpy(page, "<head><meta http-equiv=\"refresh\" content=\"10; URL=/\" /></head>");
+            strcpy(page+strlen(page), "OTA upgrade failed...");
+            ESP_LOGI(TAG, tmp);
+        }
+    } else {
+        ESP_LOGI(TAG, "just show page");
+        get_ota_page_data(page);
+    }    
+    
+    
+    httpd_resp_send(req, page, strlen(page));  
     return ESP_OK;
 }
 
 esp_err_t ota_post_handler(httpd_req_t *req){
-    
-    
+  xEventGroupClearBits(ota_event_group, OTA_IDLE_BIT);
+
     int total_len = req->content_len;
     int recv_len;           // принято за раз
     int remain = total_len;  // осталось загрузить
@@ -330,166 +286,121 @@ esp_err_t ota_post_handler(httpd_req_t *req){
 
     int buf_size = UPLOAD_BUFFER_SIZE;
     // get from nvs
-    char buffer[buf_size];
+    char *upgrade_data_buf = (char *)malloc( buf_size );
+    if (!upgrade_data_buf) {
+        ESP_LOGE(TAG, "Couldn't allocate memory to upgrade data buffer");
+        return ESP_ERR_NO_MEM;
+    }
 
     ESP_LOGI(TAG, "Start uploading firmware, size %d", total_len);        
     ESP_LOGI(TAG, "upload buffer size is %d", buf_size);        
 
+    esp_err_t err = esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &ota_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Error With OTA Begin, Cancelling OTA");
+        // show this error on page and return to ota page
+        strcpy(tmp, "<head><meta http-equiv=\"refresh\" content=\"10; URL=/ota\" /></head>");
+        strcpy(tmp+strlen(tmp), "Error With OTA Begin, Cancelling OTA");
+        httpd_resp_set_status(req, HTTPD_500);
+        httpd_resp_send(req, tmp, -1);
+        xEventGroupSetBits(ota_event_group, OTA_IDLE_BIT); 
+        return ESP_OK;               
+    }
+
     while (remain > 0) {
-        recv_len = httpd_req_recv(req, buffer, remain > buf_size ? buf_size : remain);
+        recv_len = httpd_req_recv(req, upgrade_data_buf, remain > buf_size ? buf_size : remain);
         if ( recv_len < 0) {
             if (recv_len == HTTPD_SOCK_ERR_TIMEOUT) {
                 /* Retry receiving if timeout occurred */
                 ESP_LOGI(TAG, "Socket timeout, uploaded %d (%d%%)", received, received*100/total_len);        
                 continue;
             }
-            sprintf(tmp, "File upload failed, uploaded %d%%", received*100/total_len);
-            httpd_resp_send(req, tmp, -1);        
-            return ESP_FAIL;             
+            strcpy(tmp, "<head><meta http-equiv=\"refresh\" content=\"10; URL=/ota\" /></head>");
+            sprintf(tmp+strlen(tmp), "File upload failed, uploaded %d%%", received*100/total_len);
+            httpd_resp_set_status(req, HTTPD_500);
+            
+            httpd_resp_send(req, tmp, strlen(tmp));   
+            xEventGroupSetBits(ota_event_group, OTA_IDLE_BIT);       
+            return ESP_OK;             
         }
         //printf("OTA RX: %d of %d\r", received, total_len);
 
-	    // Is this the first data we are receiving
-		// If so, it will have the information in the header we need.
+        // Is this the first data we are receiving
+        // If so, it will have the information in the header we need.
         if ( !is_firts ) {
             is_firts = 1;
-
+            ESP_LOGI(TAG, "Writing first block to OTA partition");
+            
             // Lets find out where the actual data staers after the header info	
-            char *body_start_p = strstr(buffer, "\r\n\r\n") + 4;
-            int body_part_len = recv_len - (body_start_p - buffer); 
+            char *body_start_p = strstr(upgrade_data_buf, "\r\n\r\n") + 4;
+            ESP_LOGI(TAG, "body_start_p = %02X", body_start_p - upgrade_data_buf + 1);
 
-            esp_err_t err = esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &ota_handle);
-            if (err != ESP_OK) {
- 				ESP_LOGE(TAG, "Error With OTA Begin, Cancelling OTA");
-				return ESP_FAIL;               
-            } else {
-                
-                //printf("Writing to partition subtype %d at offset 0x%x\r\n", update_partition->subtype, update_partition->address);
-			                
-                // Lets write this first part of data out
-			    esp_ota_write(ota_handle, body_start_p, body_part_len);                
-            }
+            int body_part_len = recv_len - (body_start_p - upgrade_data_buf); 
+            ESP_LOGI(TAG, "body_part_len = %d", body_part_len);
+
+            esp_ota_write(ota_handle, (const void *)body_start_p, body_part_len);                
+
         } else {
-			// Write OTA data
-			esp_ota_write(ota_handle, buffer, recv_len);
-         
+            // Write OTA data
+            esp_ota_write(ota_handle, (const void *)upgrade_data_buf, recv_len);
         }
-			
-		received += recv_len;  
+        received += recv_len;  
         remain -= recv_len;
-
         if ( new_part < received ) {
             ESP_LOGI(TAG, "uploaded %d %%", new_part*100/total_len);
             new_part += one_part;
         }
-        //vTaskDelay(5 / portTICK_RATE_MS); 
-    }
-
+    } // while
+    free(upgrade_data_buf);
     if (esp_ota_end(ota_handle) == ESP_OK) {
         // Lets update the partition
         if (esp_ota_set_boot_partition(update_partition) == ESP_OK) {
             const esp_partition_t *boot_partition = esp_ota_get_boot_partition();
             flash_status = 1;
-			ESP_LOGI("OTA", "Next boot partition subtype %d at offset 0x%x", boot_partition->subtype, boot_partition->address);
-			ESP_LOGI("OTA", "Please Restart System...");
-            xTaskCreate(&systemRebootTask, "rebootTask", 2048, NULL, 5, NULL);            
+            ESP_LOGI("OTA", "Next boot partition subtype %d at offset 0x%x", boot_partition->subtype, boot_partition->address);
+            ESP_LOGI("OTA", "Please Restart System...");
+            strcpy(tmp, "<head><meta http-equiv=\"refresh\" content=\"10; URL=/\" /></head>");
+            sprintf(tmp+strlen(tmp), "File uploaded, time left %d sec. Restarting....", (uint32_t)(millis()-start_time)/1000);
+            ESP_LOGI(TAG, tmp);
+            xTaskCreate(&systemRebootTask, "rebootTask", 1024, 3000, 5, NULL);            
         } else {
             ESP_LOGI("OTA", "\r\n\r\n !!! Flashed Error !!!");
         }
     } else {
         ESP_LOGE("OTA", "\r\n\r\n !!! OTA End Error !!!");
-    }
-    /*
-    while (remain > 0 ) {
-        recv_len = httpd_req_recv(req, buffer, remain > SIZE_OF_BUFF ? SIZE_OF_BUFF : remain);
-        if ( recv_len <= 0) {
-            if (recv_len == HTTPD_SOCK_ERR_TIMEOUT) {
-                ESP_LOGI(TAG, "RECEIVE TIMEOUT, uploaded %d (%d%%)", total_len - remain, (total_len - remain)*100/total_len);        
-                continue;
-            }
-            
-            sprintf(tmp, "File upload failed, uploaded %d%%", (total_len - remain)*100/total_len);
-            httpd_resp_send(req, tmp, -1);        
-            return ESP_OK;            
-        }
-        remain = remain - recv_len;
-        //percent = (total_len - remain)*100/total_len;
-        //if ( percent % 10 == 0) ESP_LOGI(TAG, "uploaded %d %%", percent);
-        vTaskDelay(5 / portTICK_RATE_MS);
-    }
-*/ 
-    strcpy(tmp, "<head><meta http-equiv=\"refresh\" content=\"10; URL=/\" /></head>");
-    sprintf(tmp+strlen(tmp), "File uploaded, time left %d sec. Restarting....", (uint32_t)(millis()-start_time)/1000);
-    ESP_LOGI(TAG, tmp);
-    
-
+    } 
     httpd_resp_send(req, tmp, -1);
-   // redirect to main
-    return ESP_OK;
-    
+    return ESP_OK;            
 }
 
-esp_err_t ota_post2_handler(httpd_req_t *req){
-    
-    char buf[256];
-    int ret, remaining = req->content_len;
-int32_t t = remaining / 100 ;
-    //ESP_LOGI(TAG, "req->content_len: %d", remaining);
-    
-        while (remaining > 0) {
-            //t = millis();
-        /* Read the data for the request */
-        if ((ret = httpd_req_recv(req, buf,
-                        MIN(remaining, sizeof(buf)))) <= 0) {
-            if (ret == HTTPD_SOCK_ERR_TIMEOUT) {
-                /* Retry receiving if timeout occurred */
-                ESP_LOGI(TAG, "RECEIVE TIMEOUT");        
-                continue;
-            }
-            return ESP_FAIL;
-        }
 
-        /* Send back the same data */
-        //httpd_resp_send_chunk(req, buf, ret);
-        remaining -= ret;
-        //ESP_LOGI(TAG, "remaining: %d, read: %d", remaining, ret);
-        //os_delay_us(100);
-        vTaskDelay(5 / portTICK_RATE_MS);
-        /* Log data received */
-        //ESP_LOGI(TAG, "=========== RECEIVED DATA ==========");
-        //ESP_LOGI(TAG, "%.*s", ret, buf);
-        //ESP_LOGI(TAG, "====================================");
-    }    
-    // End response
+esp_err_t favicon_get_handler(httpd_req_t *req)
+{
+    extern const unsigned char favicon_ico_start[] asm("_binary_favicon_ico_start");
+    extern const unsigned char favicon_ico_end[]   asm("_binary_favicon_ico_end");
+    const size_t favicon_ico_size = (favicon_ico_end - favicon_ico_start);
+    httpd_resp_set_type(req, "image/x-icon");
+    httpd_resp_send(req, (const char *)favicon_ico_start, favicon_ico_size);
+    return ESP_OK;
+}
 
-
-        char page[20];
-    
-    strcpy(page, "ok");
-
-    httpd_resp_send(req, page, strlen(page));
-    
-    if (httpd_req_get_hdr_value_len(req, "Host") == 0) {
-        //ESP_LOGI(TAG, "Request headers lost");
-    }
-    
-    return ESP_OK;  
-    
+esp_err_t main_css_get_handler(httpd_req_t *req)
+{
+    extern const unsigned char main_css_start[] asm("_binary_main_css_start");
+    extern const unsigned char main_css_end[]   asm("_binary_main_css_end");
+    const size_t main_css_size = (main_css_end - main_css_start);
+    httpd_resp_set_type(req, "text/css");
+    httpd_resp_send(req, (const char *)main_css_start, main_css_size);
+    return ESP_OK;
 }
 
 void register_uri_handlers(httpd_handle_t _server) {
-
-    int i;
-    //ESP_LOGI(TAG, "Registering URI handlers");
-    //ESP_LOGI(TAG, "No of uri handlers = %d", uri_handlers_no);
-
-    for (i = 0; i < uri_handlers_no; i++) {
+    for (int i = 0; i < uri_handlers_no; i++) {
         if (httpd_register_uri_handler(_server, &uri_handlers[i]) != ESP_OK) {
             //ESP_LOGW(TAG, "register uri failed for %d", i);
             return;
         }
     }
-    //ESP_LOGI(TAG, "Success");
 }
 
 

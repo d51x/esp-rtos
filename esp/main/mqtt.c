@@ -241,6 +241,7 @@ void mqtt_publish_all_task(void *arg){
     //ESP_LOGI(TAG, "%s: started\n", __func__);
 
     while (1) {
+        xEventGroupWaitBits(ota_event_group, OTA_IDLE_BIT, false, true, portMAX_DELAY);
         mqtt_publish_device_uptime();
         mqtt_publish_device_freemem();
         mqtt_publish_device_rssi();

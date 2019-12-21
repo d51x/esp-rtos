@@ -34,6 +34,7 @@ void pwm_begin(uint16_t freq_hz, uint8_t ch_cnt, const uint32_t *channels){
 
 
 void pwm_write(uint8_t ch, uint16_t duty) {
+    xEventGroupWaitBits(ota_event_group, OTA_IDLE_BIT, false, true, portMAX_DELAY);
     uint16_t real_duty = duty*period/MAX_DUTY;
     pwm_set_duty(ch, real_duty);
     pwm_start();
@@ -51,19 +52,27 @@ void pwm_task(){
 
     uint32_t duty = 0;
     uint8_t direction = 0;
-
+    portTickType xLastWakeTime;
+    xLastWakeTime = xTaskGetTickCount();
     while (1) {
         pwm_write(0, duty);
         //pwm_write(1, duty);
 
         if ( direction == 0 ) {
             duty += STEP;
-            if ( duty == MAX_DUTY ) {direction = 1;
-             vTaskDelay(5000 / portTICK_RATE_MS);}
+            if ( duty == MAX_DUTY ) {
+                    direction = 1;
+                    //vTaskDelay(2000 / portTICK_RATE_MS);
+                    vTaskDelayUntil( &xLastWakeTime, ( 500 / portTICK_RATE_MS ) );
+             }
+             
         } else {
             duty -= STEP;
-            if ( duty == 1 ) {direction = 0;
-             vTaskDelay(5000 / portTICK_RATE_MS);}
+            if ( duty == 1 ) {
+                    direction = 0;
+                    //vTaskDelay(2000 / portTICK_RATE_MS);
+                    vTaskDelayUntil( &xLastWakeTime, ( 500 / portTICK_RATE_MS ) );
+            }
         }
 
         

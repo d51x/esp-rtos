@@ -9,10 +9,7 @@
 #include "driver/ir_rx.h"
 
 // TSOP4838
-
-#define IR_RX_PIN 4
-uint32_t last_code;
-
-void ir_receiver_task(void *arg);
+void ir_receiver_init(uint8_t pin);
+esp_err_t ir_receiver_get(uint32_t *code);
 
 #endif

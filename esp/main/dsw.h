@@ -7,7 +7,6 @@
 #include "esp_system.h"
 #include "esp_event_loop.h"
 #include "freertos/FreeRTOS.h"
-#include "freertos/event_groups.h"
 #include "driver/gpio.h"
 
 
@@ -16,7 +15,7 @@
 
 #include "onewire.h"
 
-#define DS18B20_PIN 12
+//#define DS18B20_PIN 14
 
 
 typedef struct {
@@ -28,9 +27,8 @@ typedef struct {
 ds18b20_t ds18b20[DSW_COUNT];
 uint16_t ds18b20_total_crc_error;
 
-void ds_init();
-
-float ds18b20_getTemp(const uint8_t *_addr);
-void ds18b20_search_task(void *arg);
-void ds18b20_get_temp_task(void *arg);
+void ds18b20_init(uint8_t pin);
+esp_err_t ds18b20_getTemp(const uint8_t *_addr, float *temp);
+//void ds18b20_search_task(void *arg);
+//void ds18b20_get_temp_task(void *arg);
 #endif /* __DSW_H__ */

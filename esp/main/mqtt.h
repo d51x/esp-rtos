@@ -14,7 +14,7 @@
 //#include "esp_wifi_types.h"
 #include "mqtt_client.h" 
 
-#include "global.h"
+#include "main.h"
 #include "utils.h"
 #include "gpio_utils.h"
 #include "dht.h"

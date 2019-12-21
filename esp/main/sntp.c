@@ -50,6 +50,7 @@ void obtain_time(void)
 {
     //ESP_LOGI(TAG, "%s: started\n", __func__);
     xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_BIT, false, true, portMAX_DELAY);
+    xEventGroupWaitBits(ota_event_group, OTA_IDLE_BIT, false, true, portMAX_DELAY);
     initialize_sntp();
 
     // wait for time to be set

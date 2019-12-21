@@ -25,7 +25,8 @@ esp_err_t gpioprint_get_handler(httpd_req_t *req);
 esp_err_t restart_get_handler(httpd_req_t *req);
 esp_err_t ota_get_handler(httpd_req_t *req);
 esp_err_t ota_post_handler(httpd_req_t *req);
-
+esp_err_t favicon_get_handler(httpd_req_t *req);
+esp_err_t main_css_get_handler(httpd_req_t *req);
 
 httpd_uri_t uri_handlers[] = {
     { .uri      = "/",
@@ -76,6 +77,16 @@ httpd_uri_t uri_handlers[] = {
     {   .uri   = "/fwupload",    
         .method    = HTTP_POST,
         .handler   = ota_post_handler,
+        .user_ctx  = NULL,   
+    },
+    {   .uri   = "/favicon.ico",    
+        .method    = HTTP_GET,
+        .handler   = favicon_get_handler,
+        .user_ctx  = NULL,   
+    },
+    {   .uri   = "/main.css",    
+        .method    = HTTP_GET,
+        .handler   = main_css_get_handler,
         .user_ctx  = NULL,   
     }    
 };

@@ -8,7 +8,7 @@
 #include "freertos/event_groups.h"
 #include "driver/gpio.h"
 
-#include "global.h"
+#include "main.h"
 #include "utils.h"
 
 #define GPIO_CNT GPIO_PIN_COUNT

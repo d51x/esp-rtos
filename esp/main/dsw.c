@@ -1,19 +1,13 @@
-
-
-#include "driver/gpio.h"
-#include "mqtt.h"
 #include "dsw.h"
-
-
 
 static const char *TAG = "DSW";
 
+static uint8_t pin = 0;
 
-
-void ds18b20_init(){
-
+void ds18b20_init(uint8_t _pin){
+	pin = _pin;
     gpio_config_t gpio_conf;
-    gpio_conf.pin_bit_mask = 1ULL << DS18B20_PIN;
+    gpio_conf.pin_bit_mask = 1ULL << pin;
     gpio_conf.mode = GPIO_MODE_INPUT;
     gpio_conf.intr_type = GPIO_INTR_DISABLE;
     
@@ -25,28 +19,25 @@ void ds18b20_init(){
 
 }
 
-
-
-
 //-==================================================================================
-float ICACHE_FLASH_ATTR ds18b20_getTemp(const uint8_t *_addr){
+esp_err_t ICACHE_FLASH_ATTR ds18b20_getTemp(const uint8_t *_addr, float *temp){
 	int i;
 	uint8_t data[12];
-	onewire_reset(DS18B20_PIN);
-	onewire_select(DS18B20_PIN, _addr);
+	onewire_reset(pin);
+	onewire_select(pin, _addr);
 
-	onewire_write(DS18B20_PIN, ONEWIRE_CONVERT_T, 1); // perform temperature conversion
+	onewire_write(pin, ONEWIRE_CONVERT_T, 1); // perform temperature conversion
 
-	os_delay_us(1000*1000); // sleep 1s
-
+	//os_delay_us(1000*1000); // sleep 1s
+	vTaskDelay(1000 / portTICK_RATE_MS);
 	//ESP_LOGI(TAG, "Scratchpad: ");
-	onewire_reset(DS18B20_PIN);
-	onewire_select(DS18B20_PIN, _addr);
-	onewire_write(DS18B20_PIN, ONEWIRE_READ_SCRATCHPAD, 0); // read scratchpad
+	onewire_reset(pin);
+	onewire_select(pin, _addr);
+	onewire_write(pin, ONEWIRE_READ_SCRATCHPAD, 0); // read scratchpad
 	
 	for(i = 0; i < 9; i++)
 	{
-		data[i] = onewire_read(DS18B20_PIN);
+		data[i] = onewire_read(pin);
 		//ESP_LOGI(TAG, "%2x ", data[i]);
 	}
 	//ESP_LOGI(TAG, "-");
@@ -69,11 +60,16 @@ float ICACHE_FLASH_ATTR ds18b20_getTemp(const uint8_t *_addr){
     sprintf(buf, "%s%d.%d", SignBit ? "-" : "", Whole, Fract < 10 ? 0 : Fract);
 	ESP_LOGI(TAG, "Temperature: %s C", buf);
 
-    float temp = strtod(buf, NULL);
-    if ( temp < - 50.f || temp > 125.f || temp == 85.f || (SignBit == '-' && Whole == 0 && Fract < 10) ) return 125.f;
+    //float temp = strtod(buf, NULL);
+    *temp = strtod(buf, NULL);
+    if ( *temp < - 50.f || *temp > 125.f || *temp == 85.f || (SignBit == '-' && Whole == 0 && Fract < 10) ) {
+		
+		*temp = 125.f;
+		return ESP_FAIL;
+	}
     //dsw->temp = temp;
-    return temp;
-	//return ESP_OK;
+    //return temp;
+	return ESP_OK;
 }
 
 static esp_err_t ds18b20_check_crc(uint8_t *addr){
@@ -83,7 +79,7 @@ static esp_err_t ds18b20_check_crc(uint8_t *addr){
 	}
 	return ESP_OK;
 }
-
+/*
 void ds18b20_search_task(void *arg){
 
 	uint8_t addr[8];
@@ -93,6 +89,7 @@ void ds18b20_search_task(void *arg){
 	ds18b20_total_crc_error = 0;
 	uint8_t cnt;
 	while (1) {
+		xEventGroupWaitBits(ota_event_group, OTA_IDLE_BIT, false, true, portMAX_DELAY);
 		cnt = 0;
 		ESP_LOGI(TAG, "=========================================================");
 		if ( onewire_search(DS18B20_PIN, addr) == ESP_OK ) {
@@ -120,10 +117,13 @@ void ds18b20_search_task(void *arg){
 		vTaskDelay(30000 / portTICK_RATE_MS);
 	}
 }
+*/
 
+/*
 void ds18b20_get_temp_task(void *arg){
 	
     while (1) {
+		xEventGroupWaitBits(ota_event_group, OTA_IDLE_BIT, false, true, portMAX_DELAY);
         for (uint8_t i=0;i<DSW_COUNT;i++) {
 			float temp;
 			if ( ds18b20[i].addr[0] ) {
@@ -139,3 +139,4 @@ void ds18b20_get_temp_task(void *arg){
         vTaskDelay(5000 / portTICK_RATE_MS);
     }
 }
+*/

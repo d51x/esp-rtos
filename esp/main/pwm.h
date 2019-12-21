@@ -9,9 +9,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "driver/pwm.h"
-#include "lwip/apps/sntp.h"
+#include "main.h"
 
-#define PIN_PWM_0 14
+#define PIN_PWM_0 12
 //#define PIN_PWM_1 12
 #define PIN_PWM_CNT 1
 
