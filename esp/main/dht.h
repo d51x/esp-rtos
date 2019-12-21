@@ -21,13 +21,15 @@ typedef enum {
 } dht_type_t;
 
 typedef struct {
+	uint8_t pin;
+	uint8_t type;
 	float temp;
 	float hum;
 } dht_t;
 
 
 
-void dht_init(uint8_t pin, dht_type_t type);
+void dht_init(dht_t *dht);
 esp_err_t dht_read(dht_t *dht);
 
 //void dht_task(void *arg);

@@ -78,17 +78,19 @@ void read_gpio_task(void *arg){
 
 void read_sensors_task(void *arg){
     ESP_LOGI(TAG, "%s: started\n", __func__);
-ds18b20_init(DS18B20_PIN);
-dht_init(DHT_PIN, DHT22);
+    ds18b20_init(DS18B20_PIN);
+
+    dht.pin = DHT_PIN;
+    dht.type = DHT22;
+    dht_init(&dht);
+
     while (1) {
         xEventGroupWaitBits(ota_event_group, OTA_IDLE_BIT, false, true, portMAX_DELAY);
 
-        ESP_LOGI(TAG, "Get DHT data:");
         if ( dht_read(&dht) == ESP_OK) {
-            ESP_LOGI(TAG, "Temp: %.2f", dht.temp);
-            ESP_LOGI(TAG, "Humy: %.2f", dht.hum);
+            ESP_LOGD(TAG, "DHT Temp: %.2f\t\tHumy: %.2f\t\t(gpio %d)", dht.temp, dht.hum, dht.pin);
         } else {
-            ESP_LOGE(TAG, "dht data read erro");
+            ESP_LOGE(TAG, "DHT (gpio%d) data read error", dht.pin);
         }   
 
 vTaskDelay(5000 / portTICK_RATE_MS);
