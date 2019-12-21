@@ -247,14 +247,12 @@ esp_err_t ota_get_handler(httpd_req_t *req){
             // upgrading is OK, restart esp and redirect to main page in 10
             strcpy(page, "<head><meta http-equiv=\"refresh\" content=\"10; URL=/\" /></head>");
             sprintf(page+strlen(page), "File uploaded, time left %d sec. Restarting....", (uint32_t)(millis()-start_time)/1000);
-            ESP_LOGI(TAG, tmp);
             xTaskCreate(&systemRebootTask, "rebootTask", 1024, 3000, 5, NULL);    
         } else {
             // upgrading fail show ota page again
             // show upgrade fail and redirect to ota page in 10 sec
             strcpy(page, "<head><meta http-equiv=\"refresh\" content=\"10; URL=/\" /></head>");
             strcpy(page+strlen(page), "OTA upgrade failed...");
-            ESP_LOGI(TAG, tmp);
         }
     } else {
         ESP_LOGI(TAG, "just show page");
