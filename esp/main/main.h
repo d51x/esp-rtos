@@ -40,17 +40,17 @@ ir_rx_t ir_rx;
     #define ESP_WIFI_MODE_AP   1
     #ifdef WIFI1    
         #define ESP_WIFI_SSID      "Dminty"
-        #define ESP_WIFI_PASS      "110funther26"
+        #define ESP_WIFI_PASS      ""
     #else
         //#define ESP_WIFI_SSID      "LAPTOP7954"
-        //#define ESP_WIFI_SSID      "MiMix2s"
-        #define ESP_WIFI_PASS      "110funther26"
-        //#define ESP_WIFI_SSID      "TheKey24"
-        //#define ESP_WIFI_PASS      "Brainstorm42_24"        
+        //#define ESP_WIFI_SSID      ""
+        #define ESP_WIFI_PASS      ""
+        //#define ESP_WIFI_SSID      ""
+        //#define ESP_WIFI_PASS      ""        
     #endif    
     
     #define ESP_WIFI_AP_SSID      "ZppDasdwerfds"
-    #define ESP_WIFI_AP_PASS      "110funther26"
+    #define ESP_WIFI_AP_PASS      ""
     
 
     EventGroupHandle_t wifi_event_group;  /* FreeRTOS event group to signal when we are connected*/
