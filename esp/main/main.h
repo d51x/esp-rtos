@@ -40,6 +40,7 @@ ir_rx_t ir_rx;
     #define ESP_WIFI_MODE_AP   1
     #ifdef WIFI1    
         #define ESP_WIFI_SSID      "Dminty"
+        #define ESP_WIFI_PASS      "110funther26"
     #else
         //#define ESP_WIFI_SSID      "LAPTOP7954"
     #endif    
