@@ -43,9 +43,11 @@ ir_rx_t ir_rx;
         #define ESP_WIFI_PASS      "110funther26"
     #else
         //#define ESP_WIFI_SSID      "LAPTOP7954"
+        //#define ESP_WIFI_SSID      "MiMix2s"
     #endif    
     
     #define ESP_WIFI_AP_SSID      "ZppDasdwerfds"
+    #define ESP_WIFI_AP_PASS      "110funther26"
     
 
     EventGroupHandle_t wifi_event_group;  /* FreeRTOS event group to signal when we are connected*/
