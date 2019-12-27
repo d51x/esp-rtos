@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include "freertos/event_groups.h"
 
-#define FW_VER "1.9.3"
-#define CORE_FW_VER "1.9"
+#define FW_VER "1.10.1"
+#define CORE_FW_VER "1.10"
 
 //------------- GLOBAL DEFINES FOR USE MODULES ------------------------------------------
 
@@ -111,7 +111,7 @@ int WIFI_CONNECTED_BIT;  /* The event group allows multiple bits for each event,
 // ================================ PINS =========================
 
 
-#define IR_RX_PIN 4
+#define IR_RX_PIN 5
 
 
 ir_rx_t ir_rx;

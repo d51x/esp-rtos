@@ -51,10 +51,10 @@ void init_gpio(uint8_t pin, gpio_mode_t mode, gpio_level_t level, gpio_state_t s
 void init_gpios() {
     reset_all_gpio(gpio, GPIO_CNT) ;
 
-    init_gpio(GPIO_NUM_0, GPIO_MODE_INPUT, HIGH_LEVEL, OFF);
+    //init_gpio(GPIO_NUM_0, GPIO_MODE_INPUT, HIGH_LEVEL, OFF);
     init_gpio(GPIO_NUM_2, GPIO_MODE_OUTPUT, LOW_LEVEL, OFF);
-    init_gpio(GPIO_NUM_4, GPIO_MODE_INPUT, HIGH_LEVEL, OFF);
-    init_gpio(GPIO_NUM_5, GPIO_MODE_OUTPUT, HIGH_LEVEL, OFF);
+    //init_gpio(GPIO_NUM_4, GPIO_MODE_INPUT, HIGH_LEVEL, OFF);
+    //init_gpio(GPIO_NUM_5, GPIO_MODE_OUTPUT, HIGH_LEVEL, OFF);
     //init_gpio(GPIO_NUM_12, GPIO_MODE_OUTPUT, HIGH_LEVEL, OFF);
     //init_gpio(GPIO_NUM_13, GPIO_MODE_OUTPUT, HIGH_LEVEL, OFF);
     init_gpio(GPIO_NUM_14, GPIO_MODE_OUTPUT, HIGH_LEVEL, OFF);

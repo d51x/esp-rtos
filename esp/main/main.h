@@ -24,6 +24,7 @@
 #include "core/utils.h"
 #include "rgb/colors.h"
 #include "core/led_ctrl.h"
+#include "core/button.h"
 
 
 
@@ -34,5 +35,6 @@ void load_params_from_nvs();
 
 void ir_receiver_task(void *arg);
 
+void push_btn_cb(void *arg);
 
 #endif 

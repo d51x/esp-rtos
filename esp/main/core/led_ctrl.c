@@ -39,7 +39,6 @@ void ledctrl_init(uint16_t freq, uint8_t led_cnt, const led_ctrl_config_t *_led_
 	for (uint8_t i = 0; i < led_cnt; i++ ) {
 		uint8_t ch = _led_ctrl[i].ch;
 		led_pins[ ch ] = _led_ctrl[i].pin;
-		ESP_LOGI(TAG, "idx: %d channel %d pin %d", i, ch, led_pins[ ch ]);
 	} 
 
 	pwm_begin(freq, led_cnt, led_pins);
@@ -394,8 +393,6 @@ void set_color_effect(color_effect_config_t *effect) {
 	color_effect_direction_e dir = UP, prev_dir = UP;
    	static uint16_t mm = 0;
 
-    //color_rgb_t *rgb = (color_rgb_t *)malloc( sizeof(color_rgb_t));
-
     __hsv.s = effect->saturation;
     __hsv.v = effect->brightness;
     	
@@ -403,9 +400,6 @@ void set_color_effect(color_effect_config_t *effect) {
 	__fadedown = effect->fadedown_delay;		
 
 	while( 1 ) {
-		//hsv.h = 30 * mm;
-		
-
 			if ( effect->effect == JUMP ) {
 				__hsv.h = effect->colors[mm];
 			} else if ( effect->effect == FADE ) {
@@ -423,18 +417,11 @@ void set_color_effect(color_effect_config_t *effect) {
 			}
 
 		ledctrl_set_color_hsv( &__hsv);
-        /*
-        ledctrl_set_color_duty(RED,    rgb->r);
-        ledctrl_set_color_duty(GREEN,  rgb->g);
-        ledctrl_set_color_duty(BLUE,   rgb->b);
-        ledctrl_update();
-		*/
-
-		if ( effect->effect == JUMP || effect->effect == RANDOM_JUMP ) {
+ 
+ 		if ( effect->effect == JUMP || effect->effect == RANDOM_JUMP ) {
 			++mm;
     		if	(mm == effect->colors_count ) mm = 0;        
 		} else if ( effect->effect == FADE || effect->effect == RANDOM_FADE) {
-			//if ( !rgb->r && !rgb->g && !rgb->b ) {
 			if ( __hsv.v == MIN_HSV_V) {
 				dir = UP;
 				++mm;
@@ -446,13 +433,11 @@ void set_color_effect(color_effect_config_t *effect) {
 		}
 		
         if ( dir == UP ) {
-			ESP_LOGE(TAG, "__fadeup: %d", __fadeup);
 			vTaskDelay( __fadeup / portTICK_RATE_MS);
 		} else {
 			vTaskDelay( __fadedown / portTICK_RATE_MS);
 		}	
 	}
-	//free(rgb);
 	ESP_LOGE(TAG, "FATAL: EXIST FROM TASK!!!");
 	free( effect->colors);
 	vTaskDelete(NULL);
@@ -465,7 +450,6 @@ void update_fadeup(uint32_t speed) {
 		__fadeup = LEDCTRL_MAX_FADE_DEALY;
 	else		
 		__fadeup = speed;
-	ESP_LOGI(TAG, "update_fadeup: %d", __fadeup);
 }
 
 void inc_fadeup(uint32_t step) {
@@ -479,10 +463,10 @@ void dec_fadeup(uint32_t step) {
 }
 
 void update_fadedown(uint32_t speed) {
-	if ( speed < 20 ) 
-		__fadedown = 20;
-	else if ( speed > 10000)
-		__fadedown = 10000;
+	if ( speed < LEDCTRL_MIN_FADE_DEALY ) 
+		__fadedown = LEDCTRL_MIN_FADE_DEALY;
+	else if ( speed > LEDCTRL_MAX_FADE_DEALY)
+		__fadedown = LEDCTRL_MAX_FADE_DEALY;
 	else		
 		__fadedown = speed;	
 }
@@ -534,7 +518,6 @@ void dec_saturation(uint8_t step) {
 
 void ledctrl_delete_active_task(){
     if ( xHanldeLedCtrl != NULL ) { 
-		//ESP_LOGI(TAG, "xHanldeLedCtrl is not NULL. Delete task...");
 		vTaskDelete( xHanldeLedCtrl ); 
 		xHanldeLedCtrl = NULL; 
 	}	

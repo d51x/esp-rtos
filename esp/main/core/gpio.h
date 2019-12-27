@@ -12,6 +12,7 @@
 #define GPIO_CNT GPIO_PIN_COUNT
 #define MAX_GPIO 255
 
+#define GPIO_MAX_NUM 17
 
 typedef enum {
     OFF,

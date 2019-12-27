@@ -205,7 +205,7 @@ void app_main(void){
 
     xTaskCreate(ir_receiver_task, "ir_receiver_task", 2048, NULL, 10, NULL); 
     xTaskCreate(read_sensors_task, "read_sensors_task", 2048, NULL, 10, NULL); 
-    xTaskCreate(read_gpio_task, "read_gpio_task", 2048, NULL, 10, NULL); 
+    //xTaskCreate(read_gpio_task, "read_gpio_task", 2048, NULL, 10, NULL); 
 
     #define LED_CTRL_CNT        3
     #define LED_FREQ_HZ         500
@@ -285,6 +285,13 @@ void app_main(void){
     rgb.g = 0;
     rgb.b = 0;
     //ledctrl_set_color_rgb(&rgb);
+
+    configure_push_button(GPIO_NUM_4, BUTTON_ACTIVE_HIGH, push_btn_cb);
+}
+
+void IRAM_ATTR push_btn_cb(void *arg)
+{
+    ESP_LOGI(TAG, "Button RELEASE");
 }
 
 
