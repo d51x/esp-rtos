@@ -518,129 +518,48 @@ esp_err_t ledctrl_get_handler(httpd_req_t *req)
     char page[200];
 #ifdef LEDCTRL
     if ( http_get_has_params(req) == ESP_OK) {
-
+        esp_err_t err = ESP_FAIL;
         char param[10];
 
         if ( http_get_key_str(req, "color", param, sizeof(param)) == ESP_OK ) {
-            //ESP_LOGI(TAG, "param \"color\" found");
-            if ( strcmp(param, "hex") == ESP_OK ) {
-                // color=hex&value=<color>
-                ESP_LOGI(TAG, "param \"hex\" found");
+            if ( strcmp(param, "hex") == ESP_OK ) {  // color=hex&value=<color>
                 long hex;
-                if ( http_get_key_long(req, "value", &hex) == ESP_OK) {
-                    ESP_LOGI(TAG, "hex: %li", hex);
-                    ledctrl_delete_active_task();
-                    ledctrl_set_color_hex( hex );
-                    strcpy(page, "OK");
-                } else {
-                    strcpy(page, "ERROR");
-                }
-            } else if ( strcmp(param, "hsv") == ESP_OK) {
-                ESP_LOGI(TAG, "param \"hsv\" found");
-                // color=hsv&h=<h>&s=<s>&v=<v>
-                //uint16_t h,s,v;
+                err = http_get_key_long(req, "value", &hex);
+                if ( err == ESP_OK ) 
+                    ledctrl_set_color_hex( hex, 1); 
+            } else if ( strcmp(param, "hsv") == ESP_OK) { // color=hsv&h=<h>&s=<s>&v=<v>
                 color_hsv_t *hsv = malloc( sizeof(color_hsv_t));
                 if ( http_get_key_uint16(req, "h", &hsv->h) == ESP_OK &&
                      http_get_key_uint8(req, "s", &hsv->s) == ESP_OK &&
                      http_get_key_uint8(req, "v", &hsv->v) == ESP_OK) 
                 {
-                    ESP_LOGI(TAG, "hsv: %d %d %d", hsv->h, hsv->s, hsv->v);
-                    ledctrl_delete_active_task();
-                    ledctrl_set_color_hsv(hsv);
-                    strcpy(page, "OK");
-                } else {
-                    strcpy(page, "ERROR");
+                    ledctrl_set_color_hsv(hsv, 1);
+                    err = ESP_OK;
                 }                
                 free(hsv);
             } else if ( strcmp(param, "rgb") == ESP_OK) {
                 // color=rgb&r=<r>&g=<g>&b=<b>
-                ESP_LOGI(TAG, "param \"rgb\" found");
                 color_rgb_t *rgb = malloc(sizeof(color_rgb_t));
                 if ( http_get_key_uint8(req, "r", &rgb->r) == ESP_OK &&
                      http_get_key_uint8(req, "g", &rgb->g) == ESP_OK &&
                      http_get_key_uint8(req, "b", &rgb->b) == ESP_OK) 
                 {
-                    ESP_LOGI(TAG, "rgb: %d %d %d", rgb->r, rgb->g, rgb->b);
-                    ledctrl_delete_active_task();
-                    ledctrl_set_color_rgb(rgb);
-                    strcpy(page, "OK");
-                } else {
-                    strcpy(page, "ERROR");
+                    ledctrl_set_color_rgb(rgb, 1);
+                    err = ESP_OK;
                 }
                 free(rgb);
-            } else  {
-                ESP_LOGI(TAG, "value of color param not matched");
-                strcpy(page, "ERROR");
-            }
-        } else if ( http_get_key_str(req, "effect", param, sizeof(param)) == ESP_OK ) {
-             ESP_LOGI(TAG, "param \"effect\" found value %s", param);
-            // effect=<effect_id>&speed=<speed>
-            long speed = 1000;
-            http_get_key_long(req, "speed", &speed);
-            if ( strcmp( param, "jump3") == ESP_OK ) {
-                set_color_effect__jump3(speed);
-                strcpy(page, "OK");
-            } else if ( strcmp(param, "jump7") == ESP_OK ) {
-                set_color_effect__jump7(speed);
-                strcpy(page, "OK");
-            } else if ( strcmp(param, "jump12") == ESP_OK ) {
-                set_color_effect__jump12(speed);
-                strcpy(page, "OK");
-            } else if ( strcmp(param, "fade3") == ESP_OK ) {
-                set_color_effect__fade3(speed);
-                strcpy(page, "OK");
-            } else if ( strcmp(param, "fade7") == ESP_OK ) {
-                set_color_effect__fade7(speed);
-                strcpy(page, "OK");
-            } else if ( strcmp(param, "fade12") == ESP_OK ) {
-                set_color_effect__fade12(speed);
-                strcpy(page, "OK");
-            } else if ( strcmp(param, "wheel") == ESP_OK ) {
-                set_color_effect__wheel(speed);
-                strcpy(page, "OK");
-            } else if ( strcmp(param, "rndjump7") == ESP_OK ) {
-                set_color_effect__rnd_jump7(speed);
-                strcpy(page, "OK");
-            } else if ( strcmp(param, "rndjump12") == ESP_OK ) {
-                set_color_effect__rnd_jump12(speed);
-                strcpy(page, "OK");
-            } else if ( strcmp(param, "rndfade7") == ESP_OK ) {
-                set_color_effect__rnd_fade7(speed);
-                strcpy(page, "OK");
-            } else if ( strcmp(param, "rndfade12") == ESP_OK ) {
-                set_color_effect__rnd_fade12(speed);
-                strcpy(page, "OK");
-            } else if ( strcmp(param, "rnd") == ESP_OK ) {
-                set_color_effect__rnd_rnd( NULL );
-                strcpy(page, "OK");
-            } else if ( strcmp(param, "stop") == ESP_OK ) {
-                ledctrl_set_color_hex( 0 );
-                ledctrl_delete_active_task();
-                strcpy(page, "OK");
-            } else {
-                strcpy(page, "ERROR");
             } 
-        } else {
-            strcpy(page, "ERROR");
-        }
+        } else if ( http_get_key_str(req, "effect", param, sizeof(param)) == ESP_OK ) {
+            // effect=<effect_id>&speed=<speed>
+            long speed = 0;
+            http_get_key_long(req, "speed", &speed);
+            err = handle_color_effect_by_name(param, speed);
+        } 
         
-
         uint16_t fade = 1000;
-        if ( http_get_key_uint16(req, "fadeup", &fade) == ESP_OK ) {
-             ESP_LOGI(TAG, "param \"fadeup\" found value %d", fade);
-            // fadeup=<value>
-            update_fadeup( fade );
-        }
-
-        
-        if ( http_get_key_uint16(req, "fadedown", &fade) == ESP_OK ) {
-             ESP_LOGI(TAG, "param \"fadedown\" found");
-            // fadedown=<value>
-            update_fadedown( fade );
-        }
-
-        
-        
+        if ( http_get_key_uint16(req, "fadeup", &fade) == ESP_OK ) update_fadeup( fade );
+        if ( http_get_key_uint16(req, "fadedown", &fade) == ESP_OK ) update_fadedown( fade );
+        if ( err == ESP_OK ) strcpy(page, "OK"); else strcpy(page, "ERROR");
     }
 #else
     strcpy(page, "Led control is disabled");    

@@ -13,11 +13,20 @@
 #define LEDCTRL_MIN_FADE_DEALY 20
 #define LEDCTRL_MAX_FADE_DEALY 10000
 
+#define LEDCTRL_DEFAULT_SPEED_JUMP 1000
+#define LEDCTRL_DEFAULT_SPEED_FADE 40
+#define LEDCTRL_DEFAULT_SPEED_WHEEL 500
+
 #define MIN_HSV_V 1
 #define MAX_HSV_V 255
 
 #define MIN_HSV_S 1
 #define MAX_HSV_S 255
+
+#define COLOR_EFFECTS_MAX 13
+static const char *color_effects[COLOR_EFFECTS_MAX]  = {"jump3", "jump7", "jump12", "rndjump7", "rndjump12", 
+										"fade3", "fade7", "fade12", "rndfade7", "rndfade12", 
+										"wheel", "rnd", "stop"};
 
 typedef struct {
 	uint8_t pin;
@@ -61,9 +70,9 @@ void ledctrl_set_duty(uint32_t ledc_channel, uint32_t ledc_duty);
 void ledctrl_update();
 void ledctrl_set_color_duty(color_e type, uint32_t duty);
 
-void ledctrl_set_color_rgb(const color_rgb_t *rgb);
-void ledctrl_set_color_hsv(const color_hsv_t *hsv);
-void ledctrl_set_color_hex(uint32_t color);
+void ledctrl_set_color_rgb(const color_rgb_t *rgb, uint8_t del);
+void ledctrl_set_color_hsv(const color_hsv_t *hsv, uint8_t del);
+void ledctrl_set_color_hex(uint32_t color, uint8_t del);
 
 
 void set_color_effect__jump3(uint32_t speed);
@@ -100,5 +109,11 @@ void update_saturation(uint8_t saturation);
 void inc_saturation(uint8_t step);
 void dec_saturation(uint8_t step);
 void ledctrl_delete_active_task();
+
+esp_err_t handle_color_effect_default_by_id(uint8_t id);
+esp_err_t handle_color_effect_by_id(uint8_t id, uint32_t speed);
+
+esp_err_t handle_color_effect_default_by_name(char *effect_name);
+esp_err_t handle_color_effect_by_name(char *effect_name, uint32_t speed);
 
 #endif

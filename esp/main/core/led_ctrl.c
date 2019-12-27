@@ -26,6 +26,8 @@ static color_hsv_t __hsv = {0, 255, 255};
 static led_ctrl_config_t *_led_ctrl;
 static uint8_t _led_ctr_cnt = 0;
 
+static void* pcolors = NULL;
+
 static TaskHandle_t xHanldeLedCtrl = NULL;
 
 void ledctrl_init(uint16_t freq, uint8_t led_cnt, const led_ctrl_config_t *_led_ctrl_cfg) {
@@ -87,7 +89,8 @@ static void calc_color_duty_and_dir(uint8_t *val, color_effect_direction_e *dir)
 }
 
 
-void ledctrl_set_color_rgb(const color_rgb_t *rgb){
+void ledctrl_set_color_rgb(const color_rgb_t *rgb, uint8_t del){
+	if ( del ) ledctrl_delete_active_task();
 	ledctrl_set_color_duty(RED,    rgb->r);
     ledctrl_set_color_duty(GREEN,  rgb->g);
     ledctrl_set_color_duty(BLUE,   rgb->b);
@@ -95,7 +98,9 @@ void ledctrl_set_color_rgb(const color_rgb_t *rgb){
 	rgb_to_hsv(&__hsv, rgb);
 }
 
-void ledctrl_set_color_hsv(const color_hsv_t *hsv){
+void ledctrl_set_color_hsv(const color_hsv_t *hsv, uint8_t del)
+{
+	if ( del ) ledctrl_delete_active_task();
 	color_rgb_t *rgb = malloc( sizeof(color_rgb_t));
 	memcpy(&__hsv, hsv, sizeof(color_hsv_t));
 	hsv_to_rgb(rgb, __hsv);
@@ -107,30 +112,27 @@ void ledctrl_set_color_hsv(const color_hsv_t *hsv){
 	free(rgb);
 }
 
-void ledctrl_set_color_hex(uint32_t color) {
+void ledctrl_set_color_hex(uint32_t color, uint8_t del) {
+	if ( del ) ledctrl_delete_active_task();
 	color_rgb_t *rgb = malloc( sizeof(color_rgb_t));
 	hex_to_rgb( color, rgb);
-	ledctrl_set_color_rgb(rgb);
+	ledctrl_set_color_rgb(rgb, 0);
 	free(rgb);
 }
 
 
 // =========================================== JUMP3 =======================================
 void task_color_effect__jump3(uint32_t *speed){
+	uint32_t _sp = (uint32_t *)speed ? (uint32_t *)speed : LEDCTRL_DEFAULT_SPEED_JUMP;
 	color_effect_config_t effect;
 	effect.colors_count = 3;
 	effect.colors = malloc(effect.colors_count * sizeof(effect.colors));
-	effect.colors[0] = 0;
-	effect.colors[1] = 120;
-	effect.colors[2] = 240;
-	
+	effect.colors[0] = 0; effect.colors[1] = 120; effect.colors[2] = 240;
     effect.effect = JUMP;
-    effect.fadeup_delay = (uint32_t *)speed;	effect.fadedown_delay = 0;
+    effect.fadeup_delay = _sp;	effect.fadedown_delay = 0;
     effect.saturation = 255;
     effect.brightness = 255;
-
 	set_color_effect(&effect);
-
 }
 
 void set_color_effect__jump3(uint32_t speed){
@@ -140,23 +142,16 @@ void set_color_effect__jump3(uint32_t speed){
 
 // =========================================== FADE3 =======================================
 void task_color_effect__fade3(uint32_t *speed){
+	uint32_t _sp = (uint32_t *)speed ? (uint32_t *)speed : LEDCTRL_DEFAULT_SPEED_FADE;
 	color_effect_config_t effect;
 	effect.colors_count = 3;
-
-	// TODO: где то здечь утечка памяти, надо подумать как останавливать задачу с очисткой памяти под массивом
-	//effect.colors = malloc(effect.colors_count * sizeof(effect.colors));
-	uint32_t colors[effect.colors_count * sizeof(effect.colors)];
-	colors[0] = 0;
-	colors[1] = 120;
-	colors[2] = 240;
-	effect.colors = colors[0];
+	effect.colors = malloc(effect.colors_count * sizeof(effect.colors));
+	effect.colors[0] = 0; effect.colors[1] = 120; effect.colors[2] = 240;
     effect.effect = FADE;
-    effect.fadeup_delay = (uint32_t *)speed; effect.fadedown_delay = (uint32_t *)speed;
+    effect.fadeup_delay = effect.fadedown_delay = _sp;
     effect.saturation = 255;
     effect.brightness = 255;
-
 	set_color_effect(&effect);
-
 }
 
 void set_color_effect__fade3(uint32_t speed){
@@ -166,14 +161,14 @@ void set_color_effect__fade3(uint32_t speed){
 
 // =========================================== JUMP7 =======================================
 void task_color_effect__jump7(uint32_t *speed){
-
+	uint32_t _sp = (uint32_t *)speed ? (uint32_t *)speed : LEDCTRL_DEFAULT_SPEED_JUMP;
 	color_effect_config_t effect;
 	effect.colors_count = 7;
 	effect.colors = malloc(effect.colors_count * sizeof(effect.colors));
 	memcpy(effect.colors, hsv_colors_7, effect.colors_count * sizeof(effect.colors));
 
     effect.effect = JUMP;
-    effect.fadeup_delay = (uint32_t *)speed; effect.fadedown_delay = (uint32_t *)speed;
+    effect.fadeup_delay = effect.fadedown_delay = _sp;
     effect.saturation = 255;
     effect.brightness = 255;
 
@@ -188,14 +183,14 @@ void set_color_effect__jump7(uint32_t speed){
 
 // =========================================== RANDOM JUMP7 =======================================
 void task_color_effect__rnd_jump7(uint32_t *speed){
-
+	uint32_t _sp = (uint32_t *)speed ? (uint32_t *)speed : LEDCTRL_DEFAULT_SPEED_JUMP;
 	color_effect_config_t effect;
 	effect.colors_count = 7;
 	effect.colors = malloc(effect.colors_count * sizeof(effect.colors));
 	memcpy(effect.colors, hsv_colors_7, effect.colors_count * sizeof(effect.colors));
 
     effect.effect = RANDOM_JUMP;
-    effect.fadeup_delay = (uint32_t *)speed; effect.fadedown_delay = (uint32_t *)speed;
+    effect.fadeup_delay = effect.fadedown_delay = _sp;
     effect.saturation = 255;
     effect.brightness = 255;
 
@@ -210,14 +205,14 @@ void set_color_effect__rnd_jump7(uint32_t speed){
 
 // =========================================== FADE7 =======================================
 void task_color_effect__fade7(uint32_t *speed){
-
+	uint32_t _sp = (uint32_t *)speed ? (uint32_t *)speed : LEDCTRL_DEFAULT_SPEED_FADE;
 	color_effect_config_t effect;
 	effect.colors_count = 7;
 	effect.colors = malloc(effect.colors_count * sizeof(effect.colors));
 	memcpy(effect.colors, hsv_colors_7, effect.colors_count * sizeof(effect.colors));
 
     effect.effect = FADE;
-    effect.fadeup_delay = (uint32_t *)speed; effect.fadedown_delay = (uint32_t *)speed;
+    effect.fadeup_delay = effect.fadedown_delay = _sp;
     effect.saturation = 255;
     effect.brightness = 255;
 
@@ -232,14 +227,14 @@ void set_color_effect__fade7(uint32_t speed){
 
 // =========================================== RANDOM FADE7 =======================================
 void task_color_effect__rnd_fade7(uint32_t *speed){
-
+	uint32_t _sp = (uint32_t *)speed ? (uint32_t *)speed : LEDCTRL_DEFAULT_SPEED_FADE;
 	color_effect_config_t effect;
 	effect.colors_count = 7;
 	effect.colors = malloc(effect.colors_count * sizeof(effect.colors));
 	memcpy(effect.colors, hsv_colors_7, effect.colors_count * sizeof(effect.colors));
 
     effect.effect = RANDOM_FADE;
-    effect.fadeup_delay = (uint32_t *)speed; effect.fadedown_delay = (uint32_t *)speed;
+    effect.fadeup_delay = effect.fadedown_delay = _sp;
     effect.saturation = 255;
     effect.brightness = 255;
 
@@ -254,6 +249,7 @@ void set_color_effect__rnd_fade7(uint32_t speed){
 
 // =========================================== FADE12 =======================================
 void task_color_effect__fade12(uint32_t *speed) {
+	uint32_t _sp = (uint32_t *)speed ? (uint32_t *)speed : LEDCTRL_DEFAULT_SPEED_FADE;
 	color_effect_config_t effect;
 	effect.colors_count = 12;
 	effect.colors = malloc(effect.colors_count * sizeof(effect.colors));
@@ -264,7 +260,7 @@ void task_color_effect__fade12(uint32_t *speed) {
 	}
 
     effect.effect = FADE;
-    effect.fadeup_delay = (uint32_t *)speed; effect.fadedown_delay = (uint32_t *)speed;
+    effect.fadeup_delay = effect.fadedown_delay = _sp;
     effect.saturation = 255;
     effect.brightness = 255;
 
@@ -277,6 +273,7 @@ void set_color_effect__fade12(uint32_t speed){
 
 // =========================================== RANDOM FADE12 =======================================
 void task_color_effect__rnd_fade12(uint32_t *speed) {
+	uint32_t _sp = (uint32_t *)speed ? (uint32_t *)speed : LEDCTRL_DEFAULT_SPEED_FADE;	
 	color_effect_config_t effect;
 	effect.colors_count = 12;
 	effect.colors = malloc(effect.colors_count * sizeof(effect.colors));
@@ -285,7 +282,7 @@ void task_color_effect__rnd_fade12(uint32_t *speed) {
 	}
 
     effect.effect = RANDOM_FADE;
-    effect.fadeup_delay = (uint32_t *)speed; effect.fadedown_delay = (uint32_t *)speed;
+    effect.fadeup_delay = effect.fadedown_delay = _sp;
     effect.saturation = 255;
     effect.brightness = 255;
 
@@ -300,6 +297,7 @@ void set_color_effect__rnd_fade12(uint32_t speed){
 
 // =========================================== JUMP12 =======================================
 void task_color_effect__jump12(uint32_t *speed) {
+	uint32_t _sp = (uint32_t *)speed ? (uint32_t *)speed : LEDCTRL_DEFAULT_SPEED_JUMP;	
 	color_effect_config_t effect;
 	effect.colors_count = 12;
 	effect.colors = malloc(effect.colors_count * sizeof(effect.colors));
@@ -308,7 +306,7 @@ void task_color_effect__jump12(uint32_t *speed) {
 	}
 
     effect.effect = JUMP;
-    effect.fadeup_delay = (uint32_t *)speed; effect.fadedown_delay = (uint32_t *)speed;
+    effect.fadeup_delay = effect.fadedown_delay = _sp;
     effect.saturation = 255;
     effect.brightness = 255;
 
@@ -322,6 +320,7 @@ void set_color_effect__jump12(uint32_t speed){
 
 // =========================================== RANDOM JUMP12 =======================================
 void task_color_effect__rnd_jump12(uint32_t *speed) {
+	uint32_t _sp = (uint32_t *)speed ? (uint32_t *)speed : LEDCTRL_DEFAULT_SPEED_JUMP;
 	color_effect_config_t effect;
 	effect.colors_count = 12;
 	effect.colors = malloc(effect.colors_count * sizeof(effect.colors));
@@ -330,7 +329,7 @@ void task_color_effect__rnd_jump12(uint32_t *speed) {
 	}
 
     effect.effect = RANDOM_JUMP;
-    effect.fadeup_delay = (uint32_t *)speed; effect.fadedown_delay = (uint32_t *)speed;
+    effect.fadeup_delay = effect.fadedown_delay = _sp;
     effect.saturation = 255;
     effect.brightness = 255;
 
@@ -345,6 +344,7 @@ void set_color_effect__rnd_jump12(uint32_t speed){
 
 // =========================================== WHEEL =======================================
 void task_color_effect__wheel(uint32_t *speed) {
+	uint32_t _sp = (uint32_t *)speed ? (uint32_t *)speed : LEDCTRL_DEFAULT_SPEED_WHEEL;
 	color_effect_config_t effect;
 	effect.colors_count = 360;
 	effect.colors = malloc(effect.colors_count * sizeof(effect.colors));
@@ -353,7 +353,7 @@ void task_color_effect__wheel(uint32_t *speed) {
 	}
 
     effect.effect = JUMP;
-    effect.fadeup_delay = (uint32_t *)speed; effect.fadedown_delay = (uint32_t *)speed;
+    effect.fadeup_delay = effect.fadedown_delay = _sp;
     effect.saturation = 255;
     effect.brightness = 255;
 
@@ -399,6 +399,8 @@ void set_color_effect(color_effect_config_t *effect) {
 	__fadeup = effect->fadeup_delay;
 	__fadedown = effect->fadedown_delay;		
 
+	pcolors = effect->colors;
+	//ESP_LOGI(TAG, "set color effect. pcolors %p,  effect->colors %p", pcolors, effect->colors);
 	while( 1 ) {
 			if ( effect->effect == JUMP ) {
 				__hsv.h = effect->colors[mm];
@@ -416,7 +418,7 @@ void set_color_effect(color_effect_config_t *effect) {
 				__hsv.v =  esp_random() % 255;
 			}
 
-		ledctrl_set_color_hsv( &__hsv);
+		ledctrl_set_color_hsv( &__hsv, 0);
  
  		if ( effect->effect == JUMP || effect->effect == RANDOM_JUMP ) {
 			++mm;
@@ -440,6 +442,7 @@ void set_color_effect(color_effect_config_t *effect) {
 	}
 	ESP_LOGE(TAG, "FATAL: EXIST FROM TASK!!!");
 	free( effect->colors);
+	effect->colors = NULL;
 	vTaskDelete(NULL);
 }
 
@@ -517,8 +520,59 @@ void dec_saturation(uint8_t step) {
 }
 
 void ledctrl_delete_active_task(){
+
+	if ( pcolors != NULL ) {
+		free(pcolors);
+		pcolors = NULL;
+	}
+
     if ( xHanldeLedCtrl != NULL ) { 
 		vTaskDelete( xHanldeLedCtrl ); 
 		xHanldeLedCtrl = NULL; 
 	}	
+}
+
+
+esp_err_t handle_color_effect_by_id(uint8_t id, uint32_t speed) {
+	ESP_LOGI(TAG, "effect %d: %s", id, color_effects[id]);
+	esp_err_t err = ESP_OK;
+	switch (id) {
+		case 0: set_color_effect__jump3(speed); break;
+		case 1: set_color_effect__jump7(speed); break;
+		case 2: set_color_effect__jump12(speed); break;
+		case 3: set_color_effect__rnd_jump7(speed); break;
+		case 4: set_color_effect__rnd_jump12(speed); break;
+		case 5: set_color_effect__fade3(speed); break;
+		case 6: set_color_effect__fade7(speed); break;
+		case 7: set_color_effect__fade12(speed); break;
+		case 8: set_color_effect__rnd_fade7(speed); break;
+		case 9: set_color_effect__rnd_fade12(speed); break;
+		case 10: set_color_effect__wheel(speed); break;
+		case 11: set_color_effect__rnd_rnd( NULL ); break;
+		case 12: ledctrl_set_color_hex( 0, 1 ); 	break;
+		default: 
+			err = ESP_FAIL;
+		break;
+	}
+	return err;
+}
+
+esp_err_t handle_color_effect_default_by_id(uint8_t id) {
+	return handle_color_effect_by_id(id, 0);
+}
+
+
+esp_err_t handle_color_effect_by_name(char *effect_name, uint32_t speed) {
+	esp_err_t err = ESP_FAIL;
+	for (int i=0; i<COLOR_EFFECTS_MAX;i++) {
+		if ( strcmp( effect_name, color_effects[i]) == ESP_OK ) {
+			err = handle_color_effect_by_id(i, speed);
+			break;
+		}
+	}
+	return err;
+}
+
+esp_err_t handle_color_effect_default_by_name(char *effect_name) {
+	return handle_color_effect_by_name(effect_name, 0);
 }

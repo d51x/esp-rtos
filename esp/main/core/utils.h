@@ -27,6 +27,7 @@
 
 
 #define millis() (unsigned long) (esp_timer_get_time() / 1000ULL)
+#define cur_sec() (uint32_t) (esp_timer_get_time() / 1000ULL / 1000U)
 #define IP_2_STR(a) ip4addr_ntoa(a)
 
 #define UPTIME2STR "%d days %02dh %02dm %02ds"
