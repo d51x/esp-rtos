@@ -311,12 +311,12 @@ void app_main(void){
         pressed_time = 2;
         button_add_on_press_cb(btn_g4_h, pressed_time, btn_press_2sec_cb, btn_g4_h);        
    
-        pressed_time = 3;
-        button_add_on_press_cb(btn_g4_h, pressed_time, btn_press_3sec_cb, btn_g4_h);
+       pressed_time = 4;   // off
+        button_add_on_press_cb(btn_g4_h, pressed_time, rgb_lights_off, NULL);  
 
-        pressed_time = 6;
-        button_add_on_press_cb(btn_g4_h, pressed_time, btn_press_6sec_cb, btn_g4_h);  
-        
+pressed_time = 10;   // off
+        button_add_on_press_cb(btn_g4_h, pressed_time, esp_restart, NULL);  
+
         tmr_btn_pressed = xTimerCreate("tmr_press_cnt", 300  / portTICK_PERIOD_MS, pdFALSE, (void*)0, vTmrPressCntCb);
     } 
 
@@ -355,6 +355,13 @@ void vTmrPressCntCb( TimerHandle_t xTimer ){
     ESP_LOGD(TAG, "Button just short pressed. Count %d", pressed_count);
     if ( pressed_count == 1 ) {
         switch_effect();
+    } else if ( pressed_count == 2) {
+        static uint16_t h = 0;
+        color_hsv_t *hsv = malloc( sizeof(color_hsv_t));
+        hsv->h = h; hsv->s = 100; hsv->v = 100;
+        ledctrl_set_color_hsv(hsv, 1);
+        h += 5;
+        free(hsv);
     }
     pressed_count = 0;
     // if ( xTimer == NULL ) return;

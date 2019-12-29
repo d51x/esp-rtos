@@ -2,8 +2,10 @@
 
 /****************************************************************
 hue - 0..359	цвет
-sat - 0..255	насыщенность
-val - 0..255	яркость
+//---- sat - 0..255	насыщенность
+sat - 0..100	насыщенность
+//---- val - 0..255	яркость
+val - 0..100	яркость
 *****************************************************************/
 
 void hsv_to_rgb(volatile color_rgb_t *rgb, const color_hsv_t hsv) {
@@ -16,25 +18,46 @@ void hsv_to_rgb(volatile color_rgb_t *rgb, const color_hsv_t hsv) {
 		return;
 	}
 
+   // hsv.s from 100 to 255
+   // hsv.v from 100 to 255
+   uint8_t s = map(hsv.s, 0, 100, 0, 255);
+   uint8_t v = map(hsv.v, 0, 100, 0, 255);
+
 	hi = hsv.h / 60;
 	h_pr = hsv.h - hi*60; 
 
 	fr = ( h_pr * 255 ) / 60;
-	p  = hsv.v * ( 255 - hsv.s ) / 255;
-	q  = hsv.v * ( 255 - ( ( hsv.s * fr ) / 255 ) ) / 255;
-	t  = hsv.v * ( 255 - ( hsv.s * ( 255 - fr ) / 255 ) ) / 255;
+	//p  = hsv.v * ( 255 - hsv.s ) / 255;
+	p  = v * ( 255 - s ) / 255;
+	//q  = hsv.v * ( 255 - ( ( hsv.s * fr ) / 255 ) ) / 255;
+	q  = v * ( 255 - ( ( s * fr ) / 255 ) ) / 255;
+	//t  = hsv.v * ( 255 - ( hsv.s * ( 255 - fr ) / 255 ) ) / 255;
+	t  = v * ( 255 - ( s * ( 255 - fr ) / 255 ) ) / 255;
 
 	switch ( hi ) {
-		case 0: rgb->r = hsv.v; 	rgb->g = t; 		rgb->b = p; break;
-		case 1: rgb->r = q; 		rgb->g = hsv.v; 	rgb->b = p; break;
-		case 2: rgb->r = p; 		rgb->g = hsv.v; 	rgb->b = t; break;
-		case 3: rgb->r = p; 		rgb->g = q; 		rgb->b = hsv.v; break;
-		case 4: rgb->r = t; 		rgb->g = p; 		rgb->b = hsv.v; break;
-		case 5: rgb->r = hsv.v; 	rgb->g = p; 		rgb->b = q; break;
+		//case 0: rgb->r = hsv.v; 	rgb->g = t; 		rgb->b = p; break;
+		case 0: rgb->r = v; 	   rgb->g = t; 		rgb->b = p; break;
+		//case 1: rgb->r = q; 		rgb->g = hsv.v; 	rgb->b = p; break;
+		case 1: rgb->r = q; 		rgb->g = v; 	rgb->b = p; break;
+		//case 2: rgb->r = p; 		rgb->g = hsv.v; 	rgb->b = t; break;
+		case 2: rgb->r = p; 		rgb->g = v; 	rgb->b = t; break;
+		//case 3: rgb->r = p; 		rgb->g = q; 		rgb->b = hsv.v; break;
+		case 3: rgb->r = p; 		rgb->g = q; 		rgb->b = v; break;
+		//case 4: rgb->r = t; 		rgb->g = p; 		rgb->b = hsv.v; break;
+		case 4: rgb->r = t; 		rgb->g = p; 		rgb->b = v; break;
+		//case 5: rgb->r = hsv.v; 	rgb->g = p; 		rgb->b = q; break;
+		case 5: rgb->r = v; 	rgb->g = p; 		rgb->b = q; break;
 	}
 }
 
-void  hex_to_rgb(uint32_t color32, volatile color_rgb_t *rgb) {
+void  int_to_rgb(uint32_t color32, volatile color_rgb_t *rgb) {
+    rgb->r = (color32 >> 16) & 0xff;
+    rgb->g = (color32 >> 8) & 0xff;
+    rgb->b = color32 & 0xff;
+}
+
+void  hex_to_rgb(const char *color, volatile color_rgb_t *rgb) {
+   uint32_t color32 = hex2int(color);
     rgb->r = (color32 >> 16) & 0xff;
     rgb->g = (color32 >> 8) & 0xff;
     rgb->b = color32 & 0xff;
@@ -73,4 +96,8 @@ void  rgb_to_hsv(const color_rgb_t *rgb, color_hsv_t *hsv){
    if(hsvh < 0) hsvh += HUE_MAX;
 
    hsv->h = hsvh;	
+
+   // from 0.255, to 0..100
+   hsv->s = map(hsv->s, 0, 255, 0, 100);
+   hsv->v = map(hsv->v, 0, 255, 0, 100);
 }

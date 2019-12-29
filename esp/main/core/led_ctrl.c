@@ -21,7 +21,8 @@ static const char *TAG = "LEDCTRL";
 static uint32_t __fadeup = 0;
 static uint32_t __fadedown = 0;
 
-static color_hsv_t __hsv = {0, 255, 255};
+//static color_hsv_t __hsv = {0, 255, 255};
+static color_hsv_t __hsv = {0, 100, 100};
 
 static led_ctrl_config_t *_led_ctrl;
 static uint8_t _led_ctr_cnt = 0;
@@ -100,6 +101,7 @@ void ledctrl_set_color_rgb(const color_rgb_t *rgb, uint8_t del){
 
 void ledctrl_set_color_hsv(const color_hsv_t *hsv, uint8_t del)
 {
+	ESP_LOGI(TAG, "%s hsv: %d %d %d", __func__, hsv->h, hsv->s, hsv->v);
 	if ( del ) ledctrl_delete_active_task();
 	color_rgb_t *rgb = malloc( sizeof(color_rgb_t));
 	memcpy(&__hsv, hsv, sizeof(color_hsv_t));
@@ -112,14 +114,21 @@ void ledctrl_set_color_hsv(const color_hsv_t *hsv, uint8_t del)
 	free(rgb);
 }
 
-void ledctrl_set_color_hex(uint32_t color, uint8_t del) {
+void ledctrl_set_color_int(uint32_t color, uint8_t del) {
+	if ( del ) ledctrl_delete_active_task();
+	color_rgb_t *rgb = malloc( sizeof(color_rgb_t));
+	int_to_rgb( color, rgb);
+	ledctrl_set_color_rgb(rgb, 0);
+	free(rgb);
+}
+
+void ledctrl_set_color_hex(const char *color, uint8_t del) {
 	if ( del ) ledctrl_delete_active_task();
 	color_rgb_t *rgb = malloc( sizeof(color_rgb_t));
 	hex_to_rgb( color, rgb);
 	ledctrl_set_color_rgb(rgb, 0);
 	free(rgb);
 }
-
 
 // =========================================== JUMP3 =======================================
 void task_color_effect__jump3(uint32_t *speed){
@@ -130,8 +139,8 @@ void task_color_effect__jump3(uint32_t *speed){
 	effect.colors[0] = 0; effect.colors[1] = 120; effect.colors[2] = 240;
     effect.effect = JUMP;
     effect.fadeup_delay = _sp;	effect.fadedown_delay = 0;
-    effect.saturation = 255;
-    effect.brightness = 255;
+    effect.saturation = MAX_HSV_S;
+    effect.brightness = MAX_HSV_V;
 	set_color_effect(&effect);
 }
 
@@ -149,8 +158,8 @@ void task_color_effect__fade3(uint32_t *speed){
 	effect.colors[0] = 0; effect.colors[1] = 120; effect.colors[2] = 240;
     effect.effect = FADE;
     effect.fadeup_delay = effect.fadedown_delay = _sp;
-    effect.saturation = 255;
-    effect.brightness = 255;
+    effect.saturation = MAX_HSV_S;
+    effect.brightness = MAX_HSV_V;
 	set_color_effect(&effect);
 }
 
@@ -169,8 +178,8 @@ void task_color_effect__jump7(uint32_t *speed){
 
     effect.effect = JUMP;
     effect.fadeup_delay = effect.fadedown_delay = _sp;
-    effect.saturation = 255;
-    effect.brightness = 255;
+    effect.saturation = MAX_HSV_S;
+    effect.brightness = MAX_HSV_V;
 
 	set_color_effect(&effect);
 
@@ -191,8 +200,8 @@ void task_color_effect__rnd_jump7(uint32_t *speed){
 
     effect.effect = RANDOM_JUMP;
     effect.fadeup_delay = effect.fadedown_delay = _sp;
-    effect.saturation = 255;
-    effect.brightness = 255;
+    effect.saturation = MAX_HSV_S;
+    effect.brightness = MAX_HSV_V;
 
 	set_color_effect(&effect);
 
@@ -213,8 +222,8 @@ void task_color_effect__fade7(uint32_t *speed){
 
     effect.effect = FADE;
     effect.fadeup_delay = effect.fadedown_delay = _sp;
-    effect.saturation = 255;
-    effect.brightness = 255;
+    effect.saturation = MAX_HSV_S;
+    effect.brightness = MAX_HSV_V;
 
 	set_color_effect(&effect);
 
@@ -235,8 +244,8 @@ void task_color_effect__rnd_fade7(uint32_t *speed){
 
     effect.effect = RANDOM_FADE;
     effect.fadeup_delay = effect.fadedown_delay = _sp;
-    effect.saturation = 255;
-    effect.brightness = 255;
+    effect.saturation = MAX_HSV_S;
+    effect.brightness = MAX_HSV_V;
 
 	set_color_effect(&effect);
 
@@ -261,8 +270,8 @@ void task_color_effect__fade12(uint32_t *speed) {
 
     effect.effect = FADE;
     effect.fadeup_delay = effect.fadedown_delay = _sp;
-    effect.saturation = 255;
-    effect.brightness = 255;
+    effect.saturation = MAX_HSV_S;
+    effect.brightness = MAX_HSV_V;
 
 	set_color_effect(&effect);
 }
@@ -283,8 +292,8 @@ void task_color_effect__rnd_fade12(uint32_t *speed) {
 
     effect.effect = RANDOM_FADE;
     effect.fadeup_delay = effect.fadedown_delay = _sp;
-    effect.saturation = 255;
-    effect.brightness = 255;
+    effect.saturation = MAX_HSV_S;
+    effect.brightness = MAX_HSV_V;
 
 	set_color_effect(&effect);
 }
@@ -307,8 +316,8 @@ void task_color_effect__jump12(uint32_t *speed) {
 
     effect.effect = JUMP;
     effect.fadeup_delay = effect.fadedown_delay = _sp;
-    effect.saturation = 255;
-    effect.brightness = 255;
+    effect.saturation = MAX_HSV_S;
+    effect.brightness = MAX_HSV_V;
 
 	set_color_effect(&effect);
 }
@@ -330,8 +339,8 @@ void task_color_effect__rnd_jump12(uint32_t *speed) {
 
     effect.effect = RANDOM_JUMP;
     effect.fadeup_delay = effect.fadedown_delay = _sp;
-    effect.saturation = 255;
-    effect.brightness = 255;
+    effect.saturation = MAX_HSV_S;
+    effect.brightness = MAX_HSV_V;
 
 	set_color_effect(&effect);
 }
@@ -354,8 +363,8 @@ void task_color_effect__wheel(uint32_t *speed) {
 
     effect.effect = JUMP;
     effect.fadeup_delay = effect.fadedown_delay = _sp;
-    effect.saturation = 255;
-    effect.brightness = 255;
+    effect.saturation = MAX_HSV_S;
+    effect.brightness = MAX_HSV_V;
 
 	set_color_effect(&effect);
 }
@@ -376,8 +385,8 @@ void task_color_effect__rnd_rnd(void *arg) {
 
     effect.effect = RANDOM_CB;
     effect.fadeup_delay = 500; effect.fadedown_delay = 500;
-    effect.saturation = 255;
-    effect.brightness = 255;
+    effect.saturation = MAX_HSV_S;
+    effect.brightness = MAX_HSV_V;
 
 	set_color_effect(&effect);
 }
@@ -415,7 +424,7 @@ void set_color_effect(color_effect_config_t *effect) {
 				calc_color_duty_and_dir(&__hsv.v, &dir);
 			} else if ( effect->effect == RANDOM_CB ) {
 				__hsv.h = effect->colors[ esp_random() % effect->colors_count ];				
-				__hsv.v =  esp_random() % 255;
+				__hsv.v =  esp_random() % MAX_HSV_V;
 			}
 
 		ledctrl_set_color_hsv( &__hsv, 0);
@@ -535,6 +544,7 @@ void ledctrl_delete_active_task(){
 
 esp_err_t handle_color_effect_by_id(uint8_t id, uint32_t speed) {
 	ESP_LOGI(TAG, "effect %d: %s", id, color_effects[id]);
+	if ( id >= COLOR_EFFECTS_MAX ) return ESP_FAIL;
 	esp_err_t err = ESP_OK;
 	switch (id) {
 		case 0: set_color_effect__jump3(speed); break;
@@ -549,7 +559,7 @@ esp_err_t handle_color_effect_by_id(uint8_t id, uint32_t speed) {
 		case 9: set_color_effect__rnd_fade12(speed); break;
 		case 10: set_color_effect__wheel(speed); break;
 		case 11: set_color_effect__rnd_rnd( NULL ); break;
-		case 12: ledctrl_set_color_hex( 0, 1 ); 	break;
+		case 12: ledctrl_set_color_int( 0, 1 ); 	break;
 		default: 
 			err = ESP_FAIL;
 		break;
@@ -575,4 +585,9 @@ esp_err_t handle_color_effect_by_name(char *effect_name, uint32_t speed) {
 
 esp_err_t handle_color_effect_default_by_name(char *effect_name) {
 	return handle_color_effect_by_name(effect_name, 0);
+}
+
+void rgb_lights_off(){
+	ESP_LOGI(TAG, "lights off");
+	ledctrl_set_color_hex( 0, 1 ); 
 }

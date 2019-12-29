@@ -519,14 +519,20 @@ esp_err_t ledctrl_get_handler(httpd_req_t *req)
 #ifdef LEDCTRL
     if ( http_get_has_params(req) == ESP_OK) {
         esp_err_t err = ESP_FAIL;
-        char param[10];
+        char param[20];
 
         if ( http_get_key_str(req, "color", param, sizeof(param)) == ESP_OK ) {
-            if ( strcmp(param, "hex") == ESP_OK ) {  // color=hex&value=<color>
-                long hex;
-                err = http_get_key_long(req, "value", &hex);
+            if ( strcmp(param, "int") == ESP_OK ) {  // color=int&value=<color>
+                long color;
+                err = http_get_key_long(req, "value", &color);
                 if ( err == ESP_OK ) 
-                    ledctrl_set_color_hex( hex, 1); 
+                    ledctrl_set_color_int( color, 1); 
+            } else if ( strcmp(param, "hex") == ESP_OK ) { // color=int&value=RRGGBB
+                
+                err = http_get_key_str(req, "value", param, sizeof(param));
+                if ( err == ESP_OK ) {
+                    ledctrl_set_color_hex( param, 1); 
+                }
             } else if ( strcmp(param, "hsv") == ESP_OK) { // color=hsv&h=<h>&s=<s>&v=<v>
                 color_hsv_t *hsv = malloc( sizeof(color_hsv_t));
                 if ( http_get_key_uint16(req, "h", &hsv->h) == ESP_OK &&
@@ -548,12 +554,62 @@ esp_err_t ledctrl_get_handler(httpd_req_t *req)
                     err = ESP_OK;
                 }
                 free(rgb);
+            } else if ( strcmp(param, "rgb2") == ESP_OK) {
+                // color=rgb2&rgb=255,255,255
+                if ( http_get_key_str(req, "rgb", param, sizeof(param)) == ESP_OK )
+                {   
+                    char *istr = strtok (param,",");
+                    color_rgb_t *rgb = malloc(sizeof(color_rgb_t));
+                    rgb->r = atoi(istr);
+
+                    istr = strtok (NULL,",");
+                    rgb->g = atoi(istr);
+                    
+                    istr = strtok (NULL,",");
+                    rgb->b = atoi(istr);
+
+                    ledctrl_set_color_rgb(rgb, 1);
+                    err = ESP_OK;
+                    free(rgb);
+                }
+            } else if ( strcmp(param, "hsv2") == ESP_OK) {
+                // color=hsv2&hsv=320,100,100
+                ESP_LOGI(TAG, "%s", param);
+                if ( http_get_key_str(req, "hsv", param, sizeof(param)) == ESP_OK )
+                {   
+                    char *istr = strtok (param,",");
+                    color_hsv_t *hsv = malloc( sizeof(color_hsv_t));
+
+                    ESP_LOGI(TAG, "hsv %s", param);
+                    ESP_LOGI(TAG, "string hsv.h %s", istr);
+                    hsv->h = atoi(istr);
+                    ESP_LOGI(TAG, "int hsv.h %d", hsv->h);
+
+                    istr = strtok (NULL,",");
+                    ESP_LOGI(TAG, "string hsv.s %s", istr);
+                    hsv->s = atoi(istr);
+                    ESP_LOGI(TAG, "int hsv.s %d", hsv->s);
+
+                    istr = strtok (NULL,",");
+                    ESP_LOGI(TAG, "string hsv.v %s", istr);
+                    hsv->v = atoi(istr);
+                    ESP_LOGI(TAG, "int hsv.v %d", hsv->v);
+
+                    ledctrl_set_color_hsv(hsv, 1);
+                    err = ESP_OK;
+                    free(hsv);
+                }
             } 
         } else if ( http_get_key_str(req, "effect", param, sizeof(param)) == ESP_OK ) {
             // effect=<effect_id>&speed=<speed>
             long speed = 0;
             http_get_key_long(req, "speed", &speed);
             err = handle_color_effect_by_name(param, speed);
+        } else if ( http_get_key_str(req, "effectid", param, sizeof(param)) == ESP_OK ) {
+            // effectid=<effect_id>&speed=<speed>
+            long speed = 0;
+            http_get_key_long(req, "speed", &speed);
+            err = handle_color_effect_by_id(atoi(param), speed);
         } 
         
         uint16_t fade = 1000;

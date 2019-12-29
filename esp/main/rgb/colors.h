@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "esp_system.h"
+#include "../core/utils.h"
 
 /* hsv --> rgb */
 #define hue_t   uint16_t
@@ -71,7 +72,8 @@ color_hsv_t hsv;
 color_rgb_t *rgb;
 
 
-void  hex_to_rgb(uint32_t color32, volatile color_rgb_t *rgb);
+void  int_to_rgb(uint32_t color32, volatile color_rgb_t *rgb);
+void  hex_to_rgb(const char *color, volatile color_rgb_t *rgb);
 void  hsv_to_rgb(volatile color_rgb_t *rgb, const color_hsv_t hsv);
 void  rgb_to_hsv(const color_rgb_t *rgb, color_hsv_t *hsv);
 #endif

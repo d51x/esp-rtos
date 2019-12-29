@@ -72,8 +72,8 @@ void ledctrl_set_color_duty(color_e type, uint32_t duty);
 
 void ledctrl_set_color_rgb(const color_rgb_t *rgb, uint8_t del);
 void ledctrl_set_color_hsv(const color_hsv_t *hsv, uint8_t del);
-void ledctrl_set_color_hex(uint32_t color, uint8_t del);
-
+void ledctrl_set_color_int(uint32_t color, uint8_t del);
+void ledctrl_set_color_hex(const char *color, uint8_t del);
 
 void set_color_effect__jump3(uint32_t speed);
 void set_color_effect__jump7(uint32_t speed);
@@ -115,5 +115,7 @@ esp_err_t handle_color_effect_by_id(uint8_t id, uint32_t speed);
 
 esp_err_t handle_color_effect_default_by_name(char *effect_name);
 esp_err_t handle_color_effect_by_name(char *effect_name, uint32_t speed);
+
+void rgb_lights_off();
 
 #endif
