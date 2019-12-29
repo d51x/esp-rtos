@@ -18,10 +18,12 @@
 #define LEDCTRL_DEFAULT_SPEED_WHEEL 500
 
 #define MIN_HSV_V 1
-#define MAX_HSV_V 255
+//#define MAX_HSV_V 255
+#define MAX_HSV_V 100
 
 #define MIN_HSV_S 1
-#define MAX_HSV_S 255
+//#define MAX_HSV_S 255
+#define MAX_HSV_S 100
 
 #define COLOR_EFFECTS_MAX 13
 static const char *color_effects[COLOR_EFFECTS_MAX]  = {"jump3", "jump7", "jump12", "rndjump7", "rndjump12", 
