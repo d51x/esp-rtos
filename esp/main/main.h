@@ -31,20 +31,14 @@
 
 
 
-uint8_t pressed_count = 0;
-TimerHandle_t tmr_btn_pressed;
 QueueHandle_t xColorEffectQueue;
 
 void color_effect_message_task(void *arg);
-void vTmrPressCntCb( TimerHandle_t xTimer );
 void load_params_from_nvs();
 
 void ir_receiver_task(void *arg);
 
-void btn_short_press_cb(void *arg);
-void btn_rls_cb(void *arg);
-void btn_press_2sec_cb(void *arg);
-void btn_press_3sec_cb(void *arg);
-void btn_press_6sec_cb(void *arg);
-
+void press_1_cb();
+void press_2_cb();
+void press_3_cb();
 #endif 

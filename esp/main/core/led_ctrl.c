@@ -101,7 +101,7 @@ void ledctrl_set_color_rgb(const color_rgb_t *rgb, uint8_t del){
 
 void ledctrl_set_color_hsv(const color_hsv_t *hsv, uint8_t del)
 {
-	ESP_LOGI(TAG, "%s hsv: %d %d %d", __func__, hsv->h, hsv->s, hsv->v);
+	//ESP_LOGI(TAG, "%s hsv: %d %d %d", __func__, hsv->h, hsv->s, hsv->v);
 	if ( del ) ledctrl_delete_active_task();
 	color_rgb_t *rgb = malloc( sizeof(color_rgb_t));
 	memcpy(&__hsv, hsv, sizeof(color_hsv_t));
@@ -543,7 +543,7 @@ void ledctrl_delete_active_task(){
 
 
 esp_err_t handle_color_effect_by_id(uint8_t id, uint32_t speed) {
-	ESP_LOGI(TAG, "effect %d: %s", id, color_effects[id]);
+	//ESP_LOGI(TAG, "effect %d: %s", id, color_effects[id]);
 	if ( id >= COLOR_EFFECTS_MAX ) return ESP_FAIL;
 	esp_err_t err = ESP_OK;
 	switch (id) {

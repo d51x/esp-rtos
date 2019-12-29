@@ -259,34 +259,7 @@ void app_main(void){
     leds[3].bright_table = 1;
     */
     ledctrl_init(LED_FREQ_HZ, LED_CTRL_CNT, leds);
-
-    //xTaskCreate(set_color_effect__jump3, "color_jump3", 2048, 2000, 10, NULL);
-    //xTaskCreate(task_color_effect__jump3, "color_jump3", 2048, 2000, 10, NULL);
-    //set_color_effect__jump3(2000);
-    //xTaskCreate(set_color_effect__fade3, "color_fade3", 2048, 40, 10, NULL);
-    
-    //xTaskCreate(set_color_effect__jump7, "color_jump7", 2048, 2000, 10, NULL);    
-    //xTaskCreate(set_color_effect__fade7, "color_fade7", 2048, 2000, 10, NULL);  
-
-    //xTaskCreate(set_color_effect__jump12, "color_jump12", 2048, 2000, 10, NULL);    
-    //set_color_effect__fade12(20);    
-
-    //xTaskCreate(set_color_effect__rnd_jump7, "color_rndjump7", 2048, 2000, 10, NULL);    
-    //xTaskCreate(set_color_effect__rnd_fade7, "color_rndfade7", 2048, 2000, 10, NULL);    
-
-    //xTaskCreate(set_color_effect__rnd_jump12, "color_rndjump12", 2048, 2000, 10, NULL);    
-    //xTaskCreate(set_color_effect__rnd_fade12, "color_rndfade12", 2048, 2000, 10, NULL);    
-        
-    
-    //xTaskCreate(set_color_effect__wheel, "color_wheel", 2048, 40, 10, NULL);    
-    //xTaskCreate(set_color_effect__rnd_rdn, "color_rnd_rnd", 2048, 40, 10, NULL); 
-    //color_rgb_t rgb;
-    //rgb.r = 255;
-    //rgb.g = 0;
-    //rgb.b = 0;
-    //ledctrl_set_color_rgb(&rgb);
-
-    
+   
     xTaskCreate(color_effect_message_task, "color_effect_task", 2048, NULL, 10, NULL);
 
     button_handle_t btn_g4_h = configure_push_button(GPIO_NUM_4, BUTTON_ACTIVE_HIGH);
@@ -294,7 +267,7 @@ void app_main(void){
     if (btn_g4_h) {
         //button_set_evt_cb(btn_g4_h, BUTTON_CB_RELEASE, btn_short_press_cb, "RELEASE");
         //button_set_evt_cb(btn_g4_h, BUTTON_CB_PUSH, btn_event_cb, "PUSH");
-        button_set_evt_cb(btn_g4_h, BUTTON_CB_TAP, btn_short_press_cb, btn_g4_h);
+        ///////button_set_evt_cb(btn_g4_h, BUTTON_CB_TAP, btn_short_press_cb, btn_g4_h);
         //button_set_evt_cb(btn_g4_h, BUTTON_CB_SERIAL, btn_event_cb, "SERIAL");
         //button_add_on_press_cb(btn_handle, 3, btn_press_cb, NULL);
 
@@ -305,19 +278,32 @@ void app_main(void){
         // установка этого колбека перекрывает калл бек, указанный в event cb с типом CB_SERIAL
         //button_set_serial_cb(btn_g4_h, start_after_sec, interval_tick, test_serial_btn_cb, NULL);
 
-        uint32_t pressed_time = 4;
-        button_add_on_release_cb(btn_g4_h, pressed_time, btn_rls_cb, btn_g4_h);  
+        
+        button_cb *pressed_cb = calloc(3, sizeof(button_cb));
+        //button_cb pressed_cb[3];   // not working
+        pressed_cb[0] = &press_1_cb;
+        ESP_LOGI(TAG, "press_1_cb addr: %p", &press_1_cb);
+        ESP_LOGI(TAG, "pressed_cb[0]  :  %p", pressed_cb[0]);
 
-        pressed_time = 2;
-        button_add_on_press_cb(btn_g4_h, pressed_time, btn_press_2sec_cb, btn_g4_h);        
-   
-       pressed_time = 4;   // off
+        pressed_cb[1] = &press_2_cb;
+        ESP_LOGI(TAG, "press_2_cb addr: %p", &press_2_cb);
+        ESP_LOGI(TAG, "pressed_cb[1]  :  %p", pressed_cb[1]);
+
+        pressed_cb[2] = &press_3_cb;
+        ESP_LOGI(TAG, "press_3_cb addr: %p", &press_3_cb);
+        ESP_LOGI(TAG, "pressed_cb[2]  :  %p",pressed_cb[2]);
+
+
+        button_set_on_presscount_cb(btn_g4_h, 300, 3, pressed_cb);
+        // free(pressed_cb);   // do not free here, only when deinstall callback
+        uint32_t pressed_time = 4;
+        //button_add_on_release_cb(btn_g4_h, pressed_time, btn_rls_cb, btn_g4_h);  
+
+        pressed_time = 3;   // off
         button_add_on_press_cb(btn_g4_h, pressed_time, rgb_lights_off, NULL);  
 
-pressed_time = 10;   // off
+        pressed_time = 10;   // off
         button_add_on_press_cb(btn_g4_h, pressed_time, esp_restart, NULL);  
-
-        tmr_btn_pressed = xTimerCreate("tmr_press_cnt", 300  / portTICK_PERIOD_MS, pdFALSE, (void*)0, vTmrPressCntCb);
     } 
 
 }
@@ -335,14 +321,6 @@ void color_effect_message_task(void *arg){
     }
 }
 
-void handle_button_state(button_status_t state) {
-    switch (state) {
-        case BUTTON_STATE_IDLE: ESP_LOGD(TAG, "BUTTON_STATE_IDLE"); break;
-        case BUTTON_STATE_PUSH: ESP_LOGD(TAG, "BUTTON_STATE_PUSH"); break;
-        case BUTTON_STATE_PRESSED: ESP_LOGD(TAG, "BUTTON_STATE_PRESSED"); break;
-        default: break;
-    }
-}
 
 static void switch_effect() {
     static uint8_t effect_id = 0;
@@ -351,88 +329,7 @@ static void switch_effect() {
     if (effect_id >= COLOR_EFFECTS_MAX) effect_id = 0;
 }
 
-void vTmrPressCntCb( TimerHandle_t xTimer ){
-    ESP_LOGD(TAG, "Button just short pressed. Count %d", pressed_count);
-    if ( pressed_count == 1 ) {
-        switch_effect();
-    } else if ( pressed_count == 2) {
-        static uint16_t h = 0;
-        color_hsv_t *hsv = malloc( sizeof(color_hsv_t));
-        hsv->h = h; hsv->s = 100; hsv->v = 100;
-        ledctrl_set_color_hsv(hsv, 1);
-        h += 5;
-        free(hsv);
-    }
-    pressed_count = 0;
-    // if ( xTimer == NULL ) return;
-    // xTimerStop( xTimer, portMAX_DELAY );
-    // xTimerDelete( xTimer, portMAX_DELAY );
-    // xTimer = NULL;
 
-}
-
-void IRAM_ATTR btn_short_press_cb(void *arg)
-{
-    pressed_count++;
-    //ESP_LOGI(TAG, "Button just short pressed. Count %d", pressed_count);
-    
-    button_t *btn = (button_t *) arg;
-    handle_button_state(btn->state);  
-
-           if( xTimerIsTimerActive( tmr_btn_pressed ) == pdFALSE ) { // change timer period
-                //pressed_count = 0;
-                xTimerStart(tmr_btn_pressed, 0);
-           } else {
-                xTimerStop(tmr_btn_pressed, portMAX_DELAY);
-                xTimerReset(tmr_btn_pressed, portMAX_DELAY);
-           }
-}
-
-
-void IRAM_ATTR btn_rls_cb(void *arg){
-    ESP_LOGD(TAG, __func__);
-    button_t *btn = (button_t *) arg;
-    //ESP_LOGI(TAG, "Button long pressed. for %d sec", sec);
-    handle_button_state(btn->state);
-}
-
-void btn_press_2sec_cb(void *arg) {
-   ESP_LOGD(TAG, __func__);
-    button_t *btn = (button_t *) arg;
-    //ESP_LOGI(TAG, "Button long pressed. for %d sec", sec);
-    handle_button_state(btn->state);
-}
-
-void btn_press_3sec_cb(void *arg){
-   ESP_LOGD(TAG, __func__);
-    button_t *btn = (button_t *) arg;
-    //ESP_LOGI(TAG, "Button long pressed. for %d sec", sec);
-    handle_button_state(btn->state);
-}
-
-void btn_press_6sec_cb(void *arg){
-   ESP_LOGD(TAG, __func__);
-    button_t *btn = (button_t *) arg;
-    //ESP_LOGI(TAG, "Button long pressed. for %d sec", sec);
-    handle_button_state(btn->state);
-}
-
-/*
-void IRAM_ATTR btn_tap_cb(void *arg)
-{
-    ESP_LOGI(TAG, "Button tap");
-}
-*/
-
-/*
-void IRAM_ATTR push_btn_press_cb(void *arg){
-    // срабатывает при удержании в нажатом состоянии 3 сек и более
-    // если держать 5-6-9 сек, то событие произойдет 1 раз через 3 сек после нажатия
-    // дальнейшие удержания не будут учитываться
-    uint32_t sec = (uint32_t *)arg;
-    ESP_LOGI(TAG, "%d: Button pressed for %d sec", cur_sec(), sec);
-}
-*/
 
 void ir_receiver_task(void *arg) {
 	
@@ -452,3 +349,18 @@ void ir_receiver_task(void *arg) {
 	vTaskDelete(NULL);
 }
 
+
+void press_1_cb() {
+    ESP_LOGI(TAG, "*** PRESSED COUNT 1 ***");
+}
+
+void press_2_cb() {
+    ESP_LOGI(TAG, "PRESSED COUNT 2");
+    ESP_LOGI(TAG, "PRESSED COUNT 2");
+}
+
+void press_3_cb() {
+    ESP_LOGI(TAG, "PRESSED COUNT 3");
+    ESP_LOGI(TAG, "PRESSED COUNT 3");
+    ESP_LOGI(TAG, "PRESSED COUNT 3");
+}

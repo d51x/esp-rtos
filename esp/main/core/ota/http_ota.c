@@ -119,6 +119,7 @@ esp_err_t ota_task_upgrade_from_url(char *err_text){
         return ESP_ERR_NO_MEM;
     }
 
+//recv
     //=========================================================================================
     int binary_file_len = 0;
     uint8_t retry_count = 0;
