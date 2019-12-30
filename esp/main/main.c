@@ -265,9 +265,9 @@ void app_main(void){
     button_handle_t btn_g4_h = configure_push_button(GPIO_NUM_4, BUTTON_ACTIVE_HIGH);
     
     if (btn_g4_h) {
-        //button_set_evt_cb(btn_g4_h, BUTTON_CB_RELEASE, btn_short_press_cb, "RELEASE");
-        //button_set_evt_cb(btn_g4_h, BUTTON_CB_PUSH, btn_event_cb, "PUSH");
-        ///////button_set_evt_cb(btn_g4_h, BUTTON_CB_TAP, btn_short_press_cb, btn_g4_h);
+        //button_set_evt_cb(btn_g4_h, BUTTON_CB_RELEASE, button_release_event_cb, "RELEASE");
+        //button_set_evt_cb(btn_g4_h, BUTTON_CB_PUSH, button_push_event_cb, "PUSH");
+        //button_set_evt_cb(btn_g4_h, BUTTON_CB_TAP, button_tap_event_cb, "TAP (short press)");
         //button_set_evt_cb(btn_g4_h, BUTTON_CB_SERIAL, btn_event_cb, "SERIAL");
         //button_add_on_press_cb(btn_handle, 3, btn_press_cb, NULL);
 
@@ -282,28 +282,19 @@ void app_main(void){
         button_cb *pressed_cb = calloc(3, sizeof(button_cb));
         //button_cb pressed_cb[3];   // not working
         pressed_cb[0] = &press_1_cb;
-        ESP_LOGI(TAG, "press_1_cb addr: %p", &press_1_cb);
-        ESP_LOGI(TAG, "pressed_cb[0]  :  %p", pressed_cb[0]);
-
         pressed_cb[1] = &press_2_cb;
-        ESP_LOGI(TAG, "press_2_cb addr: %p", &press_2_cb);
-        ESP_LOGI(TAG, "pressed_cb[1]  :  %p", pressed_cb[1]);
-
         pressed_cb[2] = &press_3_cb;
-        ESP_LOGI(TAG, "press_3_cb addr: %p", &press_3_cb);
-        ESP_LOGI(TAG, "pressed_cb[2]  :  %p",pressed_cb[2]);
 
-
-        button_set_on_presscount_cb(btn_g4_h, 300, 3, pressed_cb);
+        button_set_on_presscount_cb(btn_g4_h, 500, 3, pressed_cb);
         // free(pressed_cb);   // do not free here, only when deinstall callback
         uint32_t pressed_time = 4;
-        //button_add_on_release_cb(btn_g4_h, pressed_time, btn_rls_cb, btn_g4_h);  
+        button_add_on_release_cb(btn_g4_h, pressed_time, btn_rls_4s_cb, btn_g4_h);  
 
-        pressed_time = 3;   // off
-        button_add_on_press_cb(btn_g4_h, pressed_time, rgb_lights_off, NULL);  
+        pressed_time = 2;   // off
+        button_add_on_press_cb(btn_g4_h, pressed_time, button_hold_3s_cb, NULL);  
 
         pressed_time = 10;   // off
-        button_add_on_press_cb(btn_g4_h, pressed_time, esp_restart, NULL);  
+        button_add_on_press_cb(btn_g4_h, pressed_time, button_hold_10s_cb, NULL);  
     } 
 
 }
@@ -350,17 +341,39 @@ void ir_receiver_task(void *arg) {
 }
 
 
+// ===================== buttons callbacks ======================================
+void button_push_event_cb(void *arg) {
+    ESP_LOGI(TAG, "%s %s", __func__, (char*)arg);
+}
+
+void button_release_event_cb(void *arg) {
+    ESP_LOGI(TAG, "%s %s", __func__, (char*)arg);
+}
+
+void button_tap_event_cb(void *arg) {
+    ESP_LOGI(TAG, "%s %s", __func__, (char*)arg);
+}
+
+void button_hold_3s_cb() {
+    ESP_LOGI(TAG, "%s %s", __func__, "Hold for 3 sec");
+}
+
+void button_hold_10s_cb() {
+    ESP_LOGI(TAG, "%s %s", __func__, "Hold for 10 sec");
+}
+
+void btn_rls_4s_cb() {
+    ESP_LOGI(TAG, "%s %s", __func__, "Release after 4 sec");
+}
+
 void press_1_cb() {
-    ESP_LOGI(TAG, "*** PRESSED COUNT 1 ***");
+    ESP_LOGI(TAG, "PRESSED COUNT 1");
 }
 
 void press_2_cb() {
     ESP_LOGI(TAG, "PRESSED COUNT 2");
-    ESP_LOGI(TAG, "PRESSED COUNT 2");
 }
 
 void press_3_cb() {
-    ESP_LOGI(TAG, "PRESSED COUNT 3");
-    ESP_LOGI(TAG, "PRESSED COUNT 3");
     ESP_LOGI(TAG, "PRESSED COUNT 3");
 }

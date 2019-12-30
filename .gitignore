@@ -3,3 +3,5 @@ esp/webpages/
 esp/main/dsw_bak/
 esp/main/bak/
 esp/main/history.txt
+esp/logs/
+*.bak

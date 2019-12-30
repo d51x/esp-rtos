@@ -33,65 +33,33 @@ static void button_press_cb(xTimerHandle tmr)
     }
 }
 
+// поиск в массиве колбеков короткого нажатия по индексу
+static void btn_short_press_by_count(uint8_t id, button_t *btn) {
+    if ( btn->tap_psh2_cb.arg == NULL ) return;
+    button_cb *cb = calloc(btn->tap_psh2_cb.on_press, sizeof(button_cb));
+    cb = (button_cb *)btn->tap_psh2_cb.arg;
+    cb[id](NULL);
+    free(cb);
+}
+
+// callback таймера для обработки коротких нажатий
 static void button_tap_psh2_cb(xTimerHandle tmr)
 {
     button_cb_t *btn_cb = (button_cb_t *) pvTimerGetTimerID(tmr);
     button_t *btn = btn_cb->pbtn;
 
-    // callbacks count  .on_press
-    // callbacks functions - arg - (button_cb *)cb;
-    if ( btn->tap_psh2_cb.on_press > 0 ) {
-        //ESP_LOGI(TAG, "pressed callbacks count %d", btn->tap_psh2_cb.on_press);
+    if ( btn->tap_psh2_cb.on_press > 0  ) {
         uint8_t cb_id = pressed_count - 1;
-        ESP_LOGI(TAG, "pressed callback id %d", cb_id);
         if ( cb_id < btn->tap_psh2_cb.on_press) {
-
-
-          ESP_LOGI(TAG, "psh2: btn->tap_psh2_cb.arg addr: %p", btn->tap_psh2_cb.arg);
-            /*
-            button_cb cb[btn->tap_psh2_cb.on_press];
-            memcpy(&cb, (button_cb *)btn->tap_psh2_cb.arg, btn->tap_psh2_cb.on_press*sizeof(button_cb));
-            */
-            button_cb *cb = calloc(btn->tap_psh2_cb.on_press, sizeof(button_cb));
-            cb = (button_cb *)btn->tap_psh2_cb.arg;
-
-            ESP_LOGI(TAG, "psh2: cb addr: %p", cb);
-
-
-
-
-             for (int i=0; i < btn->tap_psh2_cb.on_press; i++) {
-                 ESP_LOGI(TAG, "psh2: cb[%d] addr: %p", i, cb[i]);
-             }
-    
-                 cb[cb_id](NULL);
-             free(cb);
-
-        } else {
-            ESP_LOGI(TAG, "callback id %d not installed", cb_id);
+            if ( btn->state == BUTTON_STATE_IDLE ) {
+                // сработает, только после отпускания кнопки 
+                // если было одно короткое нажатие, но дольше времени таймера, то это короткое нажатие здесь не сработает
+                // его обработка в button_tap_rls_cb
+                btn_short_press_by_count(cb_id, btn);
+            }    
         }
-
-    } else { 
-        ESP_LOGI(TAG, "No one pressed callback found");
     }
-    
-/*
-     if ( pressed_count == 1 ) {
-        ESP_LOGI(TAG, "pressed count 1, run one push callback");
-
-            if (btn->tap_psh_cb.cb) {
-                
-                btn->tap_psh_cb.cb(btn->tap_psh_cb.arg);
-                
-                        
-            }
-
-    } else if ( pressed_count == 2) {
-        ESP_LOGI(TAG, "pressed count %d", pressed_count);
-    }
-    */
     pressed_count = 0;    
-
 }
 
 static void button_tap_psh_cb(xTimerHandle tmr)
@@ -107,10 +75,6 @@ static void button_tap_psh_cb(xTimerHandle tmr)
         // True implies key is pressed
         btn->state = BUTTON_STATE_PUSH;
         pressed_count++;
-         ESP_LOGI(TAG, "***** pressed count %d", pressed_count);
-
-ESP_LOGI(TAG, "button_tap_psh_cb: btn->tap_psh2_cb.arg addr: %p", btn->tap_psh2_cb.arg);
-
 
         if (btn->press_serial_cb.tmr) {
             xTimerChangePeriod(btn->press_serial_cb.tmr, btn->serial_thres_sec * 1000 / portTICK_PERIOD_MS, portMAX_DELAY);
@@ -127,13 +91,9 @@ ESP_LOGI(TAG, "button_tap_psh_cb: btn->tap_psh2_cb.arg addr: %p", btn->tap_psh2_
 
         }
   
-        
-            if (btn->tap_psh_cb.cb) {
-                
-                btn->tap_psh_cb.cb(btn->tap_psh_cb.arg);
-                
-                        
-            }
+        if (btn->tap_psh_cb.cb) {
+            btn->tap_psh_cb.cb(btn->tap_psh_cb.arg);
+        }
         
     } else {
         // 50ms, check if this is a real key up
@@ -144,8 +104,11 @@ ESP_LOGI(TAG, "button_tap_psh_cb: btn->tap_psh2_cb.arg addr: %p", btn->tap_psh2_
     }
 }
 
+
+
 static void button_tap_rls_cb(xTimerHandle tmr)
 {
+    
     button_cb_t *btn_cb = (button_cb_t *) pvTimerGetTimerID(tmr);
     button_t *btn = btn_cb->pbtn;
     xTimerStop(btn->tap_rls_cb.tmr, portMAX_DELAY);
@@ -166,6 +129,11 @@ static void button_tap_rls_cb(xTimerHandle tmr)
             xQueueReceive(btn->taskq, &task, 0);
             xQueueReceive(btn->argq, &arg, 0);
             task(arg);
+        } else {
+            // добавил условие, если нажатие было коротким, но дольше, чем таймер отслеживания коротких нажатий
+            // и не сработал другой callback, например, на удержание 1-2 сек, то запустим callback первого короткого нажатия
+            if ( btn->state == BUTTON_STATE_PUSH && xTimerIsTimerActive(btn->tap_psh2_cb.tmr) == pdFALSE ) 
+                btn_short_press_by_count(0, btn);
         }
         if (btn->press_serial_cb.tmr && btn->press_serial_cb.tmr != NULL) {
             xTimerStop(btn->press_serial_cb.tmr, portMAX_DELAY);
@@ -280,6 +248,8 @@ button_handle_t button_create(gpio_num_t gpio_num, button_active_t active_level)
     btn->tap_psh_cb.pbtn = btn;
     btn->tap_psh_cb.tmr = xTimerCreate("btn_psh_tmr", btn->tap_psh_cb.interval, pdFALSE, &btn->tap_psh_cb, button_tap_psh_cb);    
     
+    // callback для отслеживания коротких нажатий, срабатывает при отпускании кнопки после короткого нажатия 
+    // или после последнего из серии нескольких коротких нажатий
     btn->tap_psh2_cb.arg = NULL;
     btn->tap_psh2_cb.on_press = 0;
     btn->tap_psh2_cb.cb = NULL;
@@ -384,38 +354,19 @@ esp_err_t button_add_on_press_cb(button_handle_t btn_handle, uint32_t press_sec,
 }
 
 
+// регистрация массива колбеков коротких нажатий
 // установить кол-во и функции кол-беков при одинарном, двойном, и т.д. нажатии в указанный интервал
 esp_err_t button_set_on_presscount_cb(button_handle_t btn_handle, uint32_t pressed_interval, uint8_t cbs_count, button_cb *cbs)
 {
-    // нужно сюда получить массив функций колбеков
-    
     POINT_ASSERT(TAG, btn_handle, ESP_ERR_INVALID_ARG);
     IOT_CHECK(TAG, cbs_count != 0, ESP_ERR_INVALID_ARG);
     IOT_CHECK(TAG, pressed_interval != 0, ESP_ERR_INVALID_ARG);
     button_t *btn = (button_t *) btn_handle;
-    
-
-
-
-   // ESP_LOGI(TAG, "install: *cbs addr: %p", *cbs);
-    // for (int i=0;i<cbs_count;i++) {
-    //     ESP_LOGI(TAG, "install: cbs[%d] addr: %p", i, cbs[i]);
-    // }
-
     btn->tap_psh2_cb.arg = cbs;
-    //ESP_LOGI(TAG, "install: btn->tap_psh2_cb.arg addr: %p", btn->tap_psh2_cb.arg);
- 
-    //  button_cb *r =  (button_cb *)btn->tap_psh2_cb.arg;
-    //  ESP_LOGI(TAG, "install: r addr: %p", r);
-    //  for (int i=0;i<cbs_count;i++) {
-    //      ESP_LOGI(TAG, "install: r[%d] addr: %p", i, r[i]);
-    //   }
-
     btn->tap_psh2_cb.cb = NULL;
     btn->tap_psh2_cb.on_press = cbs_count;
     btn->tap_psh2_cb.interval = pressed_interval / portTICK_PERIOD_MS;
     btn->tap_psh2_cb.pbtn = btn;
-
     return ESP_OK;
 }
 
