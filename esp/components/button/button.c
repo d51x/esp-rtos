@@ -36,10 +36,12 @@ static void button_press_cb(xTimerHandle tmr)
 // поиск в массиве колбеков короткого нажатия по индексу
 static void btn_short_press_by_count(uint8_t id, button_t *btn) {
     if ( btn->tap_psh2_cb.arg == NULL ) return;
-    button_cb *cb = calloc(btn->tap_psh2_cb.on_press, sizeof(button_cb));
-    cb = (button_cb *)btn->tap_psh2_cb.arg;
+    ESP_LOGD(TAG, "%s %d", __func__, id);
+    //button_cb *cb = calloc(btn->tap_psh2_cb.on_press, sizeof(button_cb));
+    button_cb *cb = (button_cb *)btn->tap_psh2_cb.arg;
+    ESP_LOGV(TAG, "add %p", cb[id]);
     cb[id](NULL);
-    free(cb);
+    //free(cb);
 }
 
 // callback таймера для обработки коротких нажатий
@@ -228,7 +230,7 @@ esp_err_t button_delete(button_handle_t btn_handle)
 button_handle_t button_create(gpio_num_t gpio_num, button_active_t active_level) {
     //if ( gpio_num >= GPIO_MAX_NUM) return NULL;
     IOT_CHECK(TAG, gpio_num < GPIO_NUM_MAX, NULL);
-    ESP_LOGI(TAG, __func__);
+    ESP_LOGD(TAG, __func__);
     button_t *btn = (button_t *) calloc(1, sizeof(button_t));  // выделили память под button структуру
     POINT_ASSERT(TAG, btn, NULL);
     btn->io_num = gpio_num;

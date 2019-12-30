@@ -265,20 +265,6 @@ void app_main(void){
     button_handle_t btn_g4_h = configure_push_button(GPIO_NUM_4, BUTTON_ACTIVE_HIGH);
     
     if (btn_g4_h) {
-        //button_set_evt_cb(btn_g4_h, BUTTON_CB_RELEASE, button_release_event_cb, "RELEASE");
-        //button_set_evt_cb(btn_g4_h, BUTTON_CB_PUSH, button_push_event_cb, "PUSH");
-        //button_set_evt_cb(btn_g4_h, BUTTON_CB_TAP, button_tap_event_cb, "TAP (short press)");
-        //button_set_evt_cb(btn_g4_h, BUTTON_CB_SERIAL, btn_event_cb, "SERIAL");
-        //button_add_on_press_cb(btn_handle, 3, btn_press_cb, NULL);
-
-        //uint32_t start_after_sec = 4;
-        //TickType_t interval_tick = 5 * 1000 / portTICK_PERIOD_MS;
-        // событие сработает с 4-ой секунды
-        // событие будет срабатывать каждую 5-ю секунду, начиная с 4-ой, т.е. 4, 9, 14, 19, 24 ....
-        // установка этого колбека перекрывает калл бек, указанный в event cb с типом CB_SERIAL
-        //button_set_serial_cb(btn_g4_h, start_after_sec, interval_tick, test_serial_btn_cb, NULL);
-
-        
         button_cb *pressed_cb = calloc(3, sizeof(button_cb));
         //button_cb pressed_cb[3];   // not working
         pressed_cb[0] = &press_1_cb;
@@ -287,14 +273,11 @@ void app_main(void){
 
         button_set_on_presscount_cb(btn_g4_h, 500, 3, pressed_cb);
         // free(pressed_cb);   // do not free here, only when deinstall callback
-        uint32_t pressed_time = 4;
-        button_add_on_release_cb(btn_g4_h, pressed_time, btn_rls_4s_cb, btn_g4_h);  
-
-        pressed_time = 2;   // off
-        button_add_on_press_cb(btn_g4_h, pressed_time, button_hold_3s_cb, NULL);  
+        uint32_t pressed_time = 2;
+        button_add_on_press_cb(btn_g4_h, pressed_time, rgb_lights_off, NULL);  
 
         pressed_time = 10;   // off
-        button_add_on_press_cb(btn_g4_h, pressed_time, button_hold_10s_cb, NULL);  
+        button_add_on_press_cb(btn_g4_h, pressed_time, esp_restart, NULL);  
     } 
 
 }
@@ -315,7 +298,9 @@ void color_effect_message_task(void *arg){
 
 static void switch_effect() {
     static uint8_t effect_id = 0;
-    xQueueSendToFront( xColorEffectQueue, ( void * ) &effect_id, 0); 
+    ESP_LOGI(TAG, "effect: %d", effect_id);
+    //xQueueSendToFront( xColorEffectQueue, ( void * ) &effect_id, 0); 
+    handle_color_effect_default_by_id(effect_id);
     effect_id++;
     if (effect_id >= COLOR_EFFECTS_MAX) effect_id = 0;
 }
@@ -340,40 +325,33 @@ void ir_receiver_task(void *arg) {
 	vTaskDelete(NULL);
 }
 
-
 // ===================== buttons callbacks ======================================
-void button_push_event_cb(void *arg) {
-    ESP_LOGI(TAG, "%s %s", __func__, (char*)arg);
+void IRAM_ATTR press_1_cb() {
+    ESP_LOGI(TAG, __func__);
+    switch_effect();
 }
 
-void button_release_event_cb(void *arg) {
-    ESP_LOGI(TAG, "%s %s", __func__, (char*)arg);
-}
-
-void button_tap_event_cb(void *arg) {
-    ESP_LOGI(TAG, "%s %s", __func__, (char*)arg);
-}
-
-void button_hold_3s_cb() {
-    ESP_LOGI(TAG, "%s %s", __func__, "Hold for 3 sec");
-}
-
-void button_hold_10s_cb() {
-    ESP_LOGI(TAG, "%s %s", __func__, "Hold for 10 sec");
-}
-
-void btn_rls_4s_cb() {
-    ESP_LOGI(TAG, "%s %s", __func__, "Release after 4 sec");
-}
-
-void press_1_cb() {
-    ESP_LOGI(TAG, "PRESSED COUNT 1");
-}
-
+static uint16_t h = 0;
 void press_2_cb() {
-    ESP_LOGI(TAG, "PRESSED COUNT 2");
+    ESP_LOGI(TAG, __func__);
+    ESP_LOGI(TAG, "plus hsv: %d", h);
+    color_hsv_t *hsv = malloc( sizeof(color_hsv_t));
+    hsv->h = h; hsv->s = 100; hsv->v = 100;
+    ledctrl_set_color_hsv(hsv, 1);
+    if ( h <=354 )
+        h += 5;
+    else h = 359;
+    free(hsv);
 }
 
 void press_3_cb() {
-    ESP_LOGI(TAG, "PRESSED COUNT 3");
+    ESP_LOGI(TAG, __func__);
+    if ( h >= 5) h -= 5;
+    else h = 0;    
+    ESP_LOGI(TAG, "minus hsv: %d", h);
+    color_hsv_t *hsv = malloc( sizeof(color_hsv_t));
+    hsv->h = h; hsv->s = 100; hsv->v = 100;
+    ledctrl_set_color_hsv(hsv, 1);
+
+    free(hsv);
 }

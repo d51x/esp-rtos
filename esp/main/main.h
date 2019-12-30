@@ -42,11 +42,5 @@ void press_1_cb();
 void press_2_cb();
 void press_3_cb();
 
-void button_push_event_cb(void *arg);
-void button_release_event_cb(void *arg);
-void button_tap_event_cb(void *arg);
-void button_hold_3s_cb();
-void button_hold_10s_cb();
-void btn_rls_4s_cb();
 
 #endif 
