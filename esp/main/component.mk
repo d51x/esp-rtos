@@ -7,6 +7,6 @@ COMPONENT_SRCDIRS := 	. \
 						core/drivers \
 						core/ota \
 						rgb
-
+						
 COMPONENT_EMBED_FILES := 	${PROJECT_PATH}/main/web/favicon.ico \
 							${PROJECT_PATH}/main/web/main.css 

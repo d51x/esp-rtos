@@ -6,10 +6,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include "driver/gpio.h"
-#include "gpio.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/portmacro.h"
+#include "freertos/timers.h"
+#include "freertos/queue.h"
 
 
 typedef void *button_handle_t;      // button object

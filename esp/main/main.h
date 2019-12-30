@@ -25,7 +25,7 @@
 #include "core/utils.h"
 #include "rgb/colors.h"
 #include "core/led_ctrl.h"
-#include "core/button.h"
+#include "button.h"
 
 
 
