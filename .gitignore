@@ -5,3 +5,6 @@ esp/main/bak/
 esp/main/history.txt
 esp/logs/
 *.bak
+*/build/*
+*_bak/*
+*/*_bak/*

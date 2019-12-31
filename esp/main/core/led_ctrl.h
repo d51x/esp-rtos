@@ -39,7 +39,10 @@ typedef struct {
 	uint16_t fade_up_time;
 	uint16_t fade_down_time;
 	uint8_t	  bright_table;  // указатель на таблицу яркости
-} led_ctrl_config_t;
+    // TODO: указатель на функцию ledctrl_set_duty, 
+    // TODO: указатель на функцию ledctrl_update
+} led_ctrl_config_t;   // структура для конкретного канала ledctrl 
+// TODO: функция register ledctrl channel, вернет handle на канал
 
 typedef enum {
     JUMP,               // only on 
@@ -71,7 +74,10 @@ typedef struct {
 void ledctrl_init(uint16_t freq, uint8_t led_cnt, const led_ctrl_config_t *_led_ctrl_cfg);
 void ledctrl_set_duty(uint32_t ledc_channel, uint32_t ledc_duty);
 void ledctrl_update();
+
+// установить duty канала по цвету канала
 void ledctrl_set_color_duty(color_e type, uint32_t duty);
+
 void ledctrl_delete_active_task();
 
 // ========================= color control ========================================
