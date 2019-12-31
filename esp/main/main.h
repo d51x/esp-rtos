@@ -31,14 +31,12 @@
 
 
 
-QueueHandle_t xColorEffectQueue;
-
-void color_effect_message_task(void *arg);
 void load_params_from_nvs();
 
 void ir_receiver_task(void *arg);
 
 void press_1_cb();
+void hold_1s_cb();
 void press_2_cb();
 void press_3_cb();
 

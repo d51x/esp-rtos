@@ -31,6 +31,8 @@ static void* pcolors = NULL;
 
 static TaskHandle_t xHanldeLedCtrl = NULL;
 
+static int8_t effect_id = -1;
+
 void ledctrl_init(uint16_t freq, uint8_t led_cnt, const led_ctrl_config_t *_led_ctrl_cfg) {
 	ESP_LOGI(TAG, __func__);
 	uint32_t *led_pins = malloc(led_cnt * sizeof(uint32_t));
@@ -576,6 +578,7 @@ esp_err_t handle_color_effect_by_name(char *effect_name, uint32_t speed) {
 	esp_err_t err = ESP_FAIL;
 	for (int i=0; i<COLOR_EFFECTS_MAX;i++) {
 		if ( strcmp( effect_name, color_effects[i]) == ESP_OK ) {
+			effect_id = i;
 			err = handle_color_effect_by_id(i, speed);
 			break;
 		}
@@ -584,10 +587,32 @@ esp_err_t handle_color_effect_by_name(char *effect_name, uint32_t speed) {
 }
 
 esp_err_t handle_color_effect_default_by_name(char *effect_name) {
+	// TODO: get current speed
 	return handle_color_effect_by_name(effect_name, 0);
 }
 
 void rgb_lights_off(){
 	ESP_LOGI(TAG, "lights off");
 	ledctrl_set_color_hex( 0, 1 ); 
+}
+
+void set_next_color_effect()
+{
+	if ( effect_id < -1) effect_id = -1;
+	effect_id++;
+	if (effect_id >= COLOR_EFFECTS_MAX) effect_id = 0;
+
+	ESP_LOGI(TAG, "effect: %d", effect_id);
+	// TODO: get current speed
+	handle_color_effect_default_by_id(effect_id);
+	
+}
+
+void set_prev_color_effect()
+{
+	if ( effect_id < 0) effect_id = 0;
+	if ( effect_id > 0 ) effect_id--; // return to current eefect_id after set_next_color_effect
+	ESP_LOGI(TAG, "effect: %d", effect_id);
+	// TODO: get current speed
+	handle_color_effect_default_by_id(effect_id);
 }

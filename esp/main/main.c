@@ -260,20 +260,21 @@ void app_main(void){
     */
     ledctrl_init(LED_FREQ_HZ, LED_CTRL_CNT, leds);
    
-    xTaskCreate(color_effect_message_task, "color_effect_task", 2048, NULL, 10, NULL);
-
     button_handle_t btn_g4_h = configure_push_button(GPIO_NUM_4, BUTTON_ACTIVE_HIGH);
     
     if (btn_g4_h) {
         button_cb *pressed_cb = calloc(3, sizeof(button_cb));
         //button_cb pressed_cb[3];   // not working
-        pressed_cb[0] = &press_1_cb;
-        pressed_cb[1] = &press_2_cb;
+        pressed_cb[0] = &press_1_cb;  // set_next_color_effect
+        pressed_cb[1] = &press_2_cb;  // 
         pressed_cb[2] = &press_3_cb;
 
         button_set_on_presscount_cb(btn_g4_h, 500, 3, pressed_cb);
         // free(pressed_cb);   // do not free here, only when deinstall callback
-        uint32_t pressed_time = 2;
+        uint32_t pressed_time = 1;
+        button_add_on_press_cb(btn_g4_h, pressed_time, hold_1s_cb, NULL);  
+
+        pressed_time = 2;
         button_add_on_press_cb(btn_g4_h, pressed_time, rgb_lights_off, NULL);  
 
         pressed_time = 10;   // off
@@ -281,31 +282,6 @@ void app_main(void){
     } 
 
 }
-
-void color_effect_message_task(void *arg){
-    if (xColorEffectQueue == NULL ) {
-        xColorEffectQueue = xQueueCreate(2, sizeof(uint8_t));
-    }
-    uint8_t effect_id;
-    for( ;; ) {
-        if ( xQueueReceive( xColorEffectQueue, &effect_id, (portTickType)portMAX_DELAY ) == pdPASS ) {
-            handle_color_effect_default_by_id(effect_id);
-        } 
-        taskYIELD();  
-    }
-}
-
-
-static void switch_effect() {
-    static uint8_t effect_id = 0;
-    ESP_LOGI(TAG, "effect: %d", effect_id);
-    //xQueueSendToFront( xColorEffectQueue, ( void * ) &effect_id, 0); 
-    handle_color_effect_default_by_id(effect_id);
-    effect_id++;
-    if (effect_id >= COLOR_EFFECTS_MAX) effect_id = 0;
-}
-
-
 
 void ir_receiver_task(void *arg) {
 	
@@ -327,8 +303,12 @@ void ir_receiver_task(void *arg) {
 
 // ===================== buttons callbacks ======================================
 void IRAM_ATTR press_1_cb() {
-    ESP_LOGI(TAG, __func__);
-    switch_effect();
+    set_next_color_effect();
+}
+
+void hold_1s_cb()
+{
+    set_prev_color_effect();
 }
 
 static uint16_t h = 0;
