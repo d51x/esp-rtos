@@ -8,3 +8,8 @@ esp/logs/
 */build/*
 *_bak/*
 */*_bak/*
+*_
+*.*1
+*.old
+*.rej
+*.code-workspace
