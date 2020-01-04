@@ -15,8 +15,8 @@
 #define CORE_FW_VER "1.12"
 
 ledcontrol_t *ledc;
-// rgbcontrol_t *rgb_ledc;
-// effects_t* effects;
+ rgbcontrol_t *rgb_ledc;
+ effects_t* effects;
 relay_handle_t relay02, relay12, relay13, relay15; 
 
 relay_handle_t relays[4];

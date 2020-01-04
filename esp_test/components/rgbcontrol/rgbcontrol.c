@@ -211,15 +211,32 @@ void rgbcontrol_print_html_data(char *data){
     if ( ee == NULL ) return;
 
     const char *effects_data = "<div class=\"effect\">"
-                                "<p><span><b>Color effect:</b> %s (%d)</span></p>"
+                                
+                                "<p><span><b>Color effect:</b></span>"
+                                //"<span id=\"color\">%s (%d)</span>"
+                                "<select id=\"effects\" onchange=\"effects()\">"
+                                "%s"
+                                "</select>"
+                                "</p>"
                                 "<p><span><b>HSV color:</b> %d %d %d</span></p>"
                                 "<p><span><b>RGB color:</b> %d %d %d</span></p>"
                                 "</div>";
 
+    const char *effects_item = "<option value=\"%d\" %s>%s</option>";
+    char select[600] = "";
+    for (int i=0; i < COLOR_EFFECTS_MAX; i++ ) {
+        effect_t *e = ee->effect + i;
+        sprintf(select+strlen(select), effects_item, i, 
+                                                     (ee->effect_id == i || ( i == COLOR_EFFECTS_MAX-1 && ee->effect_id == -1) ) ? "selected=\"selected\" " : "",
+                                                     e->name);
+    }
+    
     effect_t *e = ee->effect + ee->effect_id;
     color_rgb_t rgb;
     hsv_to_rgb(&rgb, rgb_ctrl->hsv);
-    sprintf(data+strlen(data), effects_data, (ee->effect_id == -1) ? "color" : e->name, ee->effect_id, 
+    sprintf(data+strlen(data), effects_data, 
+                                             //(ee->effect_id == -1) ? "color" : e->name, ee->effect_id, 
+                                             select,
                                              rgb_ctrl->hsv.h, rgb_ctrl->hsv.s, rgb_ctrl->hsv.v, 
                                              rgb.r, rgb.g, rgb.b);
                                     

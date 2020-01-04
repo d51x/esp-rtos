@@ -104,17 +104,17 @@ void app_main(void){
     add_uri_get_handler( http_server, ledc->uri, ledc->http_get_handler);
 
     //rgb_ledc = rgbcontrol_init(ledc, ch_red, ch_green, ch_blue);
-    //rgb_ledc = rgbcontrol_init(ledc, &ch_red, &ch_green, &ch_blue);
+    rgb_ledc = rgbcontrol_init(ledc, &ch_red, &ch_green, &ch_blue);
     
 //ESP_LOGI(TAG, "### red addr %p", &ch_red);
 //ESP_LOGI(TAG, "### green addr %p", &ch_green);
 //ESP_LOGI(TAG, "### blue addr %p", &ch_blue);
 
-    //effects = effects_init( rgb_ledc, rgb_ledc->set_color_hsv );
-    //rgb_ledc->set_effects( effects );
+    effects = effects_init( rgb_ledc, rgb_ledc->set_color_hsv );
+    rgb_ledc->set_effects( effects );
 
     //ESP_LOGI(TAG, "rgb_ledc->http_get_handler addr: %p", rgb_ledc->http_get_handler);
-    //add_uri_get_handler( http_server, rgb_ledc->uri, rgb_ledc->http_get_handler);
+    add_uri_get_handler( http_server, rgb_ledc->uri, rgb_ledc->http_get_handler);
 
     button_handle_t btn_g4_h = configure_push_button(GPIO_NUM_4, BUTTON_ACTIVE_HIGH);
     if (btn_g4_h) {
@@ -147,7 +147,9 @@ void app_main(void){
     relays[1] = relay12;
     relays[2] = relay13;
     relays[3] = relay15;
-
+    for (int i=0;i<4;i++){
+        relay_write(relays[i], RELAY_STATE_CLOSE);
+    }
 }
 
 // будет поочереди, чтобы одновременно, надо запускать tasks

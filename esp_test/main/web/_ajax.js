@@ -89,3 +89,16 @@ for (var i = 0; i < a.length; i++) {
         });
     }
 }
+
+function effects() {
+	var eff = document.getElementById("effects");
+	var effid = eff.options[eff.selectedIndex].value;
+	var effname = eff.options[eff.selectedIndex].text;
+	ajax_request("/colors?type=effect&id=" + effid, function() {
+				eff.options[effid].selected="true";
+				// var efft = document.getElementById("color");
+                // efft.innerHTML = effname + "(" + effid + ")";
+            });
+}
+
+

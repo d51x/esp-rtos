@@ -17,7 +17,7 @@ relay_handle_t relay_create(gpio_num_t pin, relay_close_level_t level)
     relay_t* relay_p = (relay_t*) calloc(1, sizeof(relay_t));
     relay_p->pin = pin;
     relay_p->close_level = level;
-    relay_p->state = RELAY_STATE_OPEN;
+    relay_p->state = RELAY_STATE_CLOSE;
     
     gpio_config_t io_conf;
     io_conf.intr_type = GPIO_INTR_DISABLE;

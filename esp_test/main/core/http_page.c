@@ -154,7 +154,7 @@ void get_main_page_data(char *data) {
     // ============================= PRINT COLOR EFFECT INFO ==============================
     //ledc->print_html_data(data);
   
-    //rgb_ledc->print_html_data(data);
+    
     sprintf(data + strlen( data ), html_gpio_header);
 
     const char *html_relay_item = "<span><a href=\"#\" rel=\"relay\" data-id=\"%d\" data-title=\"GPIO%02d\" data-val=\"%d\">"
@@ -197,7 +197,7 @@ void get_main_page_data(char *data) {
     sprintf(data + strlen( data ), "</div>");
     // *********************************************************************
 
-    
+    rgb_ledc->print_html_data(data);
     
     // ==============================================================================
     sprintf(data + strlen( data ), "<script type=\"text/javascript\" src=\"ajax.js\"></script>");
