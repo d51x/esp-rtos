@@ -150,14 +150,15 @@ void get_main_page_data(char *data) {
         print_html_gpio( data + strlen( data ));
     #endif
 
+
     // ============================= PRINT COLOR EFFECT INFO ==============================
     //ledc->print_html_data(data);
   
     //rgb_ledc->print_html_data(data);
     sprintf(data + strlen( data ), html_gpio_header);
 
-    const char *html_relay_item = "<a href=\"#\" rel=\"relay\" data-id=\"%d\" data-title=\"GPIO%02d\" data-val=\"%d\">"
-                                         "<button class=\"relay %s\">GPIO%02d</button></a>";
+    const char *html_relay_item = "<span><a href=\"#\" rel=\"relay\" data-id=\"%d\" data-title=\"GPIO%02d\" data-val=\"%d\">"
+                                         "<button class=\"relay %s\">GPIO%02d</button></a></span>";
 
     for (int i=0; i<4; i++) {
         relay_t *relay = (relay_t *)relays[i];
@@ -170,12 +171,21 @@ void get_main_page_data(char *data) {
           
     }
     sprintf(data + strlen( data ), html_gpio_end);
+    // ====================== checkbox ====================================================
+    const char *html_checkbox = "<span><input type=\"checkbox\" rel=\"relay\" name=\"relay%d\" value=\"%d\" %s ></span> <span id=\"relay%d\">%s</span>";
+    for (int i=0; i<4; i++) {
+        relay_t *relay = (relay_t *)relays[i];
+        sprintf(data + strlen( data ), html_checkbox, 
+                                        relay->pin,
+                                        relay->state,
+                                        relay->state ? "checked" : "",
+                                        relay->pin,
+                                        relay->state ? "ON" : "OFF");
+    }
     // ***************************** ledc **********************************
-    sprintf(data + strlen( data ), "<div class=\"ledc\">");
+    sprintf(data + strlen( data ), "<div class=\"ledc\"><h4>Led controller channels</h4>");
 
-    const char *html_ledc_item = "<input type=\"range\" max=\"255\" name=\"ledc%d\" value=\"%d\"><i id=\"ledc%d\">%d</i>";
-ESP_LOGI(TAG, "html print led control data");
-ESP_LOGI(TAG, "ledc count: %d", ledc->led_cnt);
+    const char *html_ledc_item = "<div><input type=\"range\" max=\"255\" name=\"ledc%d\" value=\"%d\"><i id=\"ledc%d\">%d</i></div>";
 
     for (int i=0; i < ledc->led_cnt; i++) {
         sprintf(data + strlen( data ), html_ledc_item, 
@@ -187,9 +197,10 @@ ESP_LOGI(TAG, "ledc count: %d", ledc->led_cnt);
     sprintf(data + strlen( data ), "</div>");
     // *********************************************************************
 
-    sprintf(data + strlen( data ), "<script type=\"text/javascript\" src=\"ajax.js\"></script>");
+    
     
     // ==============================================================================
+    sprintf(data + strlen( data ), "<script type=\"text/javascript\" src=\"ajax.js\"></script>");
     sprintf(data+strlen(data), "</div>");
     print_html_menu(data+strlen(data));
     print_html_footer_data(data+strlen(data)); // TODO: взять из context  
