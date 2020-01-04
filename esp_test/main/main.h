@@ -30,11 +30,14 @@
 #include "relay.h"
 
 
+void btn4_press_1_cb();
+void btn4_hold_1s_cb();
+void btn4_press_2_cb();
+void btn4_press_3_cb();
 
+void btn0_press_1_cb();
+void btn0_hold_1s_cb();
+void btn0_press_2_cb();
+void btn0_press_3_cb();
 
-
-void press_1_cb();
-void hold_1s_cb();
-void press_2_cb();
-void press_3_cb();
 #endif 

@@ -30,7 +30,7 @@ void ledcontrol_all_fade_to_off(uint16_t duty_from, uint16_t duty_delay);
 void ledcontrol_print_html_data(char *data);
 esp_err_t ledcontrol_http_get_handler(httpd_req_t *req);
 
-ledcontrol_t* ledcontrol_create(uint32_t freq_hz, uint8_t channel_cnt)
+ledcontrol_handle_t* ledcontrol_create(uint32_t freq_hz, uint8_t channel_cnt)
 {
 
     

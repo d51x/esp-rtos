@@ -74,7 +74,6 @@ void app_main(void){
     #define LED_CTRL_BLUE_PIN   13
     #define LED_CTRL_WHITE_PIN  2
 
-    
     ledcontrol_channel_t ch_red = {
         .pin = LED_CTRL_RED_PIN,
         .channel = LED_CTRL_RED_CH,
@@ -90,118 +89,98 @@ void app_main(void){
     };
 
     ledcontrol_t* ledc_h = ledcontrol_create(LED_FREQ_HZ, LED_CTRL_CNT);
-    //ledcontrol_t *ledc = (ledcontrol_t *)ledc_h;
     ledc = (ledcontrol_t *)ledc_h;
 
-    //ledc->register_channel(ch_red);
     ledc->register_channel(ch_red);
     ledc->register_channel(ch_green);
     ledc->register_channel(ch_blue);
 
 
-ESP_LOGI(TAG, "### red addr %p", &ch_red);
-ESP_LOGI(TAG, "### green addr %p", &ch_green);
-ESP_LOGI(TAG, "### blue addr %p", &ch_blue);
+//ESP_LOGI(TAG, "### red addr %p", &ch_red);
+//ESP_LOGI(TAG, "### green addr %p", &ch_green);
+//ESP_LOGI(TAG, "### blue addr %p", &ch_blue);
 
     ledc->init();
     add_uri_get_handler( http_server, ledc->uri, ledc->http_get_handler);
 
     //rgb_ledc = rgbcontrol_init(ledc, ch_red, ch_green, ch_blue);
-    rgb_ledc = rgbcontrol_init(ledc, &ch_red, &ch_green, &ch_blue);
+    //rgb_ledc = rgbcontrol_init(ledc, &ch_red, &ch_green, &ch_blue);
     
-ESP_LOGI(TAG, "### red addr %p", &ch_red);
-ESP_LOGI(TAG, "### green addr %p", &ch_green);
-ESP_LOGI(TAG, "### blue addr %p", &ch_blue);
+//ESP_LOGI(TAG, "### red addr %p", &ch_red);
+//ESP_LOGI(TAG, "### green addr %p", &ch_green);
+//ESP_LOGI(TAG, "### blue addr %p", &ch_blue);
 
-    effects = effects_init( rgb_ledc, rgb_ledc->set_color_hsv );
-    rgb_ledc->set_effects( effects );
+    //effects = effects_init( rgb_ledc, rgb_ledc->set_color_hsv );
+    //rgb_ledc->set_effects( effects );
 
-    ESP_LOGI(TAG, "rgb_ledc->http_get_handler addr: %p", rgb_ledc->http_get_handler);
-    add_uri_get_handler( http_server, rgb_ledc->uri, rgb_ledc->http_get_handler);
+    //ESP_LOGI(TAG, "rgb_ledc->http_get_handler addr: %p", rgb_ledc->http_get_handler);
+    //add_uri_get_handler( http_server, rgb_ledc->uri, rgb_ledc->http_get_handler);
 
-   button_handle_t btn_g4_h = configure_push_button(GPIO_NUM_4, BUTTON_ACTIVE_HIGH);
+    button_handle_t btn_g4_h = configure_push_button(GPIO_NUM_4, BUTTON_ACTIVE_HIGH);
     if (btn_g4_h) {
-        button_cb *pressed_cb = calloc(2, sizeof(button_cb));
-        pressed_cb[0] = &press_1_cb;  
-        pressed_cb[1] = &press_2_cb;   
-        button_set_on_presscount_cb(btn_g4_h, 500, 2, pressed_cb);
-        button_add_on_press_cb(btn_g4_h, 1, hold_1s_cb, NULL); 
+        int pressed_cnt = 3;
+        button_cb *pressed_cb = calloc(pressed_cnt, sizeof(button_cb));
+        pressed_cb[0] = &btn4_press_1_cb;  
+        pressed_cb[1] = &btn4_press_2_cb;   
+        pressed_cb[2] = &btn4_press_3_cb;   
+        button_set_on_presscount_cb(btn_g4_h, 500, pressed_cnt, pressed_cb);
+        button_add_on_press_cb(btn_g4_h, 1, btn4_hold_1s_cb, NULL); 
     }
 
-
+    button_handle_t btn_g0_h = configure_push_button(GPIO_NUM_0, BUTTON_ACTIVE_HIGH);
+    if (btn_g0_h) {
+        int pressed_cnt = 3;
+        button_cb *pressed_cb = calloc(pressed_cnt, sizeof(button_cb));
+        pressed_cb[0] = &btn0_press_1_cb;  
+        pressed_cb[1] = &btn0_press_2_cb;   
+        pressed_cb[2] = &btn0_press_3_cb;   
+        button_set_on_presscount_cb(btn_g0_h, 500, pressed_cnt, pressed_cb);
+        button_add_on_press_cb(btn_g0_h, 1, btn0_hold_1s_cb, NULL); 
+    }
 
     relay02 = relay_create(2, RELAY_LEVEL_HIGH);
     relay12 = relay_create(12, RELAY_LEVEL_LOW);
     relay13 = relay_create(13, RELAY_LEVEL_LOW);
     relay15 = relay_create(15, RELAY_LEVEL_LOW);
 
+    relays[0] = relay02;
+    relays[1] = relay12;
+    relays[2] = relay13;
+    relays[3] = relay15;
 
 }
 
 // будет поочереди, чтобы одновременно, надо запускать tasks
-void press_1_cb() {
-    //effects->next();
+void btn4_press_1_cb() {
+    relay_write(relays[1], RELAY_STATE_OPEN );
+}
 
-
-    //relay_state_t st = relay_state_read(relay02);
-    relay_state_t st = relay_read(relay02);
-    ESP_LOGI(TAG, "relay02 is %s", (st == RELAY_STATE_CLOSE ) ? "closed" : "opened");
-
-    //relay_state_write(relay02, (st == RELAY_STATE_CLOSE ) ? RELAY_STATE_OPEN : RELAY_STATE_CLOSE);
-    relay_write( relay02, (st == RELAY_STATE_CLOSE ) ? RELAY_STATE_OPEN : RELAY_STATE_CLOSE );
-    vTaskDelay( 500 / portTICK_RATE_MS );
-
-    //st = relay_state_read(relay02);
-    st = relay_read(relay02);
-    ESP_LOGI(TAG, "relay02 is %s", (st == RELAY_STATE_CLOSE ) ? "closed" : "opened");
-
+void btn4_hold_1s_cb() {
 
 }
 
-void hold_1s_cb()
-{
-    //relay_state_t st = relay_state_read(relay02);
-    relay_state_t st = relay_read(relay15);
-    ESP_LOGI(TAG, "relay15 is %s", (st == RELAY_STATE_CLOSE ) ? "closed" : "opened");
-
-    //relay_state_write(relay02, (st == RELAY_STATE_CLOSE ) ? RELAY_STATE_OPEN : RELAY_STATE_CLOSE);
-    relay_write( relay15, (st == RELAY_STATE_CLOSE ) ? RELAY_STATE_OPEN : RELAY_STATE_CLOSE );
-    vTaskDelay( 500 / portTICK_RATE_MS );
-
-    //st = relay_state_read(relay02);
-    st = relay_read( relay15 );
-    ESP_LOGI(TAG, "relay15 is %s", (st == RELAY_STATE_CLOSE ) ? "closed" : "opened");
+void btn4_press_2_cb() {
+    relay_write(relays[1], RELAY_STATE_CLOSE );
 }
 
-void press_2_cb() {
+void btn4_press_3_cb() {
 
-    //effects->prev();
-     //relay_state_t st = relay_state_read(relay02);
-    relay_state_t st = relay_read( relay12 );
-    ESP_LOGI(TAG, "relay12 is %s", (st == RELAY_STATE_CLOSE ) ? "closed" : "opened");
-
-    //relay_state_write(relay02, (st == RELAY_STATE_CLOSE ) ? RELAY_STATE_OPEN : RELAY_STATE_CLOSE);
-    relay_write( relay12, (st == RELAY_STATE_CLOSE ) ? RELAY_STATE_OPEN : RELAY_STATE_CLOSE );
-    vTaskDelay( 500 / portTICK_RATE_MS );
-
-    //st = relay_state_read(relay02);
-    st = relay_read( relay12 );
-    ESP_LOGI(TAG, "relay12 is %s", (st == RELAY_STATE_CLOSE ) ? "closed" : "opened");   
 }
 
-void press_3_cb() {
-    //relay_state_t st = relay_state_read(relay02);
-    relay_state_t st = relay_read( relay13 );
-    ESP_LOGI(TAG, "relay13 is %s", (st == RELAY_STATE_CLOSE ) ? "closed" : "opened");
-
-    //relay_state_write(relay02, (st == RELAY_STATE_CLOSE ) ? RELAY_STATE_OPEN : RELAY_STATE_CLOSE);
-    relay_write( relay13, (st == RELAY_STATE_CLOSE ) ? RELAY_STATE_OPEN : RELAY_STATE_CLOSE );
-    vTaskDelay( 500 / portTICK_RATE_MS );
-
-    //st = relay_state_read(relay02);
-    st = relay_read( relay13 );
-    ESP_LOGI(TAG, "relay13 is %s", (st == RELAY_STATE_CLOSE ) ? "closed" : "opened");
+void btn0_press_1_cb() {
+    relay_write(relays[2], RELAY_STATE_OPEN );
 }
 
+void btn0_hold_1s_cb() {
+
+}
+
+void btn0_press_2_cb() {
+    relay_write(relays[2], RELAY_STATE_CLOSE );
+}
+
+void btn0_press_3_cb() {
+
+}
 
 

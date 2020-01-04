@@ -101,7 +101,7 @@ struct ledcontrol {
 
 // здесь укажем только внешние функции
 // создать объект ledcontrol, потом надо создать каналы, потом зарегистрировать каналы, потом ledcontrol_init для инициализации pwm
-ledcontrol_t* ledcontrol_create(uint32_t freq_hz, uint8_t channel_cnt);
+ledcontrol_handle_t* ledcontrol_create(uint32_t freq_hz, uint8_t channel_cnt);
 
 // создать канал, сначала надо создать каналы
 //esp_err_t ledcontrol_register_channel(ledcontrol_channel_t ledc_ch);

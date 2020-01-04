@@ -151,9 +151,44 @@ void get_main_page_data(char *data) {
     #endif
 
     // ============================= PRINT COLOR EFFECT INFO ==============================
-    ledc->print_html_data(data);
+    //ledc->print_html_data(data);
   
-    rgb_ledc->print_html_data(data);
+    //rgb_ledc->print_html_data(data);
+    sprintf(data + strlen( data ), html_gpio_header);
+
+    const char *html_relay_item = "<a href=\"#\" rel=\"relay\" data-id=\"%d\" data-title=\"GPIO%02d\" data-val=\"%d\">"
+                                         "<button class=\"relay %s\">GPIO%02d</button></a>";
+
+    for (int i=0; i<4; i++) {
+        relay_t *relay = (relay_t *)relays[i];
+        sprintf(data + strlen( data ), html_relay_item, 
+                                        relay->pin,             // pin
+                                        relay->pin,    // title
+                                        relay->state,           // val
+                                        relay->state ? "on" : "off",  // class
+                                        relay->pin);  
+          
+    }
+    sprintf(data + strlen( data ), html_gpio_end);
+    // ***************************** ledc **********************************
+    sprintf(data + strlen( data ), "<div class=\"ledc\">");
+
+    const char *html_ledc_item = "<input type=\"range\" max=\"255\" name=\"ledc%d\" value=\"%d\"><i id=\"ledc%d\">%d</i>";
+ESP_LOGI(TAG, "html print led control data");
+ESP_LOGI(TAG, "ledc count: %d", ledc->led_cnt);
+
+    for (int i=0; i < ledc->led_cnt; i++) {
+        sprintf(data + strlen( data ), html_ledc_item, 
+                                        ledc->channels[i].channel,   //name
+                                        ledc->channels[i].duty,      // value
+                                        ledc->channels[i].channel,   // id
+                                        ledc->channels[i].duty);     // title
+    }
+    sprintf(data + strlen( data ), "</div>");
+    // *********************************************************************
+
+    sprintf(data + strlen( data ), "<script type=\"text/javascript\" src=\"ajax.js\"></script>");
+    
     // ==============================================================================
     sprintf(data+strlen(data), "</div>");
     print_html_menu(data+strlen(data));

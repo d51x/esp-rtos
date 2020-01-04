@@ -239,6 +239,13 @@ esp_err_t gpio_get_handler(httpd_req_t *req){
             ESP_LOGD(TAG, "Send command (st = %d) to GPIO%d", st, pin); 
             if ( set_gpio(pin, st) != ESP_OK) 
                 strcpy(page, "ERROR");
+            for (int i=0; i<4; i++)   {
+                relay_t *relay = (relay_t *)relays[i];
+                if ( relay->pin == pin ) {
+                    relay_write( relay, st);    
+                    break;
+                }
+            } 
         }
     } 
 
@@ -409,6 +416,16 @@ esp_err_t main_css_get_handler(httpd_req_t *req)
     const size_t main_css_size = (main_css_end - main_css_start);
     httpd_resp_set_type(req, "text/css");
     httpd_resp_send(req, (const char *)main_css_start, main_css_size);
+    return ESP_OK;
+}
+
+esp_err_t main_ajax_get_handler(httpd_req_t *req)
+{
+    extern const unsigned char ajax_js_start[] asm("_binary_ajax_js_start");
+    extern const unsigned char ajax_js_end[]   asm("_binary_ajax_js_end");
+    const size_t ajax_js_size = (ajax_js_end - ajax_js_start);
+    httpd_resp_set_type(req, "text/javascript");
+    httpd_resp_send(req, (const char *)ajax_js_start, ajax_js_size);
     return ESP_OK;
 }
 
