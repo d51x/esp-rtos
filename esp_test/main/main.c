@@ -130,28 +130,77 @@ ESP_LOGI(TAG, "### blue addr %p", &ch_blue);
 
 
 
-
+    relay02 = relay_create(2, RELAY_LEVEL_HIGH);
+    relay12 = relay_create(12, RELAY_LEVEL_LOW);
+    relay13 = relay_create(13, RELAY_LEVEL_LOW);
+    relay15 = relay_create(15, RELAY_LEVEL_LOW);
 
 
 }
 
 // будет поочереди, чтобы одновременно, надо запускать tasks
 void press_1_cb() {
-    effects->next();
+    //effects->next();
+
+
+    //relay_state_t st = relay_state_read(relay02);
+    relay_state_t st = relay_read(relay02);
+    ESP_LOGI(TAG, "relay02 is %s", (st == RELAY_STATE_CLOSE ) ? "closed" : "opened");
+
+    //relay_state_write(relay02, (st == RELAY_STATE_CLOSE ) ? RELAY_STATE_OPEN : RELAY_STATE_CLOSE);
+    relay_write( relay02, (st == RELAY_STATE_CLOSE ) ? RELAY_STATE_OPEN : RELAY_STATE_CLOSE );
+    vTaskDelay( 500 / portTICK_RATE_MS );
+
+    //st = relay_state_read(relay02);
+    st = relay_read(relay02);
+    ESP_LOGI(TAG, "relay02 is %s", (st == RELAY_STATE_CLOSE ) ? "closed" : "opened");
+
+
 }
 
 void hold_1s_cb()
 {
+    //relay_state_t st = relay_state_read(relay02);
+    relay_state_t st = relay_read(relay15);
+    ESP_LOGI(TAG, "relay15 is %s", (st == RELAY_STATE_CLOSE ) ? "closed" : "opened");
 
+    //relay_state_write(relay02, (st == RELAY_STATE_CLOSE ) ? RELAY_STATE_OPEN : RELAY_STATE_CLOSE);
+    relay_write( relay15, (st == RELAY_STATE_CLOSE ) ? RELAY_STATE_OPEN : RELAY_STATE_CLOSE );
+    vTaskDelay( 500 / portTICK_RATE_MS );
+
+    //st = relay_state_read(relay02);
+    st = relay_read( relay15 );
+    ESP_LOGI(TAG, "relay15 is %s", (st == RELAY_STATE_CLOSE ) ? "closed" : "opened");
 }
 
 void press_2_cb() {
 
-    effects->prev();
+    //effects->prev();
+     //relay_state_t st = relay_state_read(relay02);
+    relay_state_t st = relay_read( relay12 );
+    ESP_LOGI(TAG, "relay12 is %s", (st == RELAY_STATE_CLOSE ) ? "closed" : "opened");
+
+    //relay_state_write(relay02, (st == RELAY_STATE_CLOSE ) ? RELAY_STATE_OPEN : RELAY_STATE_CLOSE);
+    relay_write( relay12, (st == RELAY_STATE_CLOSE ) ? RELAY_STATE_OPEN : RELAY_STATE_CLOSE );
+    vTaskDelay( 500 / portTICK_RATE_MS );
+
+    //st = relay_state_read(relay02);
+    st = relay_read( relay12 );
+    ESP_LOGI(TAG, "relay12 is %s", (st == RELAY_STATE_CLOSE ) ? "closed" : "opened");   
 }
 
 void press_3_cb() {
+    //relay_state_t st = relay_state_read(relay02);
+    relay_state_t st = relay_read( relay13 );
+    ESP_LOGI(TAG, "relay13 is %s", (st == RELAY_STATE_CLOSE ) ? "closed" : "opened");
 
+    //relay_state_write(relay02, (st == RELAY_STATE_CLOSE ) ? RELAY_STATE_OPEN : RELAY_STATE_CLOSE);
+    relay_write( relay13, (st == RELAY_STATE_CLOSE ) ? RELAY_STATE_OPEN : RELAY_STATE_CLOSE );
+    vTaskDelay( 500 / portTICK_RATE_MS );
+
+    //st = relay_state_read(relay02);
+    st = relay_read( relay13 );
+    ESP_LOGI(TAG, "relay13 is %s", (st == RELAY_STATE_CLOSE ) ? "closed" : "opened");
 }
 
 

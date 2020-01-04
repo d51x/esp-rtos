@@ -27,6 +27,7 @@
 #include "button.h"
 #include "ledcontrol.h"
 #include "rgbcontrol.h"
+#include "relay.h"
 
 
 

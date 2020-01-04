@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include "freertos/event_groups.h"
 #include "button.h"
+#include "relay.h"
 #include "ledcontrol.h"
 #include "rgbcontrol.h"
 
@@ -16,6 +17,7 @@
 ledcontrol_t *ledc;
 rgbcontrol_t *rgb_ledc;
 effects_t* effects;
+relay_handle_t relay02, relay12, relay13, relay15; 
 
 //------------- GLOBAL DEFINES FOR USE MODULES ------------------------------------------
 
