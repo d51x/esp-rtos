@@ -1,6 +1,6 @@
-#include "dsw.h"
+#include "ds18b20.h"
 
-static const char *TAG = "DSW";
+static const char *TAG = "DS18B20";
 
 static uint8_t pin = 0;
 static uint16_t crc_errors;

@@ -3,9 +3,9 @@ set(COMPONENT_ADD_INCLUDEDIRS "")
 
 
 
-set(COMPONENT_EMBED_TXTFILES 	${PROJECT_PATH}/main/web/favicon.ico
-								${PROJECT_PATH}/main/web/main.css
-								${PROJECT_PATH}/main/web/ajax.js )
+set(COMPONENT_EMBED_TXTFILES 	${PROJECT_PATH}/web/favicon.ico
+								${PROJECT_PATH}/web/main.css
+								${PROJECT_PATH}/web/ajax.js )
 register_component()
 
 

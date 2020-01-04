@@ -32,10 +32,7 @@ void app_main(void){
     ota_event_group = xEventGroupCreate();
     xEventGroupSetBits(ota_event_group, OTA_IDLE_BIT);
 
-    #ifdef GPIO
-        init_gpios();     // configure GPIO
-    #endif
-    
+   
     #ifdef DEBUG
         print_chip_info();
     #endif

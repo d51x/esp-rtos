@@ -1,4 +1,4 @@
-#include "http_ota.h"
+#include "ota.h"
 
 static const char *TAG = "OTA";
 

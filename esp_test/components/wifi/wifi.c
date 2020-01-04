@@ -97,7 +97,7 @@ esp_err_t wifi_event_handler(void *ctx, system_event_t *event){
             //esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B );//| WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
             esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
             xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
-            xEventGroupSetBits(ota_event_group, OTA_IDLE_BIT);
+            //xEventGroupSetBits(ota_event_group, OTA_IDLE_BIT);
             break;
         case SYSTEM_EVENT_AP_STACONNECTED:
             //ESP_LOGI(TAG, "SYSTEM_EVENT_AP_STACONNECTED");

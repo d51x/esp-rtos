@@ -1,5 +1,5 @@
-#ifndef __HTTP_OTA_H__
-#define __HTTP_OTA_H__
+#ifndef __OTA_H__
+#define __OTA_H__
 
 #include <stdio.h>
 #include <string.h>
@@ -12,7 +12,7 @@
 #include "esp_http_server.h"
 #include "nvs.h"
 #include "utils.h"
-#include "../core.h"
+
 
 
 typedef enum esp_ota_firm_state {

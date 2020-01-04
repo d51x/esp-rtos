@@ -53,17 +53,6 @@ void print_html_dht(const dht_t *dht, char *buf) {
 }
 #endif
 
-void print_html_gpio(char *buf) {
-    sprintf(buf, html_gpio_header);
-
-    for (int i=0;i<GPIO_CNT;i++) {
-        if ( gpio[i].pin == MAX_GPIO ) continue;
-        sprintf(buf+strlen(buf), html_gpio_item, gpio[i].pin, !gpio[i].state, gpio[i].state ? "on" : "off", gpio[i].pin);  // TODO: учесть инвертирование в будущем
-    }
-    sprintf(buf+strlen(buf), html_gpio_end);
-
-}
-
 void print_html_menu(char *buf) {
     sprintf(buf, "<menu>");
     sprintf(buf+strlen(buf), html_menu_item, "/", "Main");
@@ -248,13 +237,14 @@ void get_debug_page_data(char *data) {
 void gpioprint_page_data(char *data) {
 
     uint8_t i;
-    for (i=0;i<GPIO_CNT;i++){
-        //gpio
-        if ( gpio[i].pin == MAX_GPIO) continue;
-        //get_gpio_info(&gpio[i]);
-        sprintf(data, "%d:%d;", gpio[i].pin, gpio[i].state);
-        data += strlen(data);
-    }
+    // for (i=0;i<GPIO_CNT;i++){
+    //     //gpio
+    //     if ( gpio[i].pin == MAX_GPIO) continue;
+    //     //get_gpio_info(&gpio[i]);
+    //     sprintf(data, "%d:%d;", gpio[i].pin, gpio[i].state);
+    //     data += strlen(data);
+    // }
+    // TODO: handle relays gpio and other user configurablу output gpios or just detect output gpios within bitmask
 }
 
 void tools_page_data(char *data) {

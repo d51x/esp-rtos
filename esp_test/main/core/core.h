@@ -33,15 +33,7 @@ relay_handle_t relays[4];
 
 //------------- GLOBAL DEFINES FOR USE MODULES ------------------------------------------
 
-    #define ESP_WIFI_MODE_AP   1
-    
-        #define ESP_WIFI_SSID      "Dminty"
-        #define ESP_WIFI_PASS      "110funther26"
-    
 
-    
-    #define ESP_WIFI_AP_SSID      "ZppDasdwerfds"
-    #define ESP_WIFI_AP_PASS      "110funther26"
     
 
 
@@ -68,8 +60,6 @@ relay_handle_t relays[4];
 EventGroupHandle_t ota_event_group;  /* FreeRTOS event group to signal when we are connected*/
 int OTA_IDLE_BIT;  /* The event group allows multiple bits for each event, but we only care about one event - are we connected  to the AP with an IP? */
 
-EventGroupHandle_t wifi_event_group;  /* FreeRTOS event group to signal when we are connected*/
-int WIFI_CONNECTED_BIT;  /* The event group allows multiple bits for each event, but we only care about one event - are we connected  to the AP with an IP? */
 
 
 #endif

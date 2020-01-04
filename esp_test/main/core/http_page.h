@@ -10,8 +10,7 @@
 
 #include "core.h"
 #include "wifi.h"
-#include "gpio.h"
-#include "ota/http_ota.h"
+#include "ota.h"
 #include "utils.h"
 #include "http_utils.h"
 
@@ -39,7 +38,6 @@ void print_html_dsw(const ds18b20_t *_dsw, uint8_t cnt, char *buf);
 void print_html_dht(const dht_t *dht, char *buf);
 #endif
 
-void print_html_gpio(char *buf);
 void print_html_menu(char *buf);
 void httpd_resp_sendstr_chunk(httpd_req_t *req, const char *buf);
 

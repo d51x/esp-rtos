@@ -12,8 +12,19 @@
 #include "esp_wifi.h"
 #include "esp_wifi_types.h"
 #include "utils.h"
-#include "core.h"
 
+EventGroupHandle_t wifi_event_group;  /* FreeRTOS event group to signal when we are connected*/
+int WIFI_CONNECTED_BIT;  /* The event group allows multiple bits for each event, but we only care about one event - are we connected  to the AP with an IP? */
+
+    #define ESP_WIFI_MODE_AP   1
+    
+        #define ESP_WIFI_SSID      "Dminty"
+        #define ESP_WIFI_PASS      "110funther26"
+    
+
+    
+    #define ESP_WIFI_AP_SSID      "ZppDasdwerfds"
+    #define ESP_WIFI_AP_PASS      "110funther26"
 
 #define MAX_STA_CONN       5
 

@@ -264,7 +264,7 @@ esp_err_t rgbcontrol_http_get_handler(httpd_req_t *req){
             // rgb?hsv=h,s,v
             err = http_process_hsv(req, param, sizeof(param));
         } else if ( http_get_key_str(req, "type", param, sizeof(param)) == ESP_OK ) {
-            ESP_LOGI(TAG, "type = %s", param);
+            //ESP_LOGI(TAG, "type = %s", param);
             if ( strcmp(param, "rgb") == ESP_OK ) {
                 err = http_process_rgb2(req); // rgb?type=rgb&r=r&g=g&b=b
             } else if ( strcmp(param, "hsv") == ESP_OK ) {
@@ -326,7 +326,7 @@ esp_err_t http_process_rgb(httpd_req_t *req, char *param, size_t size){
     istr = strtok (NULL,",");
     rgb->b = atoi(istr);
     effects_t *ef = (effects_t *) rgb_ctrl->effects;
-    ESP_LOGI(TAG, "effects is %s", (rgb_ctrl->effects == NULL) ? "NULL" : "not NULL");
+    //ESP_LOGI(TAG, "effects is %s", (rgb_ctrl->effects == NULL) ? "NULL" : "not NULL");
     if ( ef != NULL ) ef->stop();
     rgb_ctrl->set_color_rgb(*rgb);
     free(rgb);                

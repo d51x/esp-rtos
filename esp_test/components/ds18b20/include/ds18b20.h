@@ -1,5 +1,5 @@
-#ifndef __DSW_H__
-#define __DSW_H__
+#ifndef __DS18B20_H__
+#define __DS18B20_H__
 
 #include <stdio.h>
 #include <string.h>
@@ -13,7 +13,7 @@
 #include "esp_log.h"
 
 
-#include "../drivers/onewire.h"
+#include "onewire.h"
 
 #define DSW_ADDR_PATTERN "%02x %02x %02x %02x %02x %02x %02x %02x"
 

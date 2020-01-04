@@ -237,8 +237,8 @@ esp_err_t gpio_get_handler(httpd_req_t *req){
         } else {
             // control gpios
             ESP_LOGD(TAG, "Send command (st = %d) to GPIO%d", st, pin); 
-            if ( set_gpio(pin, st) != ESP_OK) 
-                strcpy(page, "ERROR");
+            // TODO: handle all relays and other user configurable output gpios
+            // // TODO: handle relays gpio and other user configurablу output gpios or just detect output gpios within bitmask
             for (int i=0; i<4; i++)   {
                 relay_t *relay = (relay_t *)relays[i];
                 if ( relay->pin == pin ) {

@@ -1,4 +1,4 @@
-#include "pwm.h"
+#include "ipwm.h"
 
 
 
@@ -26,7 +26,6 @@ void pwm_begin(uint16_t freq_hz, uint8_t ch_cnt, const uint32_t *channels){
 
 
 void pwm_write(uint8_t ch, uint16_t duty) {
-    xEventGroupWaitBits(ota_event_group, OTA_IDLE_BIT, false, true, portMAX_DELAY);
     uint16_t real_duty = duty*period/MAX_DUTY;
     pwm_set_duty(ch, real_duty);
 }

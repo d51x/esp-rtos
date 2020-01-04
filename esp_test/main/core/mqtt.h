@@ -18,7 +18,6 @@
 #include "wifi.h"
 #include "core.h"
 #include "utils.h"
-#include "gpio.h"
 
 
 

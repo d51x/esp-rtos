@@ -1,5 +1,5 @@
-#ifndef __PWM_H__
-#define __PWM_H__
+#ifndef __IPWM_H__
+#define __IPWM_H__
 
 
 #include <string.h>
@@ -9,7 +9,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "driver/pwm.h"
-#include "core.h"
+
 
 
 #define PIN_PWM_0 15

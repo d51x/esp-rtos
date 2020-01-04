@@ -138,12 +138,12 @@ void ledcontrol_init()
 // установить duty канала
 void ledcontrol_set_duty(ledcontrol_channel_t *channel, uint16_t duty){
     channel->duty = duty;
-    ESP_LOGI(TAG, "*** channel %p, channel->channel %d duty %d", channel, channel->channel, duty);
+    //ESP_LOGI(TAG, "*** channel %p, channel->channel %d duty %d", channel, channel->channel, duty);
 
     uint16_t real_duty = duty*period/MAX_DUTY;
-    ESP_LOGI(TAG, "set duty %d for channel %d (real duty %d)", channel->duty, channel->channel, real_duty);
+    //ESP_LOGI(TAG, "set duty %d for channel %d (real duty %d)", channel->duty, channel->channel, real_duty);
     esp_err_t err = pwm_set_duty(channel->channel, real_duty);    
-    ESP_LOGI(TAG, esp_err_to_name(err));
+    //ESP_LOGI(TAG, esp_err_to_name(err));
 }
 
 void ledcontrol_update(){
