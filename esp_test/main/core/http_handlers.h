@@ -20,7 +20,7 @@ esp_err_t setup_get_handler(httpd_req_t *req);
 esp_err_t debug_get_handler(httpd_req_t *req);
 esp_err_t tools_get_handler(httpd_req_t *req);
 esp_err_t gpio_get_handler(httpd_req_t *req);
-esp_err_t gpioprint_get_handler(httpd_req_t *req);
+//esp_err_t gpioprint_get_handler(httpd_req_t *req);
 esp_err_t restart_get_handler(httpd_req_t *req);
 esp_err_t ota_get_handler(httpd_req_t *req);
 esp_err_t ota_post_handler(httpd_req_t *req);
@@ -54,11 +54,13 @@ httpd_uri_t uri_handlers[] = {
         .handler   = gpio_get_handler,
         .user_ctx  = NULL,   
     },
+/*    
     {   .uri   = "/gpioprint",    
         .method    = HTTP_GET,
         .handler   = gpioprint_get_handler,
         .user_ctx  = NULL,   
     },
+*/    
     {   .uri   = "/restart",    
         .method    = HTTP_GET,
         .handler   = restart_get_handler,

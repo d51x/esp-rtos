@@ -234,6 +234,7 @@ void get_debug_page_data(char *data) {
     print_html_footer_data(data+strlen(data)); // TODO: взять из context  
 }
 
+/*
 void gpioprint_page_data(char *data) {
 
     uint8_t i;
@@ -245,7 +246,14 @@ void gpioprint_page_data(char *data) {
     //     data += strlen(data);
     // }
     // TODO: handle relays gpio and other user configurablу output gpios or just detect output gpios within bitmask
+    for (int i=0; i<GPIO_PIN_COUNT;i++) {
+        if ( GPIO_MODE_OUTPUT & GPIO_MODE_DEF_OUTPUT) {
+            sprintf(data, "%d:%d;", i, gpio_get_level(i));
+            data += strlen(data);
+        }
+    }
 }
+*/
 
 void tools_page_data(char *data) {
     print_html_header_data(data, "Tools page"); // TODO: взять из context

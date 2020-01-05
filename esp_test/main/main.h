@@ -39,4 +39,8 @@ void btn0_hold_1s_cb();
 void btn0_press_2_cb();
 void btn0_press_3_cb();
 
+void ir_button1_press(void *arg);
+void ir_button2_press(void *arg);
+void ir_button3_press(void *arg);
+
 #endif 

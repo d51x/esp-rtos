@@ -10,6 +10,7 @@
 #include "relay.h"
 #include "ledcontrol.h"
 #include "rgbcontrol.h"
+#include "irrcv.h"
 
 #define FW_VER "1.12.1"
 #define CORE_FW_VER "1.12"
@@ -21,6 +22,8 @@ relay_handle_t relay02, relay12, relay13, relay15;
 
 relay_handle_t relays[4];
 
+
+irrcv_handle_t ir_rx;
 //------------- GLOBAL DEFINES FOR USE MODULES ------------------------------------------
 
 #define PWM

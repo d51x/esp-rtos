@@ -262,6 +262,7 @@ esp_err_t gpio_get_handler(httpd_req_t *req){
     return ESP_OK;
 }
 
+/*
 esp_err_t gpioprint_get_handler(httpd_req_t *req){
     char page[1024];
     gpioprint_page_data(page);
@@ -269,6 +270,7 @@ esp_err_t gpioprint_get_handler(httpd_req_t *req){
     httpd_resp_send(req, page, strlen(page));
     return ESP_OK;
 }
+*/
 
 esp_err_t restart_get_handler(httpd_req_t *req){
     char page[2048];
@@ -471,7 +473,7 @@ httpd_handle_t start_webserver(void){
     httpd_handle_t _server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.stack_size = WEB_SERVER_STACK_SIZE;
-    config.max_uri_handlers = 100; //uri_handlers_no; //WEB_SERVER_MAX_URI_GET_HANDLERS;
+    config.max_uri_handlers = 15; //100; //uri_handlers_no; //WEB_SERVER_MAX_URI_GET_HANDLERS;
     config.recv_wait_timeout = 10;
     //        .max_uri_handlers   = 8,                        
     //    .max_resp_headers   = 8, 
