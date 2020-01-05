@@ -116,7 +116,7 @@ void app_main(void){
     //ESP_LOGI(TAG, "rgb_ledc->http_get_handler addr: %p", rgb_ledc->http_get_handler);
     //add_uri_get_handler( http_server, rgb_ledc->uri, rgb_ledc->http_get_handler);
 
-    //button_handle_t btn_g4_h = configure_push_button(GPIO_NUM_4, BUTTON_ACTIVE_HIGH);
+    // button_handle_t btn_g4_h = configure_push_button(GPIO_NUM_4, BUTTON_ACTIVE_HIGH);
     // if (btn_g4_h) {
     //     int pressed_cnt = 3;
     //     button_cb *pressed_cb = calloc(pressed_cnt, sizeof(button_cb));
@@ -153,120 +153,25 @@ void app_main(void){
     relay_write(relay12, RELAY_STATE_CLOSE);
 
 
-    ir_rx = irrcv_init(5, 100, 3);
-    if ( ir_rx != NULL ) {
-        irrcv_add_button(ir_rx, 0, 0x00FF14EB, "button1", ir_button1_press);
-        irrcv_add_button(ir_rx, 1, 0x00FF04FB, "button2", ir_button2_press);
-        irrcv_add_button(ir_rx, 2, 0x00FF10EF, "button3", ir_button3_press);        
-        irrcv_start( ir_rx );
-    } else {
-        ESP_LOGE(TAG, "failed to init ir receiver");
-    }
-    
-    pir_conf_t pir_cfg = {
-        .pin = GPIO_NUM_4,
-        .interval = 10,
-        .type = PIR_ISR,
-        .active_level = PIR_LEVEL_ANY,
-        .cb_high_ctx = "high ctx",
-        .high_cb = ir1_high,
-        .cb_low_ctx = "low ctx",
-        .low_cb = ir1_low,  
-        .cb_tmr_ctx = "tmr ctx",     
-        .tmr_cb = ir1_tmr,       
+    encoder_config_t enc_cfg = {
+        .pin_btn = 13,
+        .pin_clk = 4,	
+        .pin_dt = 0,
+        .left = btn4_press_1_cb,
+	    .cb_left_ctx = "left",
+	    .right = btn0_press_1_cb,
+	    .cb_right_ctx = "right",
+	    .press = btn4_press_2_cb,
+	    .cb_press_ctx = "press",
     };
 
-ESP_LOGI(TAG, "ir_button1_press addr %p", ir_button1_press);
-ESP_LOGI(TAG, "ir_button2_press addr %p", ir_button2_press);
-ESP_LOGI(TAG, "ir_button3_press addr %p", ir_button3_press);
+    enc_h = encoder_init(enc_cfg);
 
-    pir = pir_init(pir_cfg);
-
-    pir_conf_t pir2_cfg = {
-        .pin = GPIO_NUM_0,
-        .interval = 10,
-        .type = PIR_ISR,
-        .active_level = PIR_LEVEL_HIGH,
-        .cb_high_ctx = "high2 ctx",
-        .high_cb = ir2_high,
-        .cb_low_ctx = "low2 ctx",
-        .low_cb = ir2_low,  
-        .cb_tmr_ctx = "tmr2 ctx",     
-        .tmr_cb = ir2_tmr,       
-    };
-pir2 = pir_init(pir2_cfg);
 }
 
-void ir_button1_press(void *arg) {
-	ESP_LOGI(TAG, "start %s", __func__);
-	ESP_LOGI(TAG, "freemem %d", esp_get_free_heap_size());   
 
-    pir_t *_pir = (pir_t *)pir;
-    ESP_LOGI(TAG, "PIR1 status %d", _pir->status); 
-    _pir->enable( pir );
-    ESP_LOGI(TAG, "PIR1 status %d", _pir->status); 
-	ESP_LOGI(TAG, "end %s", __func__);
-	ESP_LOGI(TAG, "freemem %d", esp_get_free_heap_size());    
-}
 
-void ir_button2_press(void *arg) {
-	ESP_LOGI(TAG, "start %s", __func__);
-	ESP_LOGI(TAG, "freemem %d", esp_get_free_heap_size());  
-    pir_t *_pir = (pir_t *)pir;
-    ESP_LOGI(TAG, "PIR1 status %d", _pir->status);      
-   _pir->disable( pir );    
-   ESP_LOGI(TAG, "PIR1 status %d", _pir->status); 
-	ESP_LOGI(TAG, "end %s", __func__);
-	ESP_LOGI(TAG, "freemem %d", esp_get_free_heap_size());      
-}
 
-void ir_button3_press(void *arg) {
- 	ESP_LOGI(TAG, "start %s", __func__);
-	ESP_LOGI(TAG, "freemem %d", esp_get_free_heap_size());  
-    
-    pir_t *_pir2 = (pir_t *)pir2;
-
-    ESP_LOGI(TAG, "PIR2 status %d", _pir2->status);      
-   
-    if ( _pir2->status == PIR_DISABLED )
-        _pir2->enable( pir2 );    
-    else
-        _pir2->disable( pir2 );    
-
-   ESP_LOGI(TAG, "PIR1 status %d", _pir2->status); 
-	ESP_LOGI(TAG, "end %s", __func__);
-	ESP_LOGI(TAG, "freemem %d", esp_get_free_heap_size());  
-}
-
-void ir1_high(void *arg) {
-   ESP_LOGI(TAG, "%s %s", __func__, (char *)arg);
-   ESP_LOGI(TAG, "PIR1 active HIGH");
-}
-
-void ir1_low(void *arg) {
-   ESP_LOGI(TAG, "%s %s", __func__, (char *)arg);
-   ESP_LOGI(TAG, "PIR1 active LOW");
-}
-
-void ir1_tmr(void *arg) {
-   ESP_LOGI(TAG, "%s %s", __func__, (char *)arg);
-   ESP_LOGI(TAG, "PIR1 timer end");
-}
-
-void ir2_high(void *arg) {
-   ESP_LOGI(TAG, "%s %s", __func__, (char *)arg);
-   ESP_LOGI(TAG, "PIR2 active HIGH");
-}
-
-void ir2_low(void *arg) {
-   ESP_LOGI(TAG, "%s %s", __func__, (char *)arg);
-   ESP_LOGI(TAG, "PIR2 active LOW");
-}
-
-void ir2_tmr(void *arg) {
-   ESP_LOGI(TAG, "%s %s", __func__, (char *)arg);
-   ESP_LOGI(TAG, "PIR2 timer end");
-}
 
 // будет поочереди, чтобы одновременно, надо запускать tasks
 void btn4_press_1_cb() {
@@ -288,8 +193,9 @@ void btn4_press_3_cb() {
 }
 
 void btn0_press_1_cb() {
+    ESP_LOGI(TAG, __func__);
     //relay_write(relays[2], RELAY_STATE_OPEN );
-    relay_write(relay12, RELAY_STATE_CLOSE );
+    //relay_write(relay12, RELAY_STATE_CLOSE );
 }
 
 void btn0_hold_1s_cb() {

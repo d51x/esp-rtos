@@ -12,6 +12,7 @@
 #include "rgbcontrol.h"
 #include "irrcv.h"
 #include "pir.h"
+#include "encoder.h"
 
 #define FW_VER "1.12.1"
 #define CORE_FW_VER "1.12"
@@ -23,10 +24,8 @@ relay_handle_t relay02, relay12, relay13, relay15;
 
 relay_handle_t relays[4];
 
+encoder_handle_t enc_h;
 
-irrcv_handle_t ir_rx;
-
-pir_handle_t pir, pir2;
 //------------- GLOBAL DEFINES FOR USE MODULES ------------------------------------------
 
 #define PWM

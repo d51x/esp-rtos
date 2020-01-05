@@ -27,6 +27,7 @@
 #include "ledcontrol.h"
 #include "rgbcontrol.h"
 #include "relay.h"
+#include "encoder.h"
 
 
 void btn4_press_1_cb();
@@ -39,17 +40,5 @@ void btn0_hold_1s_cb();
 void btn0_press_2_cb();
 void btn0_press_3_cb();
 
-void ir_button1_press(void *arg);
-void ir_button2_press(void *arg);
-void ir_button3_press(void *arg);
-
-
-void ir1_high(void *arg);
-void ir1_low(void *arg);
-void ir1_tmr(void *arg);
-
-void ir2_high(void *arg);
-void ir2_low(void *arg);
-void ir2_tmr(void *arg);
 
 #endif 
