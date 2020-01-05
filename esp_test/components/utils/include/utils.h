@@ -33,6 +33,7 @@
 #define POINT_ASSERT(tag, param, ret)    IOT_CHECK(tag, (param) != NULL, (ret))
 
 
+#define micros() (unsigned long) (esp_timer_get_time())
 #define millis() (unsigned long) (esp_timer_get_time() / 1000ULL)
 #define cur_sec() (uint32_t) (esp_timer_get_time() / 1000ULL / 1000U)
 #define IP_2_STR(a) ip4addr_ntoa(a)

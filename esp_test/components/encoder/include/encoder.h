@@ -8,9 +8,13 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "esp_system.h"
+#include "esp_timer.h"
 #include "esp_log.h"
 #include "driver/gpio.h"
+#include "utils.h"
 
+
+#define ENCODER_ROTATE_DEBOUNCE_TIME 300 // msec
 
 typedef struct encoder encoder_t;
 typedef struct encoder_config encoder_config_t;
@@ -77,6 +81,11 @@ struct encoder {
 	func_cb disable;
 
 	func_cb task_rotate_cb;	
+
+	volatile long pause;  // Пауза для борьбы с дребезгом
+	volatile long lastTurn;   // Переменная для хранения времени последнего изменения
+	volatile int rotate_state; // Статус одного шага - от 0 до 4 в одну сторону, от 0 до -4 - в другую
+	volatile int count;
 };
 
 encoder_handle_t encoder_init(encoder_config_t encoder_config);

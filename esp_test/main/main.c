@@ -175,7 +175,8 @@ void app_main(void){
 
 // будет поочереди, чтобы одновременно, надо запускать tasks
 void btn4_press_1_cb() {
-    ESP_LOGI(TAG, __func__);
+    //ESP_LOGI(TAG, __func__);
+    ESP_LOGI(TAG, "Turn left");
     //relay_write(relays[1], RELAY_STATE_OPEN );
     //relay_write(relay12, RELAY_STATE_OPEN );
 }
@@ -193,7 +194,8 @@ void btn4_press_3_cb() {
 }
 
 void btn0_press_1_cb() {
-    ESP_LOGI(TAG, __func__);
+    //ESP_LOGI(TAG, __func__);
+    ESP_LOGI(TAG, "Turn right");
     //relay_write(relays[2], RELAY_STATE_OPEN );
     //relay_write(relay12, RELAY_STATE_CLOSE );
 }

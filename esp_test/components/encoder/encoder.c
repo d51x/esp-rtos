@@ -24,7 +24,7 @@ static void task_rotate_cb(void *arg) {
 	vTaskDelete(NULL);
 }
 
-static void IRAM_ATTR encoder_press_isr_handler(encoder_handle_t enc_h) {
+static void IRAM_ATTR encoder_btn_isr_handler(encoder_handle_t enc_h) {
 	encoder_t * enc = (encoder_t *)enc_h;
 	
 	portBASE_TYPE HPTaskAwoken = pdFALSE;
@@ -34,7 +34,7 @@ static void IRAM_ATTR encoder_press_isr_handler(encoder_handle_t enc_h) {
     void *arg;	
 	
 	// дребезг контактов !!!
-	
+
 	int level = gpio_get_level(  enc->pin_btn );
 	if ( level == 1 ) {
 		enc->state = ENCODER_STATE_PRESSED;
@@ -54,49 +54,118 @@ static void IRAM_ATTR encoder_press_isr_handler(encoder_handle_t enc_h) {
 	portEND_SWITCHING_ISR( HPTaskAwoken == pdTRUE );
 }
 
+void IRAM_ATTR setCount(encoder_handle_t enc_h) {          // Устанавливаем значение счетчика
+  encoder_t * enc = (encoder_t *)enc_h;
+  if ( enc->rotate_state == 4 || enc->rotate_state == -4) {  // Если переменная state приняла заданное значение приращения
+    enc->count += (int)(enc->rotate_state / 4);      // Увеличиваем/уменьшаем счетчик
+    enc->lastTurn = esp_timer_get_time();            // Запоминаем последнее изменение
+  }
+}
+
 static void IRAM_ATTR encoder_rotate_isr_handler(encoder_handle_t enc_h) {
 	encoder_t * enc = (encoder_t *)enc_h;
 	
+	
 	portBASE_TYPE HPTaskAwoken = pdFALSE;
 	BaseType_t xHigherPriorityTaskWoken;
-	
+
+	void *func = NULL;
+	void *arg = NULL;	
+
 	int level_clk = gpio_get_level(  enc->pin_clk );
 	int level_dt = gpio_get_level(  enc->pin_dt );
 	
-	void *func;
-    void *arg;	
-		
-		// дребезг контактов !!!
-	if ( level_clk == level_dt ){
-		enc->position++;
-		enc->direction = ENCODER_ROTATE_RIGHT; 
-		func = enc->right;
-		arg = enc;
-	} else {
-		enc->position--;
-		enc->direction = ENCODER_ROTATE_LEFT;
-		func = enc->left;
-		arg = enc;		
-	}		
 	
-	if ( enc->position == 0 ) enc->direction = ENCODER_ROTATE_ZERO;
-	//send to queue encoder direction
-	
-	if ( enc->taskq != NULL && enc->argq != NULL ) {
-	
-		xQueueOverwriteFromISR( enc->taskq, &func, &xHigherPriorityTaskWoken);
-		xQueueOverwriteFromISR( enc->argq, &arg, &xHigherPriorityTaskWoken);		
+
+	if ( level_clk && !enc->rotate_state)
+	{
+		if ( millis() - enc->lastTurn < ENCODER_ROTATE_DEBOUNCE_TIME) return;
+		if ( level_dt) {		 
+			//right
+				enc->position++;
+				enc->direction = ENCODER_ROTATE_RIGHT; 
+				func = enc->right;
+				arg = enc;
+		} else {
+				enc->position--;
+				enc->direction = ENCODER_ROTATE_LEFT; 
+				func = enc->left;
+				arg = enc;
+		}		
+		if ( enc->position == 0 ) enc->direction = ENCODER_ROTATE_ZERO;
+		if ( enc->taskq != NULL && enc->argq != NULL ) {
+			xQueueOverwriteFromISR( enc->taskq, &func, &xHigherPriorityTaskWoken);
+			xQueueOverwriteFromISR( enc->argq, &arg, &xHigherPriorityTaskWoken);		
+		}
 	}
-	
+
+	enc->rotate_state = level_clk;
 	portEND_SWITCHING_ISR( HPTaskAwoken == pdTRUE );
 }
+/*
+static void IRAM_ATTR encoder_dt_isr_handler(encoder_handle_t enc_h) {
+	encoder_t * enc = (encoder_t *)enc_h;
+	
+	
+	if (micros() - enc->lastTurn < enc->pause) return;
+
+	portBASE_TYPE HPTaskAwoken = pdFALSE;
+	BaseType_t xHigherPriorityTaskWoken;
+
+	int level_clk = gpio_get_level(  enc->pin_clk );
+	int level_dt = gpio_get_level(  enc->pin_dt );
+	
+	if ( level_clk == 1 && level_dt == 0) {
+		enc->rotate_state = -1;
+		enc->lastTurn = micros();
+	}
+	else if ( level_clk == 0 && level_dt == 0 ) {
+		enc->rotate_state = -2;
+		enc->lastTurn = micros();
+	}
+	else if ( level_clk == 0 && level_dt == 1 ) {
+		enc->rotate_state = -3;	
+		enc->lastTurn = micros();
+	}
+	else if ( level_clk == 1 && level_dt == 1 ) {
+		enc->rotate_state = -4;	
+		enc->lastTurn = micros();
+	}	
+
+	if ( enc->rotate_state == -4)
+	{
+		void *func;
+		void *arg;	
+
+			enc->position--;
+			enc->direction = ENCODER_ROTATE_LEFT; 
+			func = enc->left;
+			arg = enc;
 
 
+		if ( enc->position == 0 ) enc->direction = ENCODER_ROTATE_ZERO;
+		//send to queue encoder direction
+		
+		if ( enc->taskq != NULL && enc->argq != NULL ) {
+		
+			xQueueOverwriteFromISR( enc->taskq, &func, &xHigherPriorityTaskWoken);
+			xQueueOverwriteFromISR( enc->argq, &arg, &xHigherPriorityTaskWoken);		
+		}
+	}
+	portEND_SWITCHING_ISR( HPTaskAwoken == pdTRUE );
+}
+*/
 static void reset_params(encoder_handle_t enc_h){
 	encoder_t * enc = (encoder_t *)enc_h;
 	enc->state = ENCODER_STATE_IDLE;
 	enc->direction = ENCODER_ROTATE_ZERO;
 	enc->position = 0;
+
+	enc->pause    = ENCODER_ROTATE_DEBOUNCE_TIME;  
+	enc->lastTurn = 0;   
+	enc->rotate_state = 0;
+	enc->count = 0;
+
 }
 
 static void encoder_enable( encoder_handle_t enc_h ) {
@@ -104,7 +173,8 @@ static void encoder_enable( encoder_handle_t enc_h ) {
 	enc->status = ENCODER_ENABLED;
 	gpio_install_isr_service(0);
 	gpio_isr_handler_add( enc->pin_clk, encoder_rotate_isr_handler, enc);
-	gpio_isr_handler_add( enc->pin_btn, encoder_press_isr_handler, enc);
+	//gpio_isr_handler_add( enc->pin_dt, encoder_rotate_isr_handler, enc);
+	gpio_isr_handler_add( enc->pin_btn, encoder_btn_isr_handler, enc);
 	reset_params( enc );	
 
 	if (enc->taskq == NULL ) enc->taskq = xQueueCreate(1, sizeof(void *));
@@ -117,6 +187,7 @@ static void encoder_disable( encoder_handle_t enc_h ) {
 	encoder_t * enc = (encoder_t *)enc_h;
 	enc->status = ENCODER_DISABLED;
 	gpio_isr_handler_remove( enc->pin_clk );
+	//gpio_isr_handler_remove( enc->pin_dt );
 	gpio_isr_handler_remove( enc->pin_btn );
 	reset_params( enc );
 	
@@ -154,11 +225,11 @@ encoder_handle_t encoder_init(encoder_config_t enc_cfg){
 	enc->task_rotate_cb = task_rotate_cb;
 
     gpio_config_t gpio_conf;
-  	gpio_conf.intr_type = GPIO_INTR_POSEDGE;
+  	gpio_conf.intr_type = GPIO_INTR_ANYEDGE;
     gpio_conf.mode = GPIO_MODE_INPUT;
     gpio_conf.pin_bit_mask = (1ULL << enc->pin_btn) | (1ULL << enc->pin_clk) | (1ULL <<  enc->pin_dt);
     gpio_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    gpio_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+    gpio_conf.pull_up_en = GPIO_PULLUP_ENABLE;
     gpio_config(&gpio_conf);
 
 	// кнопку переиспользовать через button
