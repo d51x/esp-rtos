@@ -98,8 +98,10 @@ esp_err_t ledcontrol_register_channel(ledcontrol_channel_t led_channel)
     ledc->channels[ ch ].channel = led_channel->channel;
 */    
     ledc->channels[ ch ].duty = 0;
-    ledc->channels[ ch ].bright_tbl = NONE;
-    
+    ledc->channels[ ch ].bright_tbl = led_channel.bright_tbl;
+    ledc->channels[ ch ].inverted = led_channel.inverted;
+    ESP_LOGI(TAG, "channel %d inverted %d", ch, led_channel.inverted);
+    ESP_LOGI(TAG, "channel %d bright_tbl %d", ch, led_channel.bright_tbl);
     return ESP_OK;
 }
 
@@ -122,6 +124,14 @@ void ledcontrol_init()
     int16_t *phases = malloc( sizeof(uint16_t) * ledc->led_cnt);
     memset(phases, 0, sizeof(uint16_t) * ledc->led_cnt);
     pwm_set_phases(phases);
+
+    uint32_t bitmask = 1;
+	for (uint8_t i = 0; i < ledc->led_cnt; i++ ) {
+		uint8_t ch = ledc->channels[i].channel;
+		if (ledc->channels[i].inverted )
+            bitmask = bitmask | bitmask << ledc->channels[i].channel;
+	}    
+    pwm_set_channel_invert( bitmask );
 
     pwm_start();
     free(phases);

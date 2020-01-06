@@ -58,50 +58,52 @@ void app_main(void){
 
     xTaskCreate(main_task, "main_task", 1024, NULL, 10, NULL);
 
-//    #define LED_CTRL_CNT        3
-    #define LED_CTRL_CNT        1
+    #define LED_CTRL_CNT        4
+    // #define LED_CTRL_CNT        1
     #define LED_FREQ_HZ         500
 
-    // #define LED_CTRL_RED_CH     0
-    // #define LED_CTRL_GREEN_CH   1 
-    #define LED_CTRL_GREEN_CH   0 
-    // #define LED_CTRL_BLUE_CH    2 
-    // #define LED_CTRL_WHITE_CH  3 
+    #define LED_CTRL_RED_CH     0
+    #define LED_CTRL_GREEN_CH   1 
+    #define LED_CTRL_BLUE_CH    2 
+    #define LED_CTRL_WHITE_CH   3 
 
-    // #define LED_CTRL_RED_PIN    15
-     #define LED_CTRL_GREEN_PIN  12
-    // #define LED_CTRL_BLUE_PIN   13
-    // #define LED_CTRL_WHITE_PIN  2
+    #define LED_CTRL_RED_PIN    15
+    #define LED_CTRL_GREEN_PIN  12
+    #define LED_CTRL_BLUE_PIN   13
+    #define LED_CTRL_WHITE_PIN  2
 
-    // ledcontrol_channel_t ch_red = {
-    //     .pin = LED_CTRL_RED_PIN,
-    //     .channel = LED_CTRL_RED_CH,
-    // };
+    ledcontrol_channel_t ch_red = {
+        .pin = LED_CTRL_RED_PIN,
+        .channel = LED_CTRL_RED_CH,
+        .inverted = true
+    };
     
     ledcontrol_channel_t ch_green = {
         .pin = LED_CTRL_GREEN_PIN,
         .channel = LED_CTRL_GREEN_CH,
     };
 
-    // ledcontrol_channel_t ch_blue = {
-    //     .pin = LED_CTRL_BLUE_PIN,
-    //     .channel = LED_CTRL_BLUE_CH,
-    // };
+    ledcontrol_channel_t ch_blue = {
+        .pin = LED_CTRL_BLUE_PIN,
+        .channel = LED_CTRL_BLUE_CH,
+    };
+
+    ledcontrol_channel_t ch_white = {
+        .pin = LED_CTRL_WHITE_PIN,
+        .channel = LED_CTRL_WHITE_CH,
+        .inverted = true
+    };
 
     ledcontrol_t* ledc_h = ledcontrol_create(LED_FREQ_HZ, LED_CTRL_CNT);
     ledc = (ledcontrol_t *)ledc_h;
 
-    //ledc->register_channel(ch_red);
+    ledc->register_channel(ch_red);
     ledc->register_channel(ch_green);
-    //ledc->register_channel(ch_blue);
+    ledc->register_channel(ch_blue);
+    ledc->register_channel(ch_white);
 
-
-//ESP_LOGI(TAG, "### red addr %p", &ch_red);
-//ESP_LOGI(TAG, "### green addr %p", &ch_green);
-//ESP_LOGI(TAG, "### blue addr %p", &ch_blue);
-
-    //ledc->init();
-    //add_uri_get_handler( http_server, ledc->uri, ledc->http_get_handler);
+    ledc->init();
+    add_uri_get_handler( http_server, ledc->uri, ledc->http_get_handler);
 
     //rgb_ledc = rgbcontrol_init(ledc, ch_red, ch_green, ch_blue);
     //rgb_ledc = rgbcontrol_init(ledc, &ch_red, &ch_green, &ch_blue);
@@ -150,22 +152,8 @@ void app_main(void){
     // for (int i=0;i<4;i++){   // check for null
     //     relay_write(relays[i], RELAY_STATE_CLOSE);
     // }
-    relay_write(relay12, RELAY_STATE_CLOSE);
+    // relay_write(relay12, RELAY_STATE_CLOSE);
 
-
-    encoder_config_t enc_cfg = {
-        .pin_btn = 13,
-        .pin_clk = 4,	
-        .pin_dt = 0,
-        .left = btn4_press_1_cb,
-	    .cb_left_ctx = "left",
-	    .right = btn0_press_1_cb,
-	    .cb_right_ctx = "right",
-	    .press = btn4_press_2_cb,
-	    .cb_press_ctx = "press",
-    };
-
-    enc_h = encoder_init(enc_cfg);
 
 }
 
@@ -173,12 +161,9 @@ void app_main(void){
 
 
 
-// будет поочереди, чтобы одновременно, надо запускать tasks
+
 void btn4_press_1_cb() {
-    //ESP_LOGI(TAG, __func__);
-    ESP_LOGI(TAG, "Turn left");
-    //relay_write(relays[1], RELAY_STATE_OPEN );
-    //relay_write(relay12, RELAY_STATE_OPEN );
+
 }
 
 void btn4_hold_1s_cb() {
@@ -186,7 +171,7 @@ void btn4_hold_1s_cb() {
 }
 
 void btn4_press_2_cb() {
-    //relay_write(relays[1], RELAY_STATE_CLOSE );
+    
 }
 
 void btn4_press_3_cb() {
@@ -194,10 +179,7 @@ void btn4_press_3_cb() {
 }
 
 void btn0_press_1_cb() {
-    //ESP_LOGI(TAG, __func__);
-    ESP_LOGI(TAG, "Turn right");
-    //relay_write(relays[2], RELAY_STATE_OPEN );
-    //relay_write(relay12, RELAY_STATE_CLOSE );
+
 }
 
 void btn0_hold_1s_cb() {
@@ -205,7 +187,7 @@ void btn0_hold_1s_cb() {
 }
 
 void btn0_press_2_cb() {
-    //relay_write(relays[2], RELAY_STATE_CLOSE );
+
 }
 
 void btn0_press_3_cb() {

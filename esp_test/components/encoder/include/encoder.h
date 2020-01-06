@@ -14,7 +14,7 @@
 #include "utils.h"
 
 
-#define ENCODER_ROTATE_DEBOUNCE_TIME 300 // msec
+#define ENCODER_ROTATE_DEBOUNCE_TIME 50 // msec
 
 typedef struct encoder encoder_t;
 typedef struct encoder_config encoder_config_t;

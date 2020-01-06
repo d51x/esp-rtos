@@ -75,7 +75,7 @@ static void IRAM_ATTR encoder_rotate_isr_handler(encoder_handle_t enc_h) {
 	int level_clk = gpio_get_level(  enc->pin_clk );
 	int level_dt = gpio_get_level(  enc->pin_dt );
 	
-	
+
 
 	if ( level_clk && !enc->rotate_state)
 	{
@@ -225,7 +225,7 @@ encoder_handle_t encoder_init(encoder_config_t enc_cfg){
 	enc->task_rotate_cb = task_rotate_cb;
 
     gpio_config_t gpio_conf;
-  	gpio_conf.intr_type = GPIO_INTR_ANYEDGE;
+  	gpio_conf.intr_type = GPIO_INTR_POSEDGE;
     gpio_conf.mode = GPIO_MODE_INPUT;
     gpio_conf.pin_bit_mask = (1ULL << enc->pin_btn) | (1ULL << enc->pin_clk) | (1ULL <<  enc->pin_dt);
     gpio_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;

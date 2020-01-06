@@ -63,6 +63,7 @@ struct ledcontrol_channel {
 		uint8_t pin;
 		uint8_t channel;
 		uint16_t duty;
+		bool inverted;
 		brightness_table_e bright_tbl;
 };
 

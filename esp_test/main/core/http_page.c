@@ -14,6 +14,7 @@ void httpd_resp_sendstr_chunk(httpd_req_t *req, const char *buf){
 }
 
 void print_html_header_data(char *buf, const char *title) {
+    ESP_LOGI(TAG, __func__);
     sprintf(buf, html_header, title);
 }
 
@@ -25,6 +26,7 @@ void print_html_footer_data(char *buf) {
 }
 
 void print_html_devinfo(char *buf) {
+    ESP_LOGI(TAG, __func__);
     char * buf2 = malloc(20);
     get_uptime(buf2);
     sprintf(buf, html_devinfo, hostname, esp_get_free_heap_size(), wifi_get_rssi(), esp_wifi_get_vdd33(), buf2);
@@ -123,10 +125,12 @@ void print_html_setup(char *buf){
 }
 
 void get_main_page_data(char *data) {
+    ESP_LOGI(TAG, __func__);
     print_html_header_data(data, "Main page"); // TODO: взять из context
     print_html_devinfo(data+strlen(data));
 
-    sprintf(data+strlen(data), "<div id=\"sens\">");        
+    sprintf(data+strlen(data), "<div id=\"sens\">");    
+    /*    
     #ifdef DS18B20
         print_html_dsw(&ds18b20, DSW_COUNT, data+strlen(data));
     #endif
@@ -138,12 +142,12 @@ void get_main_page_data(char *data) {
     #ifdef GPIO
         print_html_gpio( data + strlen( data ));
     #endif
-
+    */
 
     // ============================= PRINT COLOR EFFECT INFO ==============================
     //ledc->print_html_data(data);
   
-    
+    /*
     sprintf(data + strlen( data ), html_gpio_header);
 
     const char *html_relay_item = "<span><a href=\"#\" rel=\"relay\" data-id=\"%d\" data-title=\"GPIO%02d\" data-val=\"%d\">"
@@ -160,7 +164,9 @@ void get_main_page_data(char *data) {
           
     }
     sprintf(data + strlen( data ), html_gpio_end);
+    */
     // ====================== checkbox ====================================================
+    /*
     const char *html_checkbox = "<span><input type=\"checkbox\" rel=\"relay\" name=\"relay%d\" value=\"%d\" %s ></span> <span id=\"relay%d\">%s</span>";
     for (int i=0; i<4; i++) {
         relay_t *relay = (relay_t *)relays[i];
@@ -171,7 +177,9 @@ void get_main_page_data(char *data) {
                                         relay->pin,
                                         relay->state ? "ON" : "OFF");
     }
+    */
     // ***************************** ledc **********************************
+    ESP_LOGI(TAG, "print ledc data");
     sprintf(data + strlen( data ), "<div class=\"ledc\"><h4>Led controller channels</h4>");
 
     const char *html_ledc_item = "<div><input type=\"range\" max=\"255\" name=\"ledc%d\" value=\"%d\"><i id=\"ledc%d\">%d</i></div>";
@@ -183,10 +191,11 @@ void get_main_page_data(char *data) {
                                         ledc->channels[i].channel,   // id
                                         ledc->channels[i].duty);     // title
     }
+    
     sprintf(data + strlen( data ), "</div>");
     // *********************************************************************
 
-    rgb_ledc->print_html_data(data);
+    // rgb_ledc->print_html_data(data);
     
     // ==============================================================================
     sprintf(data + strlen( data ), "<script type=\"text/javascript\" src=\"ajax.js\"></script>");
