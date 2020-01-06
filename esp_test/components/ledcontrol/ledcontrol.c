@@ -216,59 +216,47 @@ void ledcontrol_channel_prev_duty(ledcontrol_channel_t *channel, uint8_t step)
 }
 
 static uint8_t get_min_index_from_brightness_table(ledcontrol_channel_t *channel, uint16_t duty) {
-    ESP_LOGI(TAG, __func__);
     uint8_t idx = 0;
     if ( channel->bright_tbl != TBL_NONE ) {
         uint32_t *tbl = tbl_brightness[ channel->bright_tbl ]; // pointer to brightness table
         uint8_t step = bright_steps[ channel->bright_tbl  ]; // brightness step count
-        ESP_LOGI(TAG, "steps %d", step+1);
 
         for (uint8_t i = 0; i < step+1 ; i++) {
             uint8_t val = tbl[i];  // brightness value from table
-            
             uint8_t val_next = ( i + 1 >= step + 1 ) ? val : tbl[i + 1];
+            if ( duty >= val && duty < val_next ) {
+                idx = i;
+                break;
+            } else if ( duty == val_next) {
+                idx = i + 1;
+                break;
+            }
+        }
+    }
+    return idx;
+}
 
-            ESP_LOGI(TAG, "duty %d, idx %d -> value %d, -> val next %d", duty, i, val, val_next);
-
-            if ( duty >= val && duty <= val_next ) {
-                //res = val_next;
+static uint8_t get_max_index_from_brightness_table(ledcontrol_channel_t *channel, uint16_t duty) {
+    uint8_t idx = 0;
+    if ( channel->bright_tbl != TBL_NONE ) {
+        uint32_t *tbl = tbl_brightness[ channel->bright_tbl ]; // pointer to brightness table
+        uint8_t step = bright_steps[ channel->bright_tbl  ]; 
+        for (uint8_t i = 0; i < step+1 ; i++) {
+            uint8_t val = tbl[i];  // brightness value from table
+            uint8_t val_next = ( i + 1 >= step + 1 ) ? val : tbl[i + 1];
+            if ( duty > val && duty <= val_next ) {
+                idx = i+1;
+                break;
+            } else if ( duty == val) {
                 idx = i;
                 break;
             }
         }
     }
-    ESP_LOGI(TAG, "result idx %d", idx);
-    return idx;
-}
-
-static uint8_t get_max_index_from_brightness_table(ledcontrol_channel_t *channel, uint16_t duty) {
-    ESP_LOGI(TAG, __func__);
-    uint8_t idx = 0;
-    if ( channel->bright_tbl != TBL_NONE ) {
-        uint32_t *tbl = tbl_brightness[ channel->bright_tbl ]; // pointer to brightness table
-        uint8_t step = bright_steps[ channel->bright_tbl  ]; // brightness step count
-        ESP_LOGI(TAG, "steps %d", step+1);
-
-        for (uint8_t i = 0; i < step+1 ; i++) {
-            uint8_t val = tbl[i];  // brightness value from table
-            uint8_t val_next = ( i + 1 >= step + 1 ) ? val : tbl[i + 1];
-            ESP_LOGI(TAG, "duty %d, idx %d -> value %d, -> val next %d", duty, i, val, val_next);
-            if ( duty > val && duty <= val_next ) {
-                //res = val_next;
-                idx = i+1;
-                break;
-            } else if ( duty == val  ) {
-                idx = i;
-                break;
-            } 
-        }
-    }
-    ESP_LOGI(TAG, "result idx %d", idx);
     return idx;
 }
 
 static void ledcontrol_channel_fade_by_table(ledcontrol_channel_t *channel, uint16_t duty_from, uint16_t duty_to, uint16_t duty_delay){
-    ESP_LOGI(TAG, __func__);
 
     direction_e direction;
     uint8_t idx_start = 0;
@@ -276,21 +264,15 @@ static void ledcontrol_channel_fade_by_table(ledcontrol_channel_t *channel, uint
 
     if (duty_from < duty_to) {
         direction = UP;
-        idx_start = get_min_index_from_brightness_table(channel, duty_from);
+        idx_start = get_max_index_from_brightness_table(channel, duty_from);
         idx_stop = get_max_index_from_brightness_table(channel, duty_to);
     } else {
         direction = DOWN;
-        idx_start = get_max_index_from_brightness_table(channel, duty_from);
+        idx_start = get_min_index_from_brightness_table(channel, duty_from);
         idx_stop = get_min_index_from_brightness_table(channel, duty_to);
     }
 
-    ESP_LOGI(TAG, "br-tbl %d, start idx %d, stop idx %d",  channel->bright_tbl, idx_start, idx_stop);
-
     int16_t i = idx_start;
-
-    ESP_LOGI(TAG, "br-tbl %d, start idx %d, stop idx %d, start from %d, direction %d",  
-         channel->bright_tbl,    idx_start,    idx_stop,             i, direction);
-
     uint32_t *tbl = tbl_brightness[ channel->bright_tbl ];
     
     while ( (direction == UP && i <= idx_stop) ||
@@ -299,9 +281,7 @@ static void ledcontrol_channel_fade_by_table(ledcontrol_channel_t *channel, uint
     {
         
         uint8_t duty = tbl[i];
-
-        ESP_LOGI(TAG, "i %d, duty %d", i, duty);
-
+        
         ledcontrol_set_duty(channel, duty);
         ledcontrol_update();
         if ( direction == UP )
@@ -379,6 +359,8 @@ void ledcontrol_all_on(){
 }
 
 void ledcontrol_all_next_duty(uint8_t step){
+
+    // TODO: учесть таблицы яркости
     ledcontrol_channel_t *p = ledc->channels;
 	for (uint8_t i = 0; i < ledc->led_cnt; i++ ) {
         uint16_t duty = ledc->channels[i].duty;
@@ -393,6 +375,7 @@ void ledcontrol_all_next_duty(uint8_t step){
 }
 
 void ledcontrol_all_prev_duty(uint8_t step){
+    // TODO: учесть таблицы яркости
     ledcontrol_channel_t *p = ledc->channels; 
 	for (uint8_t i = 0; i < ledc->led_cnt; i++ ) {
         uint16_t duty = ledc->channels[i].duty;
@@ -408,6 +391,8 @@ void ledcontrol_all_prev_duty(uint8_t step){
 
 void ledcontrol_all_fade(uint16_t duty_from, uint16_t duty_to, uint16_t duty_delay) {
     //ESP_LOGI(TAG, __func__);
+    // TODO: учесть таблицы яркости только если все каналы имеют одну и туже таблицу яркости
+
     direction_e direction = (duty_from < duty_to) ? UP : DOWN;
     int16_t duty = duty_from ;
 
