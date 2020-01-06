@@ -75,17 +75,18 @@ void app_main(void){
     ledcontrol_channel_t ch_red = {
         .pin = LED_CTRL_RED_PIN,
         .channel = LED_CTRL_RED_CH,
-        .inverted = true
     };
     
     ledcontrol_channel_t ch_green = {
         .pin = LED_CTRL_GREEN_PIN,
         .channel = LED_CTRL_GREEN_CH,
+        .bright_tbl = TBL_LOG,
     };
 
     ledcontrol_channel_t ch_blue = {
         .pin = LED_CTRL_BLUE_PIN,
         .channel = LED_CTRL_BLUE_CH,
+        .bright_tbl = TBL_32B,
     };
 
     ledcontrol_channel_t ch_white = {

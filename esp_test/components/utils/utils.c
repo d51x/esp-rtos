@@ -333,3 +333,10 @@ uint32_t hex2int(char *hex) {
     }
     return val;
 }
+
+uint32_t uround(float val) {
+    uint32_t val2 = val * 10;  // 238,9 * 10 = 2389
+    uint32_t res = val2 / 10; // 238
+    if ( val2 % 10 >=5 ) ++res;
+    return res;
+}
