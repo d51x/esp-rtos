@@ -45,9 +45,15 @@ struct pir_conf {
 	
 	void *cb_low_ctx;
 	func_cb low_cb;
-	int interval;
-	void *cb_tmr_ctx;
-	func_cb tmr_cb;		// callback for end timer after start interrupt
+
+	int poll_interval;
+	int interval_low;
+	void *cb_tmr_low_ctx;
+	func_cb tmr_low_cb;		// callback for end timer after start interrupt
+
+	int interval_high;
+	void *cb_tmr_high_ctx;
+	func_cb tmr_high_cb;		// callback for end timer after start interrupt
 
 
 };
@@ -69,11 +75,19 @@ struct pir {
 	TaskHandle_t task;
 	TaskHandle_t task_poll;
 
-	TimerHandle_t tmr;
+	int poll_interval;
+
+	TimerHandle_t tmr_low;
+	TimerHandle_t tmr_high;
 	func_cb task_cb;
-	TickType_t interval;
-	void *cb_tmr_ctx;
-	func_cb tmr_cb;		// callback for end timer after start interrupt
+
+
+	TickType_t interval_low;
+	TickType_t interval_high;
+	void *cb_tmr_low_ctx;
+	func_cb tmr_low_cb;		// callback for end timer after start interrupt
+	void *cb_tmr_high_ctx;
+	func_cb tmr_high_cb;		// callback for end timer after start interrupt
 
 	func_cb enable;
 	func_cb disable;	
