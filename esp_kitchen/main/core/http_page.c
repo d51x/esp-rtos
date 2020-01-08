@@ -1,11 +1,10 @@
 #include "http_page.h"
 #include "http_page_tpl.h"
+#include "core.h"
 
 static const char *TAG = "WEB";
 
 void set_redirect_header(uint8_t time, const char *uri, char *data){
-    ESP_LOGI(TAG, __func__);
-    ESP_LOGI(TAG, "redirect uri: %s", uri);
     sprintf(data, html_header_redirect, time, uri);
 }
 
@@ -14,7 +13,6 @@ void httpd_resp_sendstr_chunk(httpd_req_t *req, const char *buf){
 }
 
 void print_html_header_data(char *buf, const char *title) {
-    ESP_LOGI(TAG, __func__);
     sprintf(buf, html_header, title);
 }
 
@@ -26,34 +24,12 @@ void print_html_footer_data(char *buf) {
 }
 
 void print_html_devinfo(char *buf) {
-    ESP_LOGI(TAG, __func__);
     char * buf2 = malloc(20);
     get_uptime(buf2);
     sprintf(buf, html_devinfo, hostname, esp_get_free_heap_size(), wifi_get_rssi(), esp_wifi_get_vdd33(), buf2);
     free(buf2);
 }
 
-
-#ifdef DS18B20
-void print_html_dsw(const ds18b20_t *_dsw, uint8_t cnt, char *buf) {
-
-    sprintf(buf, html_ds18b20_header);
-    uint8_t i = 0;   
-    for (i=0;i<cnt;i++) {
-		if ( _dsw[i].addr[0] ) {
-                sprintf(buf+strlen(buf), html_ds18b20_data, i+1, _dsw[i].temp, 
-                                                        _dsw[i].addr[0], _dsw[i].addr[1], _dsw[i].addr[2], _dsw[i].addr[3], 
-                                                        _dsw[i].addr[4], _dsw[i].addr[5], _dsw[i].addr[6], _dsw[i].addr[7]);
-            }
-		}       
-}
-#endif  
-
-#ifdef DHT
-void print_html_dht(const dht_t *dht, char *buf) {
-    sprintf(buf, html_dht_data, dht->temp, dht->hum);
-}
-#endif
 
 void print_html_menu(char *buf) {
     sprintf(buf, "<menu>");
@@ -66,7 +42,76 @@ void print_html_menu(char *buf) {
 }
 
 void print_html_tools(char *buf){
-    sprintf(buf, html_tools_body);
+    strcpy(buf, "");
+    const char *pir_mode_item = "<option value=\"%d\" %s>%s</option>";
+    char pir_mode_items[60*4] = "";
+
+    for (uint8_t i = 0; i<4; i++) {
+        
+        sprintf(pir_mode_items + strlen(pir_mode_items), pir_mode_item, 
+                                                         i, 
+                                                         (pir_mode == i) ? "selected=\"selected\" " : "",
+                                                         pir_mode_desc[i]);
+    }
+
+    const char *html_form_opt = "<div>"
+                            "<form method=\"GET\" id=\"opt\">"
+                            "<p><span><input type=\"checkbox\" name=\"pir_en\" value=\"%d\" %s></span>"
+                            "<span>Датчик движения</span></p>"  // checkbox
+                            "<p><span>Режим подсветки рабочей зоны:</span></p>"  // combobox
+                            "<p>"
+                            "<select id=\"pir-mode\" name=\"pir-mode\" onchange=\"pirmode()\" form=\"opt\">"
+                            "%s"
+                            "</select>"
+                            "</p>"
+                                
+                            "<p><span>Pir off delay: </span><input size=\"2\" name=\"pir_off_delay\" value=\"%d\"><span>sec</span></p>"
+                            "<p><span>Fadeup delay: </span><input size=\"2\" name=\"fadeup\" value=\"%d\"><span>msec</span></p>"
+                            "<p><span>Fadedown delay: </span><input size=\"2\" name=\"fadedown\" value=\"%d\"><span>msec</span></p>"
+                            "<p><input type=\"hidden\" name=\"st\" value=\"1\"></p>"
+                            //"<p><input class=\"on\" type=\"submit\" value=\"\"></p>" 
+                            "<button class=\"on\">Set</button>"
+                            "</form>"                       
+                            "</div>"
+                           ;
+
+    sprintf(buf+strlen(buf), html_form_opt
+                            , 1 
+                            , is_pir_enabled ? "checked" : ""
+                            , pir_mode_items
+                            , pir_timer_off_delay
+                            , white_led_fadeup_delay
+                            , white_led_fadeout_delay
+    );
+
+  const char *html_form_opt_pin = "<div>"
+                            "<form method=\"GET\" id=\"optpin\">"        
+                            "<p><span>Канал R GPIO: </span><input size=\"2\" name=\"ledpin0\" value=\"%d\"></p>"
+                            "<p><span>Канал G GPIO: </span><input size=\"2\" name=\"ledpin1\" value=\"%d\"></p>"
+                            "<p><span>Канал B GPIO: </span><input size=\"2\" name=\"ledpin2\" value=\"%d\"></p>"
+                            "<p><span>Канал W GPIO: </span><input size=\"2\" name=\"ledpin3\" value=\"%d\"></p>"
+                            "<p><span>Канал WW GPIO: </span><input size=\"2\" name=\"ledpin4\" value=\"%d\"></p>"
+                            
+                            "<p><span>Fan GPIO: </span><span><input size=\"2\" name=\"fanpin\" value=\"%d\"></span></p>"
+                            "<p><span>PIR GPIO: </span><span><input size=\"2\" name=\"pirpin\" value=\"%d\"></span></p>"
+                            "<p><span>IR GPIO: </span><span><input size=\"2\" name=\"irpin\" value=\"%d\"></span></p>"
+                            "<p><input type=\"hidden\" name=\"st\" value=\"2\"></p>"
+                            //"<p><input class=\"on\" type=\"submit\" value=\"\"></p>" 
+                            "<button class=\"on\">Set</button>"
+                            "</form>"                       
+                            "</div>"
+                           ;
+    sprintf(buf+strlen(buf), html_form_opt_pin, main_led_pins[0]
+                                              , main_led_pins[1]
+                                              , main_led_pins[2]
+                                              , main_led_pins[3]
+                                              , main_led_pins[4]
+                                              , relay_fan_pin
+                                              , pir_pin
+                                              , ir_pin
+    );
+
+    sprintf(buf+strlen(buf), html_restart_button);
 }
 
 void print_html_setup(char *buf){
@@ -125,46 +170,95 @@ void print_html_setup(char *buf){
 }
 
 void get_main_page_data(char *data) {
-    ESP_LOGI(TAG, __func__);
     print_html_header_data(data, "Main page"); // TODO: взять из context
     print_html_devinfo(data+strlen(data));
 
-    sprintf(data+strlen(data), "<div id=\"sens\">");    
-    /*    
-    #ifdef DS18B20
-        print_html_dsw(&ds18b20, DSW_COUNT, data+strlen(data));
-    #endif
-    #ifdef DHT
-        sprintf(data+strlen(data), html_dht_header);
-        print_html_dht(&dht, data+strlen(data));
-        //print_html_dht(&dht2, data+strlen(data));
-    #endif
-    #ifdef GPIO
-        print_html_gpio( data + strlen( data ));
-    #endif
-    */
+    sprintf(data+strlen(data), "<div id=\"sens\" style=\"border-top: 1px solid grey;\">");    
 
+    // ===== print param info ===========================
+    sprintf(data+strlen(data), "<div style=\"text-align: left; font-size: 14px; "
+                                            "border-bottom: 1px solid grey;\">");
+
+    sprintf(data+strlen(data), "<p>Датчик движения: <b>%s</b></p>", is_pir_enabled ? STR_ON : STR_OFF);
+  
+    sprintf(data+strlen(data), "<p>Режим работы: <b>%s</b></p>", pir_mode_desc[pir_mode] );
+    sprintf(data+strlen(data), "<p>Сейчас: <b>%s</b></p>", is_dark ? "темно" : "светло" );
+    sprintf(data+strlen(data), "<p>Движение: <b>%s</b></p>", is_motion ? STR_YES : STR_NO );
+    //if ( count_down_off > 0 )
+        sprintf(data+strlen(data), "<p>Осталось сек до выключения: <b>%d</b> сек</p>", count_down_off);
+    //if (count_up_motion > 0) 
+        sprintf(data+strlen(data), "<p>Прошло после начала движения: <b>%d</b> сек</p>", count_up_motion);
+
+    sprintf(data+strlen(data), "</div>"); 
+
+    // ================= print fan info =====================
+    
+    const char *html_relay_item = "<div style=\"text-align: left;\">"
+                                  "<span>Вентилятор: </span>"
+                                  "<span><a href=\"#\" rel=\"relay\" data-id=\"%d\" data-title=\"Fan\" data-val=\"%d\">"
+                                         "<button class=\"relay %s\">Fan</button>"
+                                  "</a></span></div>";
+    relay_t *fan = (relay_t *)relay_fan_h;
+    sprintf(data + strlen( data ),  html_relay_item, 
+                                    fan->pin,             // pin        data-id
+                                    fan->state,           // val        data-val
+                                    fan->state ? "on" : "off"  // class
+                                    );     
+    // === print white led info =================================
+    const char *html_white_led_info = "<div style=\"text-align: left;\">"
+                                 "<span>Подсветка рабочей зоны: </span>"
+                                 "<span><i id=\"ledc%d\">%d</i></span>"
+                                 "<span><input type=\"range\" max=\"255\" name=\"ledc%d\" value=\"%d\"></span>"
+                                 "</div>";
+    
+    ledcontrol_channel_t *ch = ledc->channels + LED_CTRL_WHITE_CH;
+    sprintf(data + strlen( data ),  html_white_led_info, 
+                                    ch->channel,      // ajax value
+                                    ch->duty,          // ajax value
+                                    ch->channel,   // input param
+                                    ch->duty      // input param
+                                ); 
+
+    // ***************************** RGB LED DATA **********************************                            
+    // ***************************** ledc **********************************
+    sprintf(data + strlen( data ), "<div class=\"ledc\"><h4>RGB лента</h4>");
+    const char *html_rgb_item = "<p>"
+                                 "<span><b>%s:</b></span>"
+                                 "<span><input type=\"range\" max=\"255\" name=\"ledc%d\" value=\"%d\"></span>"
+                                 "<span><i id=\"ledc%d\">%d</i></span></p>";
+
+    // RED
+    ch = ledc->channels + LED_CTRL_RED_CH;
+    sprintf(data + strlen( data ), html_rgb_item, 
+                                    "R",
+                                    ch->channel,   //name
+                                    ch->duty,      // value
+                                    ch->channel,   // id
+                                    ch->duty);     // title    
+
+    // GREEN
+    ch = ledc->channels + LED_CTRL_GREEN_CH;
+    sprintf(data + strlen( data ), html_rgb_item, 
+                                    "G",
+                                    ch->channel,   //name
+                                    ch->duty,      // value
+                                    ch->channel,   // id
+                                    ch->duty);     // title   
+
+    // BLUE
+    ch = ledc->channels + LED_CTRL_BLUE_CH;
+    sprintf(data + strlen( data ), html_rgb_item, 
+                                    "B",
+                                    ch->channel,   //name
+                                    ch->duty,      // value
+                                    ch->channel,   // id
+                                    ch->duty);     // title  
+
+    sprintf(data + strlen( data ), "</div>");
+    
     // ============================= PRINT COLOR EFFECT INFO ==============================
     //ledc->print_html_data(data);
-  
-    /*
-    sprintf(data + strlen( data ), html_gpio_header);
 
-    const char *html_relay_item = "<span><a href=\"#\" rel=\"relay\" data-id=\"%d\" data-title=\"GPIO%02d\" data-val=\"%d\">"
-                                         "<button class=\"relay %s\">GPIO%02d</button></a></span>";
-
-    for (int i=0; i<4; i++) {
-        relay_t *relay = (relay_t *)relays[i];
-        sprintf(data + strlen( data ), html_relay_item, 
-                                        relay->pin,             // pin
-                                        relay->pin,    // title
-                                        relay->state,           // val
-                                        relay->state ? "on" : "off",  // class
-                                        relay->pin);  
-          
-    }
-    sprintf(data + strlen( data ), html_gpio_end);
-    */
     // ====================== checkbox ====================================================
     /*
     const char *html_checkbox = "<span><input type=\"checkbox\" rel=\"relay\" name=\"relay%d\" value=\"%d\" %s ></span> <span id=\"relay%d\">%s</span>";
@@ -178,24 +272,10 @@ void get_main_page_data(char *data) {
                                         relay->state ? "ON" : "OFF");
     }
     */
-    // ***************************** ledc **********************************
-    ESP_LOGI(TAG, "print ledc data");
-    sprintf(data + strlen( data ), "<div class=\"ledc\"><h4>Led controller channels</h4>");
 
-    const char *html_ledc_item = "<div><input type=\"range\" max=\"255\" name=\"ledc%d\" value=\"%d\"><i id=\"ledc%d\">%d</i></div>";
-
-    for (int i=0; i < ledc->led_cnt; i++) {
-        sprintf(data + strlen( data ), html_ledc_item, 
-                                        ledc->channels[i].channel,   //name
-                                        ledc->channels[i].duty,      // value
-                                        ledc->channels[i].channel,   // id
-                                        ledc->channels[i].duty);     // title
-    }
-    
-    sprintf(data + strlen( data ), "</div>");
     // *********************************************************************
 
-    // rgb_ledc->print_html_data(data);
+    rgb_ledc->print_html_data(data);
     
     // ==============================================================================
     sprintf(data + strlen( data ), "<script type=\"text/javascript\" src=\"ajax.js\"></script>");
@@ -297,7 +377,7 @@ void restarting_page_data(char *data) {
 }
 
 void get_ota_page_data(char *data){
-    ESP_LOGD(TAG, __func__);
+
     print_html_header_data(data, "OTA page");
 
     const esp_partition_t* part = esp_ota_get_running_partition(); 
@@ -317,6 +397,5 @@ void get_ota_page_data(char *data){
     print_html_footer_data(data+strlen(data)); // TODO: взять из context
     free(updated);
     free(nvs_ota);
-    //ESP_LOGI(TAG, "page size: %d", strlen(data));
 }
 

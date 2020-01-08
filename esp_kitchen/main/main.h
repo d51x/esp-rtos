@@ -28,9 +28,12 @@
 void pir_high_cb(void *arg);
 void pir_low_cb(void *arg);
 void pir_timer_low_cb(void *arg);
-void pir_timer_high_cb(void *arg);
+void white_led_smooth_off();
+void white_led_smooth_on();
 
+void mqtt_send_gpio(const char *topic, const char *payload);
+void mqtt_send_pir();
 
-
+void load_params();
 
 #endif 

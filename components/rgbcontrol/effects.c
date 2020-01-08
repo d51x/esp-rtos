@@ -23,7 +23,7 @@ effects_t* effects_init(void *rgbctrl, effect_set_color_hsv_f *cb) {
     effects->set_color_hsv = cb;
     effects->task = NULL;
     effects->task_cb = NULL;
-    effects->effect_id = -1;
+    effects->effect_id = COLOR_EFFECTS_MAX-1;
     
     for ( int i = 0; i < COLOR_EFFECTS_MAX; i++) {
         effect_t *e = effects->effect + i;
@@ -75,13 +75,22 @@ static void cleanup_effect_colors(effects_t *ee) {
 void effects_set_effect( int8_t id ){
     if ( id < 0 || id >= COLOR_EFFECTS_MAX ) return;
     cleanup_effect_colors(effects);
-    effects->effect_id = id;
+    
     effect_t *e = effects->effect + id;
     effects->task_cb = e->cb;
 
     if ( effects->task_cb != NULL ) {
         xTaskCreate( effects->task_cb, "effect_task", 2048, (effect_t *)e, 10, &effects->task);
     }            
+
+    rgbcontrol_t *rgbctl = (rgbcontrol_t *)effects->rgbctrl;
+    if ( rgbctl->mqtt_send && effects->effect_id != id ) {
+        char topic[10] = "effect";
+        rgbctl->mqtt_send(topic, e->name);
+    }
+
+    effects->effect_id = id;
+
 }
 
 void effect_jump3(void *arg) {
@@ -214,8 +223,8 @@ void effect_rnd(void *arg){
 void effect_stop(void *arg){
     effect_t *e = (effect_t *)arg;
     e->type = STOP;
-    e->hsv.h = 0; e->hsv.s = 0; e->hsv.v = 0;
-    e->pe->set_color_hsv( e->hsv );
+    //e->hsv.h = 0; e->hsv.s = 0; e->hsv.v = 0;
+    //e->pe->set_color_hsv( e->hsv );
     while (1) {
         vTaskDelay( 1000 / portTICK_RATE_MS );
     }
@@ -295,6 +304,6 @@ void effects_prev_effect(){
 
 void effects_stop_effect(){
     cleanup_effect_colors(effects);
-    effects->effect_id = -1;
+    effects->effect_id = COLOR_EFFECTS_MAX-1;
 }
 

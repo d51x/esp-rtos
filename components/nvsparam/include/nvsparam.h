@@ -18,6 +18,15 @@
   *     - others: refer to nvs.h
   */
 esp_err_t nvs_param_save(const char* space_name, const char* key, void* param, uint16_t len);
+esp_err_t nvs_param_i8_save(const char* space_name, const char* key, int8_t param);
+esp_err_t nvs_param_u8_save(const char* space_name, const char* key, uint8_t param);
+esp_err_t nvs_param_i16_save(const char* space_name, const char* key, int16_t param);
+esp_err_t nvs_param_u16_save(const char* space_name, const char* key, uint16_t param);
+esp_err_t nvs_param_i32_save(const char* space_name, const char* key, int32_t param);
+esp_err_t nvs_param_u32_save(const char* space_name, const char* key, uint32_t param);
+esp_err_t nvs_param_i64_save(const char* space_name, const char* key, int64_t param);
+esp_err_t nvs_param_u64_save(const char* space_name, const char* key, uint64_t param);
+esp_err_t nvs_param_str_save(const char* space_name, const char* key, const char* param);
 
 /**
   * @brief  read param from flash.
@@ -34,6 +43,16 @@ esp_err_t nvs_param_save(const char* space_name, const char* key, void* param, u
   *     - others: refer to nvs.h
   */
 esp_err_t nvs_param_load(const char* space_name, const char* key, void* dest);
+esp_err_t nvs_param_i8_load(const char* space_name, const char* key, int8_t* dest);
+esp_err_t nvs_param_u8_load(const char* space_name, const char* key, uint8_t* dest);
+esp_err_t nvs_param_i16_load(const char* space_name, const char* key, int16_t* dest);
+esp_err_t nvs_param_u16_load(const char* space_name, const char* key, uint16_t* dest);
+esp_err_t nvs_param_i32_load(const char* space_name, const char* key, int32_t* dest);
+esp_err_t nvs_param_u32_load(const char* space_name, const char* key, uint32_t* dest);
+esp_err_t nvs_param_i64_load(const char* space_name, const char* key, int64_t* dest);
+esp_err_t nvs_param_u64_load(const char* space_name, const char* key, uint64_t* dest);
+esp_err_t nvs_param_str_load(const char* space_name, const char* key, char* dest);
+
 
 /**
   * @brief  erase param saved in flash.

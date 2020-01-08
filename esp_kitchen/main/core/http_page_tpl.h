@@ -27,7 +27,7 @@ const char *html_page_device_info =
                             "local time: %s<br>"
                             "</p>";
 
-const char *html_tools_body = "<p><span><a href=\"/restart\"><button class=\"off\">Restart</button></a></span></p>";
+const char *html_restart_button = "<p><span><a href=\"/restart\"><button class=\"off\">Restart</button></a></span></p>";
 
 const char *html_devinfo =   "<div id=\"dev-info\">"
                                     "<h2>Hostname: <b>%s</b></h2>"
@@ -104,7 +104,8 @@ const char *html_setup_form_post = "<form method=\"GET\">"
                                         "<p>buf size: <input size=\"20\" name=\"ota_bufsz\" value=\"%d\"></p>" 
                                         "<hr>"
                                         "<p><input type=\"hidden\" name=\"st\" value=\"1\"></p>"
-                                        "<p><input type=\"submit\" value=\"Set\"></p>";
+                                        "<p><input type=\"submit\" value=\"Set\"></p>"
+                                        "</form>";
 
 const char *html_ota_body =     "<p>Firmware:</p>"
                                 "<p>Loaded: %s.bin</p>"

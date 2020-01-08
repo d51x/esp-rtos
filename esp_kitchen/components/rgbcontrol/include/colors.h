@@ -45,24 +45,51 @@ static const uint32_t hsv_colors_7[7] = { 0,     	// red
 static const color_rgb_t COLOR_BLACK         = {  0,  0,  0};
 // main 7 colors   
 static const color_rgb_t COLOR_RED           = {255,   0,   0};
-static const color_rgb_t COLOR_ORANGE        = {255, 128,   0};      
+#define HEX_COLOR_RED   "FF0000"
+
+static const color_rgb_t COLOR_ORANGE        = {255, 128,   0};  
+#define HEX_COLOR_ORANGE "FF8000"
+
 static const color_rgb_t COLOR_YELLOW        = {255, 255,   0};
+#define HEX_COLOR_YELLOW "FFFF00"
+
 static const color_rgb_t COLOR_GREEN         = {  0, 255,   0};
+#define HEX_COLOR_GREEN "00FF00"
+
 static const color_rgb_t COLOR_CYAN          = {  0, 255, 255};
+#define HEX_COLOR_CYAN "00FFFF"
+
 static const color_rgb_t COLOR_BLUE          = {  0,   0, 255};
+#define HEX_COLOR_BLUE "0000FF"
+
 static const color_rgb_t COLOR_PURPLE        = {255,   0, 255};
+#define HEX_COLOR_PURPLE "FF00FF"
+
 static const color_rgb_t COLOR_WHITE         = {255, 255, 255};
 // light colors
 static const color_rgb_t COLOR_LIMEGREEN     = {128, 255,   0}; 
+#define HEX_COLOR_LIMEGREEN "80FF00"
+
 static const color_rgb_t COLOR_LIGHTBLUE     = {  0, 128, 255}; 
+#define HEX_COLOR_LIGHTBLUE "0080FF"
+
 static const color_rgb_t COLOR_VIOLET        = {128,   0, 255}; 
+#define HEX_COLOR_VIOLET "8000FF"
+
 static const color_rgb_t COLOR_LIGHTGREEN    = {  0, 255, 128}; 
+#define HEX_COLOR_LIGHTGREEN "00FF80"
+
 static const color_rgb_t COLOR_PINK          = {255,   0, 128}; 
+#define HEX_COLOR_PINK "FF0080"
 
 static const color_rgb_t COLOR_DARKPURPLE    = {128,   0, 128};
-static const color_rgb_t COLOR_TEAL          = {  0, 128, 128};
-static const color_rgb_t COLOR_OLIVE         = {128, 128,   0};
+#define HEX_COLOR_DARKPURPLE "800080"
 
+static const color_rgb_t COLOR_TEAL          = {  0, 128, 128};
+#define HEX_COLOR_TEAL "008080"
+
+static const color_rgb_t COLOR_OLIVE         = {128, 128,   0};
+#define HEX_COLOR_OLIVE "808000"
 
 color_hsv_t hsv;
 color_rgb_t *rgb;

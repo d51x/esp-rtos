@@ -50,6 +50,7 @@ ledcontrol_handle_t* ledcontrol_create(uint32_t freq_hz, uint8_t channel_cnt)
 	ledc->init = ledcontrol_init;
 	ledc->register_channel = ledcontrol_register_channel;
     ledc->set_duty = ledcontrol_set_duty;
+    ledc->get_duty = ledcontrol_get_duty;
 	ledc->update = ledcontrol_update;
 	ledc->on = ledcontrol_channel_on;
 	ledc->off = ledcontrol_channel_off;
@@ -104,15 +105,12 @@ esp_err_t ledcontrol_register_channel(ledcontrol_channel_t led_channel)
 
     ledc->channels[ ch ].ledc = ledc;
 
-    ESP_LOGI(TAG, "channel %d inverted %d", ch, led_channel.inverted);
-    ESP_LOGI(TAG, "channel %d bright_tbl %d", ch, led_channel.bright_tbl);
     return ESP_OK;
 }
 
 // инициализация pwm
 void ledcontrol_init()
 {
-    ESP_LOGI(TAG, __func__);
     uint32_t *led_pins = malloc(ledc->led_cnt * sizeof(uint32_t));
 
 	for (uint8_t i = 0; i < ledc->led_cnt; i++ ) {
@@ -142,7 +140,6 @@ void ledcontrol_init()
 	
 	vTaskDelay( 500 / portTICK_RATE_MS);
 	for (uint8_t i = 0; i < ledc->led_cnt; i++ ) {
-        ESP_LOGI(TAG, "set duty %d for channel %d", ledc->channels[i].duty, ledc->channels[i].channel);
 		pwm_set_duty( ledc->channels[i].channel, ledc->channels[i].duty );
 	}	
 	pwm_start();
@@ -151,14 +148,8 @@ void ledcontrol_init()
 // установить duty канала
 void ledcontrol_set_duty(ledcontrol_channel_t *channel, uint16_t duty){
     channel->duty = duty;
-    //ESP_LOGI(TAG, "*** channel %p, channel->channel %d duty %d", channel, channel->channel, duty);
-
     uint16_t real_duty = duty*period/MAX_DUTY;
-    //ESP_LOGI(TAG, "set duty %d for channel %d (real duty %d)", channel->duty, channel->channel, real_duty);
     esp_err_t err = pwm_set_duty(channel->channel, real_duty);    
-    //ESP_LOGI(TAG, esp_err_to_name(err));
-
-    channel->duty = ledcontrol_get_duty(channel);
 }
 
 // получить duty канала
@@ -172,20 +163,17 @@ uint16_t ledcontrol_get_duty(ledcontrol_channel_t *channel){
 }
 
 void ledcontrol_update(){
-    //ESP_LOGI(TAG, __func__);
 	pwm_start();
 
 }
 
 void ledcontrol_channel_on(ledcontrol_channel_t *channel){
-    //ESP_LOGI(TAG, __func__);
     // set MAX DUTY
     ledcontrol_set_duty(channel, MAX_DUTY);
     ledcontrol_update();
 }
 
 void ledcontrol_channel_off(ledcontrol_channel_t *channel){
-    //ESP_LOGI(TAG, __func__);
     // set MAX DUTY
     ledcontrol_set_duty(channel, 0);
     ledcontrol_update();
@@ -193,7 +181,6 @@ void ledcontrol_channel_off(ledcontrol_channel_t *channel){
 
 void ledcontrol_channel_next_duty(ledcontrol_channel_t *channel, uint8_t step)
 {
-    //ESP_LOGI(TAG, __func__);
     uint16_t duty = channel->duty;
     if ( duty <= MAX_DUTY - step ) 
         duty += step;
@@ -205,7 +192,6 @@ void ledcontrol_channel_next_duty(ledcontrol_channel_t *channel, uint8_t step)
 
 void ledcontrol_channel_prev_duty(ledcontrol_channel_t *channel, uint8_t step)
 {
-    //ESP_LOGI(TAG, __func__);
     uint16_t duty = channel->duty;
     if ( duty >= step ) 
         duty -= step;
@@ -295,9 +281,6 @@ static void ledcontrol_channel_fade_by_table(ledcontrol_channel_t *channel, uint
 
 
 void ledcontrol_channel_fade(ledcontrol_channel_t *channel, uint16_t duty_from, uint16_t duty_to, uint16_t duty_delay) {
-    //ESP_LOGI(TAG, __func__);
-
- 
     if ( channel->bright_tbl != TBL_NONE ) {
         ledcontrol_channel_fade_by_table(channel, duty_from, duty_to, duty_delay);
         return;
@@ -305,10 +288,7 @@ void ledcontrol_channel_fade(ledcontrol_channel_t *channel, uint16_t duty_from, 
 
     direction_e direction = (duty_from < duty_to) ? UP : DOWN;
 
-    //ESP_LOGI(TAG, "duty from %d    duty to %d   direction %d", duty_from, duty_to, direction);
-    
     int16_t duty = duty_from;
-
 
     while ( 
             ((direction == UP) && (duty <= duty_to)) ||
@@ -390,7 +370,6 @@ void ledcontrol_all_prev_duty(uint8_t step){
 }
 
 void ledcontrol_all_fade(uint16_t duty_from, uint16_t duty_to, uint16_t duty_delay) {
-    //ESP_LOGI(TAG, __func__);
     // TODO: учесть таблицы яркости только если все каналы имеют одну и туже таблицу яркости
 
     direction_e direction = (duty_from < duty_to) ? UP : DOWN;
@@ -432,7 +411,6 @@ void ledcontrol_print_html_data(char *data){
     char ledc_str[500] = "";
     for (uint8_t i = 0; i < ledc->led_cnt; i++ ) {   
             char tmp[100];
-            ESP_LOGI(TAG, "channel %d pin %d duty %d", ledc->channels[i].channel, ledc->channels[i].pin, ledc->channels[i].duty);
             sprintf(tmp, "<p><span><b>channel:</b> %d</span><span><b>duty:</b> %d</span></p>", i, ledc->channels[i].duty);        
             strcat(ledc_str, tmp);
     }
@@ -451,7 +429,6 @@ esp_err_t ledcontrol_http_get_handler(httpd_req_t *req){
     ip/ledc?allon=1
     ip/ledc?alloff=1
 */
-    ESP_LOGI(TAG, __func__);
     char page[200] = "";
     if ( http_get_has_params(req) == ESP_OK) {
         esp_err_t err = ESP_FAIL;
@@ -459,14 +436,12 @@ esp_err_t ledcontrol_http_get_handler(httpd_req_t *req){
         if ( http_get_key_str(req, "ch", param, sizeof(param)) == ESP_OK ) {
             uint8_t ch;
             ch = atoi(param);
-            ESP_LOGI(TAG, "ch: %d", ch);
             if ( ch < 0 || ch > ledc->led_cnt /*LEDCONTROL_CHANNEL_MAX*/ ) {
                 err = ESP_FAIL;
                 goto end;
             }
             ledcontrol_channel_t *channel = ledc->channels + ch;
-            ESP_LOGI(TAG, "get %d channel %d pin %d duty %d", ch, channel->channel, channel->pin, channel->duty);
-            
+         
             long val = 0;
             if ( http_get_key_long(req, "duty", &val) == ESP_OK ) {
                 // channel->set_duty
@@ -502,7 +477,6 @@ esp_err_t ledcontrol_http_get_handler(httpd_req_t *req){
                      http_get_key_long(req, "to", &to) == ESP_OK &&
                      http_get_key_long(req, "delay", &delay) == ESP_OK )
                 {
-                    ESP_LOGI(TAG, "fade from %li to %li delay %li", from, to, delay);
                     ledc->fade( channel, from, to, delay);
                     err = ESP_OK;
                 }

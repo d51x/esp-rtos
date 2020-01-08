@@ -57,7 +57,7 @@ rgbcontrol_t* rgbcontrol_init(ledcontrol_t *ledc, ledcontrol_channel_t *red, led
     rgb_ctrl->fade_delay = RGB_DEFAULT_FADE;
     rgb_ctrl->fadeup_delay = RGB_DEFAULT_FADEUP;
     rgb_ctrl->fadedown_delay = RGB_DEFAULT_FADEDOWN;
-    rgb_ctrl->effect_id = -1;
+    rgb_ctrl->effect_id = COLOR_EFFECTS_MAX-1;
 
 	// указатели на функции
 	rgb_ctrl->set_color_hsv = rgbcontrol_set_color_hsv;
@@ -81,6 +81,7 @@ rgbcontrol_t* rgbcontrol_init(ledcontrol_t *ledc, ledcontrol_channel_t *red, led
     strcpy(rgb_ctrl->uri, RGB_URI);
     rgb_ctrl->http_get_handler = rgbcontrol_http_get_handler; 
 
+    rgb_ctrl->mqtt_send = NULL;
     return rgb_ctrl;
 }
 
@@ -98,9 +99,9 @@ void rgbcontrol_set_color_hsv(color_hsv_t hsv) {
 
 void _rgbcontrol_set_color_rgb(color_rgb_t rgb, bool update) {
     rgb_to_hsv(&rgb, &rgb_ctrl->hsv);
-    rgb_ctrl->ledc->set_duty( &rgb_ctrl->red,   rgb.r );
-    rgb_ctrl->ledc->set_duty( &rgb_ctrl->green, rgb.g );
-    rgb_ctrl->ledc->set_duty( &rgb_ctrl->blue,  rgb.b );
+    rgb_ctrl->ledc->set_duty( rgb_ctrl->ledc->channels + rgb_ctrl->red.channel,   rgb.r );
+    rgb_ctrl->ledc->set_duty( rgb_ctrl->ledc->channels + rgb_ctrl->green.channel, rgb.g );
+    rgb_ctrl->ledc->set_duty( rgb_ctrl->ledc->channels + rgb_ctrl->blue.channel,  rgb.b );
     if ( update ) rgb_ctrl->ledc->update();	  
 }
 
@@ -210,16 +211,20 @@ void rgbcontrol_print_html_data(char *data){
     effects_t *ee = rgb_ctrl->effects;
     if ( ee == NULL ) return;
 
-    const char *effects_data = "<div class=\"effect\">"
+    const char *effects_data = "<div class=\"effect\" style=\"display: flow-root;\">"
                                 
-                                "<p><span><b>Color effect:</b></span>"
+                                "<div style=\"display: inline-block; width: 50%%;\">"
+                                  "<p><span><b>HSV color:</b> %d %d %d</span></p>"
+                                    "<p><span><b>RGB color:</b> %d %d %d</span></p>"  
+                                "</div>"            
+                                "<div style=\"height: 50px;border: 1px solid grey;float: right;display: inline-block;width:  50%%;background: rgb(%d,%d,%d)\"></div>"
+
+                                "<div><p><span><b>Color effect:</b></span>"
                                 //"<span id=\"color\">%s (%d)</span>"
                                 "<select id=\"effects\" onchange=\"effects()\">"
                                 "%s"
                                 "</select>"
-                                "</p>"
-                                "<p><span><b>HSV color:</b> %d %d %d</span></p>"
-                                "<p><span><b>RGB color:</b> %d %d %d</span></p>"
+                                "</p></div>"
                                 "</div>";
 
     const char *effects_item = "<option value=\"%d\" %s>%s</option>";
@@ -234,11 +239,16 @@ void rgbcontrol_print_html_data(char *data){
     effect_t *e = ee->effect + ee->effect_id;
     color_rgb_t rgb;
     hsv_to_rgb(&rgb, rgb_ctrl->hsv);
-    sprintf(data+strlen(data), effects_data, 
-                                             //(ee->effect_id == -1) ? "color" : e->name, ee->effect_id, 
-                                             select,
-                                             rgb_ctrl->hsv.h, rgb_ctrl->hsv.s, rgb_ctrl->hsv.v, 
-                                             rgb.r, rgb.g, rgb.b);
+    sprintf(data+strlen(data), effects_data, rgb_ctrl->hsv.h
+                                           , rgb_ctrl->hsv.s
+                                           , rgb_ctrl->hsv.v
+                                           , rgb.r
+                                           , rgb.g
+                                           , rgb.b
+                                           , rgb.r, rgb.g, rgb.b  // rgb()
+                                             //(ee->effect_id == -1) ? "color" : e->name, ee->effect_id
+                                           , select
+    );
                                     
 }
 
@@ -264,7 +274,6 @@ esp_err_t rgbcontrol_http_get_handler(httpd_req_t *req){
             // rgb?hsv=h,s,v
             err = http_process_hsv(req, param, sizeof(param));
         } else if ( http_get_key_str(req, "type", param, sizeof(param)) == ESP_OK ) {
-            //ESP_LOGI(TAG, "type = %s", param);
             if ( strcmp(param, "rgb") == ESP_OK ) {
                 err = http_process_rgb2(req); // rgb?type=rgb&r=r&g=g&b=b
             } else if ( strcmp(param, "hsv") == ESP_OK ) {
@@ -276,8 +285,9 @@ esp_err_t rgbcontrol_http_get_handler(httpd_req_t *req){
             } else if ( strcmp(param, "effect") == ESP_OK ) {
                 if ( http_get_key_str(req, "id", param, sizeof(param)) == ESP_OK ) {
                     effects_t *ef = (effects_t *) rgb_ctrl->effects;
-                    if ( ef != NULL )
+                    if ( ef != NULL ) {
                         ef->set( atoi(param) );
+                    }    
                 } else if ( http_get_key_str(req, "name", param, sizeof(param)) == ESP_OK ) {
                     effects_t *ef = (effects_t *) rgb_ctrl->effects;
                     if ( ef != NULL )                   
@@ -326,7 +336,6 @@ esp_err_t http_process_rgb(httpd_req_t *req, char *param, size_t size){
     istr = strtok (NULL,",");
     rgb->b = atoi(istr);
     effects_t *ef = (effects_t *) rgb_ctrl->effects;
-    //ESP_LOGI(TAG, "effects is %s", (rgb_ctrl->effects == NULL) ? "NULL" : "not NULL");
     if ( ef != NULL ) ef->stop();
     rgb_ctrl->set_color_rgb(*rgb);
     free(rgb);                
@@ -384,4 +393,8 @@ esp_err_t http_process_hsv2(httpd_req_t *req) {
     }
     free(hsv);
     return err;
+}
+
+void rgbcontrol_set_mqtt_send_cb(func_mqtt_send_cb cb){
+    rgb_ctrl->mqtt_send = cb;
 }

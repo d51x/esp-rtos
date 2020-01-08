@@ -14,8 +14,8 @@
 #include "pir.h"
 
 
-#define FW_VER "1.12.1"
-#define CORE_FW_VER "1.12"
+#define FW_VER "1.14.7"
+#define CORE_FW_VER "1.14"
 
 ledcontrol_t *ledc;
 rgbcontrol_t *rgb_ledc;
@@ -53,25 +53,79 @@ int OTA_IDLE_BIT;  /* The event group allows multiple bits for each event, but w
 
 
     #define LED_CTRL_CNT        4
+    #define LED_CTRL_MAX        5
+    uint8_t main_led_cnt;
+
     #define LED_FREQ_HZ         500
 
     #define LED_CTRL_RED_CH     0
     #define LED_CTRL_GREEN_CH   1 
     #define LED_CTRL_BLUE_CH    2 
     #define LED_CTRL_WHITE_CH   3 
+    #define LED_CTRL_WWHITE_CH   4 
 
     #define LED_CTRL_RED_PIN    15
     #define LED_CTRL_GREEN_PIN  12
     #define LED_CTRL_BLUE_PIN   13
     #define LED_CTRL_WHITE_PIN  2
+    #define LED_CTRL_WWHITE_PIN  14
+    uint8_t main_led_pins[LED_CTRL_MAX];
 
     #define RELAY_FAN_PIN       16
+    uint8_t relay_fan_pin;
 
-    #define PIR_PIN             4
-    #define PIR_TIMER_CALLBACK_DELAY 10
+    //#define PIR_PIN             4
+    #define PIR_PIN             1
+    uint8_t pir_pin;
+
+    #define PIR_TIMER_CALLBACK_DELAY 15
+
+    #define WHITE_LED_FADEUP_DELAY 100
+    #define WHITE_LED_FADEDOWN_DELAY 150
 
     #define IR_RECEIVER_PIN 5
+    uint8_t ir_pin;
+
 	#define IR_RECEIVE_DELAY 100
 	
 
+    typedef enum {
+        PIR_MODE_NONE,
+        PIR_MODE_SUSNSET,       // закат
+        PIR_MODE_DLR,           // датчик освещенности
+        PIR_MODE_MIX            // комбинированный
+    } pir_mode_t;
+
+    char pir_mode_desc[4][30];
+
+    typedef enum {
+        LED_SPEED_DOWN,
+        LED_SPEED_UP
+    } led_speed_cmd_t;
+
+    typedef enum {
+        LED_BRIGHT_DOWN,
+        LED_BRIGHT_UP
+    } led_bright_cmd_t;
+
+    bool is_pir_enabled; // OPTIONS: взять из настроек - pir вкл / выкл
+    pir_mode_t pir_mode;  // OPTIONS: взять из настроек
+    bool is_motion;
+    uint32_t count_down_off;         // осталось до выключения
+    uint32_t count_up_motion;        // прошло после начала движения
+
+    bool is_sunset;
+    bool is_dark; // закат или данные с датчика освещенности
+    bool is_white_led_auto; // is_pir_enabled & is_dark 
+
+    uint16_t pir_timer_off_delay; // OPTIONS: взять из настроек
+    uint16_t white_led_fadeup_delay; // OPTIONS: взять из настроек
+    uint16_t white_led_fadeout_delay; // OPTIONS: взять из настроек
+    uint8_t  white_led_max_duty;  // макс яркость, регулируется пультом
+
+
+    static TimerHandle_t tmr_cnt = NULL;
+    
+
+    bool get_dark_mode(pir_mode_t mode);
 #endif

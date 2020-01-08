@@ -1,6 +1,9 @@
 #ifndef _RELAY_H_
 #define _RELAY_H_
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
 #include "esp_system.h"
@@ -10,6 +13,8 @@
 
 typedef struct relay relay_t;
 typedef void* relay_handle_t;
+
+typedef void (*func_mqtt_send_cb)(const char *topic, const char *payload);
 
 typedef enum {
     RELAY_LEVEL_LOW = 0,    
@@ -26,6 +31,7 @@ struct relay {
 	  gpio_num_t pin;
     relay_state_t state;
     relay_close_level_t close_level;
+    func_mqtt_send_cb mqtt_send;
 };   
 
 
@@ -73,5 +79,6 @@ relay_state_t relay_read(relay_handle_t relay_handle);
   */
 esp_err_t relay_delete(relay_handle_t relay_handle);
 
+void relay_add_mqtt_send_cb(relay_handle_t relay_handle, func_mqtt_send_cb cb);
 
 #endif

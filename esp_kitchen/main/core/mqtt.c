@@ -14,6 +14,7 @@ static char *_mqtt_dev_name = MQTT_DEVICE;
 
 static void mqtt_uninitialize();
 
+static void process_data(esp_mqtt_event_handle_t event);
 
 void mqtt_set_device_name(const char *dev_name){
     strcpy(_mqtt_dev_name, dev_name);
@@ -33,13 +34,17 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             mqtt_subscribe_topics(client);
             // TODO: save status mqtt and counters
 
+            if ( xHanldeAll == NULL )
+                xTaskCreate(mqtt_publish_all_task, "mqtt_publish_all_task", 2048, NULL, 10, &xHanldeAll);
             break;
         case MQTT_EVENT_DISCONNECTED:
 
                 mqtt_state = 0;
                 ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
                 // TODO: save status mqtt and counters
-
+                if ( xHanldeAll ) {
+                    vTaskDelete(xHanldeAll);
+                }
                 //mqtt_uninitialize();
             break;
 
@@ -55,7 +60,7 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
         case MQTT_EVENT_DATA:
             ESP_LOGD(TAG, "MQTT_EVENT_DATA");
 
-            //process_data(event);
+            process_data(event);
             break;
         case MQTT_EVENT_ERROR:
             mqtt_error_count++;
@@ -155,13 +160,13 @@ void mqtt_subscribe_topics(esp_mqtt_client_handle_t client){
 
 
 static void mqtt_publish_generic(const char *_topic, const char *payload) {
-    ESP_LOGV(TAG, "%s started", __func__);
+    //ESP_LOGI(TAG, "%s started", __func__);
     char topic[32];
     
     strcpy( topic, _mqtt_dev_name /*MQTT_DEVICE*/ );
     strcpy( topic + strlen( topic ), _topic);
     
-    ESP_LOGV(TAG, "mqtt publish topic %s with payload %s", topic, payload);
+    //ESP_LOGI(TAG, "mqtt publish topic %s with payload %s", topic, payload);
 
     int res = esp_mqtt_client_publish(mqtt_client, topic, payload, strlen(payload), 0, 1);
     if ( res == -1 ) {
@@ -206,13 +211,16 @@ void mqtt_publish_all_task(void *arg){
         mqtt_publish_device_freemem();
         mqtt_publish_device_rssi();
 
+        // TODO: make array with func_cb and data and register method for callbacks
+        mqtt_publish_fan_state();
+        mqtt_publish_effect_name();
         vTaskDelay( delay_ms / portTICK_RATE_MS);
     }
 
 }
 
 void mqtt_load_data_from_nvs(mqtt_config_t *cfg){
-    ESP_LOGI(TAG, __func__);
+    //ESP_LOGI(TAG, __func__);
     nvs_handle mqtt_handle;
     if ( nvs_open("mqtt", NVS_READONLY, &mqtt_handle) == ESP_OK ) {
         size_t size_buf = strlen(cfg->broker_url)-1;
@@ -274,3 +282,118 @@ void mqtt_save_data_to_nvs(const mqtt_config_t *cfg){
     }
     nvs_close(mqtt_handle);
 }
+
+void mqtt_extern_publish(const char *_topic, const char *payload){
+
+    mqtt_publish_generic( _topic, payload);
+}
+
+
+static void process_data(esp_mqtt_event_handle_t event){
+    char *topic = malloc(event->topic_len+1);
+    memset(topic, 0, event->topic_len+1);
+    strncpy(topic, event->topic, event->topic_len);
+
+    char *data = malloc(event->data_len+1);
+    memset(data, 0, event->data_len+1);
+    strncpy(data, event->data, event->data_len);
+
+    //ESP_LOGI(TAG, "TOPIC=%s", topic);
+    //ESP_LOGI(TAG, "DATA=%s", data);
+
+    // cut _mqtt_dev_name from topic
+    char _topic[20];
+    strcpy(_topic, topic + strlen(_mqtt_dev_name));
+    //ESP_LOGI(TAG, "new topic %s", _topic);
+
+    if ( strstr( _topic, "output" ) != NULL ) {
+        // process gpio
+        char spin[3];
+        strcpy(spin, _topic + 6 );
+        //ESP_LOGI(TAG, "gpio pin %s state %s", spin, data);
+        // КОСТЫЛЬ!!!
+        uint8_t pin = atoi( spin );
+        uint8_t state = atoi( data );
+
+        //if ( pin == RELAY_FAN_PIN ) {
+        if ( pin == relay_fan_pin ) {
+            if ( state != relay_read(relay_fan_h) )
+                relay_write(relay_fan_h, state);
+        }
+
+    } else if ( strstr( _topic, "effect" ) != NULL ) {
+        // process effect
+        char effect[15];
+        strcpy(effect, _topic + 6 );
+        effects_t *ef = (effects_t *) rgb_ledc->effects;
+        if ( ef != NULL )  {                 
+            effect_t *e = ef->effect + ef->effect_id;
+            if ( strcmp(e->name, data) != ESP_OK) {
+                ef->set_by_name( data );   
+            }
+        }    
+    } else if ( strstr( _topic, "color" ) != NULL ) {
+        // process color
+        char color[15];
+        strcpy(color, _topic + 5 + 1 /* 1 = "/"" */ );
+        if ( strstr( color, "rgb" ) != NULL ) {
+            // process rgb color
+            char *istr = strtok (data,",");
+            color_rgb_t *rgb = malloc(sizeof(color_rgb_t));
+            rgb->r = atoi(istr);
+            istr = strtok (NULL,",");
+            rgb->g = atoi(istr); 
+            istr = strtok (NULL,",");
+            rgb->b = atoi(istr);
+            effects_t *ef = (effects_t *) rgb_ledc->effects;
+            if ( ef != NULL ) ef->stop();
+            rgb_ledc->set_color_rgb(*rgb);
+            free(rgb);  
+        } else if ( strstr( color, "hsv" ) != NULL ) {
+            // process hsv color
+            char *istr = strtok (data,",");
+            color_hsv_t *hsv = malloc( sizeof(color_hsv_t));
+            hsv->h = atoi(istr);
+            istr = strtok (NULL,",");
+            hsv->s = atoi(istr);
+            istr = strtok (NULL,",");
+            hsv->v = atoi(istr);
+            effects_t *ef = (effects_t *) rgb_ledc->effects;
+            if ( ef != NULL ) ef->stop();
+            rgb_ledc->set_color_hsv(*hsv);
+            free(hsv);
+        } else if ( strstr( color, "hex" ) != NULL ) {
+            // process hex color
+            effects_t *ef = (effects_t *) rgb_ledc->effects;
+            if ( ef != NULL ) ef->stop();     
+            rgb_ledc->set_color_hex(data);          
+        }     
+    }  else if ( strstr( _topic, "sunset" ) != NULL ) {
+        uint8_t val = atoi( data );
+        is_sunset = val;
+        is_dark = get_dark_mode( pir_mode );
+    } 
+
+
+    free(topic);
+    free(data);
+
+}
+
+ void mqtt_publish_fan_state(){
+    uint8_t st =  relay_read(relay_fan_h);
+    char payload[2];
+    itoa(st, payload, 10);
+    char topic[10];
+    //sprintf(topic, "output%d", RELAY_FAN_PIN);
+    sprintf(topic, "output%d", relay_fan_pin);
+    mqtt_publish_generic( topic, payload);
+ }
+
+ void mqtt_publish_effect_name(){
+    effects_t *ef = (effects_t *) rgb_ledc->effects;
+    effect_t *e = ef->effect + ef->effect_id;
+    char name[12];
+    strcpy(name, e->name);
+    mqtt_publish_generic( "effect", name);
+ }

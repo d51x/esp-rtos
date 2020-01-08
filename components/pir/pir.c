@@ -2,8 +2,15 @@
 #include "pir.h"
 
 
+#define X_DELETE_TIMER(tmr) { if ( tmr ) {xTimerStop(tmr, 0); xTimerDelete( tmr, 0 );} }
+#define X_RESET_TIMER(tmr, period) { xTimerStop(tmr, 0); \
+							 xTimerChangePeriod(tmr, period, portMAX_DELAY); \
+							 xTimerReset( tmr, 0 ); }
 
 static const char *TAG = "PIR";
+
+static void pir_update_timer_low_interval(pir_handle_t pir_h, uint16_t val);
+static void pir_update_timer_hig_interval(pir_handle_t pir_h, uint16_t val);
 
 static void task_cb(void *arg) {
 
@@ -11,13 +18,13 @@ static void task_cb(void *arg) {
 
 	int delay = 10 / portTICK_PERIOD_MS;
 	while (1) {
-		if ( pir->taskq != NULL && pir->argq != NULL /*&& uxQueueMessagesWaiting(pir->taskq) != 0*/) {
+		if ( pir->taskq && pir->argq /*&& uxQueueMessagesWaiting(pir->taskq) != 0*/) {
 			void (*task)(void *);
 			void *arg;		
 			if ( xQueueReceive(pir->taskq, &task, 0) == pdPASS &&
 				 xQueueReceive(pir->argq, &arg, 0) == pdPASS ) 
 				 {
-					task(arg);
+					if ( task ) task(arg);
 				 }
 		}
 		vTaskDelay( delay );
@@ -44,17 +51,20 @@ static void pir_low_cb(void *arg)
 static void pir_tmr_low_cb(xTimerHandle tmr)
 {
 	pir_t *pir = (pir_t *) pvTimerGetTimerID(tmr);
-	ESP_LOGI(TAG, "pir->tmr_low_cb add %p", pir->tmr_low_cb);
-	if ( pir->tmr_low_cb )
+	if ( pir->tmr_low_cb ) {
+		//ESP_LOGI(TAG, "pir->tmr_low_cb add %p", pir->tmr_low_cb);
 		pir->tmr_low_cb( pir->cb_tmr_low_ctx );
+	}
 }
 
 static void pir_tmr_high_cb(xTimerHandle tmr)
 {
 	pir_t *pir = (pir_t *) pvTimerGetTimerID(tmr);
-	ESP_LOGI(TAG, "pir->tmr_high_cb add %p", pir->tmr_high_cb);
-	if ( pir->tmr_high_cb )
+	
+	if ( pir->tmr_high_cb ) {
+		//ESP_LOGI(TAG, "pir->tmr_high_cb add %p", pir->tmr_high_cb);
 		pir->tmr_high_cb( pir->cb_tmr_high_ctx );
+	}
 }
 
 
@@ -71,18 +81,22 @@ static void gpio_poll(void *arg){
 				pir_high_cb( pir );
 
 				// stop tmr_low
-				if (pir->tmr_low) { 
-					xTimerStop(pir->tmr_low, 0);
-					xTimerDelete( pir->tmr_low, 0 );
-				}
-
-				if (pir->tmr_high) {  // restart timer if timer already created
-					xTimerStop(pir->tmr_high, 0);
-					xTimerReset(pir->tmr_high, 0);		
+				// if (pir->tmr_low) { 
+				// 	xTimerStop(pir->tmr_low, 0);
+				// 	xTimerDelete( pir->tmr_low, 0 );	
+				// }
+				X_DELETE_TIMER(pir->tmr_low); 
+				
+				if (pir->tmr_high && pir->tmr_high_cb) {  // restart timer if timer already created
+					// xTimerStop(pir->tmr_high, 0);
+					// xTimerReset(pir->tmr_high, 0);	
+					X_RESET_TIMER( pir->tmr_high, pir->interval_high );	
 				} else {
 					// create and start timer
-					pir->tmr_high = xTimerCreate("pir_tmr_high", pir->interval_high, pdFALSE, pir, pir_tmr_high_cb);    // callback timer stop
-					xTimerStart(pir->tmr_high, 0);
+					if ( pir->tmr_high && pir->tmr_high_cb) {
+						pir->tmr_high = xTimerCreate("pir_tmr_high", pir->interval_high, pdFALSE, pir, pir_tmr_high_cb);    // callback timer stop
+						xTimerStart(pir->tmr_high, 0);
+					}
 				}			
 			} else {
 				pir_low_cb( pir );
@@ -92,18 +106,22 @@ static void gpio_poll(void *arg){
 				pir_low_cb( pir );
 
 				// stop tmr high
-				if (pir->tmr_high) { 
-					xTimerStop(pir->tmr_high, 0);
-					xTimerDelete( pir->tmr_high, 0 );
-				}	
-
-				if (pir->tmr_low) {  // restart timer if timer already created
-					xTimerStop(pir->tmr_low, 0);
-					xTimerReset(pir->tmr_low, 0);		
+				// if (pir->tmr_high) { 
+				// 	xTimerStop(pir->tmr_high, 0);
+				// 	xTimerDelete( pir->tmr_high, 0 );
+				// }	
+				X_DELETE_TIMER(pir->tmr_high); 
+				
+				if (pir->tmr_low && pir->tmr_low_cb) {  // restart timer if timer already created
+					// xTimerStop(pir->tmr_low, 0);
+					// xTimerReset(pir->tmr_low, 0);
+					X_RESET_TIMER( pir->tmr_low, pir->interval_low );		
 				} else {
 					// create and start timer
-					pir->tmr_low = xTimerCreate("pir_tmr_low", pir->interval_low, pdFALSE, pir, pir_tmr_low_cb);    // callback timer stop
-					xTimerStart(pir->tmr_low, 0);
+					if ( pir->tmr_low && pir->tmr_low_cb ) {
+						pir->tmr_low = xTimerCreate("pir_tmr_low", pir->interval_low, pdFALSE, pir, pir_tmr_low_cb);    // callback timer stop
+						xTimerStart(pir->tmr_low, 0);
+					}
 				}			
 			} else {
 				pir_high_cb( pir );
@@ -131,18 +149,21 @@ static void IRAM_ATTR pir_isr_handler(void *arg) {
 					arg = pir;
 
 					// stop tmr_low
-					if (pir->tmr_low) { 
+					if (pir->tmr_low ) { 
 						xTimerStopFromISR(pir->tmr_low, &HPTaskAwoken);
 						xTimerDelete( pir->tmr_low, 0 );
 					}
  					// restart timer  high if timer already created
-					if (pir->tmr_high) { 
+					if (pir->tmr_high && pir->tmr_high_cb) { 
 						xTimerStopFromISR(pir->tmr_high, &HPTaskAwoken);
+						xTimerChangePeriodFromISR(pir->tmr_high, pir->interval_high, &HPTaskAwoken);
 						xTimerResetFromISR(pir->tmr_high, &HPTaskAwoken);		
 					} else {
 						// create and start timer
-						pir->tmr_high = xTimerCreate("pir_tmr_high", pir->interval_high, pdFALSE, pir, pir_tmr_high_cb);    // callback timer stop
-						xTimerStartFromISR(pir->tmr_high, &HPTaskAwoken);
+						if ( pir->tmr_high && pir->tmr_high_cb ) {
+							pir->tmr_high = xTimerCreate("pir_tmr_high", pir->interval_high, pdFALSE, pir, pir_tmr_high_cb);    // callback timer stop
+							xTimerStartFromISR(pir->tmr_high, &HPTaskAwoken);
+						}
 					}			
 				} else {
 					func = pir_low_cb;
@@ -150,22 +171,25 @@ static void IRAM_ATTR pir_isr_handler(void *arg) {
 				}		
 			} else {
 				// level 0
-				if ( pir->active_level ==  PIR_LEVEL_HIGH || pir->active_level == PIR_LEVEL_ANY ) {   // 
+				if ( pir->active_level ==  PIR_LEVEL_LOW || pir->active_level == PIR_LEVEL_ANY ) {   // 
 					func = pir_low_cb;
 					arg = pir;		
 					// stop tmr high
-					if (pir->tmr_high) { 
+					if (pir->tmr_high ) { 
 						xTimerStopFromISR(pir->tmr_high, &HPTaskAwoken);
 						xTimerDelete( pir->tmr_high, 0 );
 					}				
 
-					if (pir->tmr_low) {  // restart timer if timer already created
+					if (pir->tmr_low && pir->tmr_low_cb ) {  // restart timer if timer already created
 						xTimerStopFromISR(pir->tmr_low, &HPTaskAwoken);
+						xTimerChangePeriodFromISR(pir->tmr_low, pir->interval_low, &HPTaskAwoken);
 						xTimerResetFromISR(pir->tmr_low, &HPTaskAwoken);		
 					} else {
 						// create and start timer
-						pir->tmr_low = xTimerCreate("pir_tmr_low", pir->interval_low, pdFALSE, pir, pir_tmr_low_cb);    // callback timer stop
-						xTimerStartFromISR(pir->tmr_low, &HPTaskAwoken);
+						if ( pir->tmr_low && pir->tmr_low_cb  ) {
+							pir->tmr_low = xTimerCreate("pir_tmr_low", pir->interval_low, pdFALSE, pir, pir_tmr_low_cb);    // callback timer stop
+							xTimerStartFromISR(pir->tmr_low, &HPTaskAwoken);
+						}
 					}			
 				} else {
 					func = pir_high_cb;
@@ -188,19 +212,19 @@ static void pir_enable(pir_handle_t _pir) {
 	pir->status = PIR_ENABLED;
 
 	if ( pir->type == PIR_ISR  ) {
-		if ( pir->task == NULL ) 
+		if ( !pir->task ) 
 			xTaskCreate( pir->task_cb, "pir_task", 1024, pir, 10, &pir->task);
 
-		if (pir->taskq == NULL ) 
+		if ( !pir->taskq ) 
 			pir->taskq = xQueueCreate(1, sizeof(void *));
 
-		if (pir->argq == NULL) 
+		if ( !pir->argq ) 
 			pir->argq =  xQueueCreate(1, sizeof(void *));
 					
-		if ( pir->tmr_low == NULL )
+		if ( !pir->tmr_low && pir->tmr_low_cb )
 			pir->tmr_low = xTimerCreate("pir_tmr_low", pir->interval_low, pdFALSE, pir, pir_tmr_low_cb);
 					
-		if ( pir->tmr_high == NULL )
+		if ( !pir->tmr_high && pir->tmr_high_cb )
 			pir->tmr_high = xTimerCreate("pir_tmr_high", pir->interval_high, pdFALSE, pir, pir_tmr_high_cb);
 
 		gpio_install_isr_service(0);
@@ -218,27 +242,27 @@ static void pir_disable(pir_handle_t _pir) {
 
 	pir->status = PIR_DISABLED;
 
-	if ( pir->taskq != NULL ) {
+	if ( pir->taskq ) {
 		vQueueDelete( pir->taskq );
 		pir->taskq = NULL;
 	}
 
-	if ( pir->argq != NULL ) {
+	if ( pir->argq ) {
 		vQueueDelete( pir->argq );
 		pir->argq = NULL;
 	}
 
-	if ( pir->task != NULL ) {
+	if ( pir->task ) {
 		vTaskDelete( pir->task );
 		pir->task = NULL;
 	}
 
 	if ( pir->type == PIR_ISR  ) {
-		if ( pir->tmr_low != NULL ) {
+		if ( pir->tmr_low ) {
 			xTimerStop( pir->tmr_low, 0 );
 			xTimerDelete( pir->tmr_low, 0 );
 		}		
-		if ( pir->tmr_high != NULL ) {
+		if ( pir->tmr_high ) {
 			xTimerStop( pir->tmr_high, 0 );
 			xTimerDelete( pir->tmr_high, 0 );
 		}
@@ -246,8 +270,8 @@ static void pir_disable(pir_handle_t _pir) {
 	} else {
 		// polling gpio task
 		// _pir->task_cb
-		if ( pir->type == PIR_POLL && pir->task_poll != NULL) {
-			if ( pir->task_poll != NULL) { 
+		if ( pir->type == PIR_POLL && pir->task_poll ) {
+			if ( pir->task_poll ) { 
 				vTaskDelete( pir->task_poll );
 				pir->task_poll = NULL;
 			}	
@@ -259,6 +283,7 @@ pir_handle_t pir_init(pir_conf_t pir_conf){
 	pir_t * _pir = calloc(1, sizeof(pir_t));
 	
 	_pir->pin = pir_conf.pin;
+	ESP_LOGI(TAG, "pir conf pin %d", pir_conf.pin);
 	_pir->active_level = pir_conf.active_level;
 	_pir->type = pir_conf.type;
 	_pir->status = PIR_DISABLED;
@@ -292,6 +317,8 @@ pir_handle_t pir_init(pir_conf_t pir_conf){
 	_pir->disable = pir_disable;
 
 	_pir->task_cb = task_cb;
+	_pir->set_interval_low = pir_update_timer_low_interval;
+	_pir->set_interval_high = pir_update_timer_hig_interval;
 
     // настройка  gpio
     
@@ -313,7 +340,22 @@ pir_handle_t pir_init(pir_conf_t pir_conf){
     gpio_conf.pull_up_en = GPIO_PULLUP_DISABLE;
     gpio_config(&gpio_conf);
 
+ESP_LOGI(TAG, "pir pin: %d", _pir->pin);
+ESP_LOGI(TAG, "gpio bit mask: %d", gpio_conf.pin_bit_mask);
 	pir_enable( _pir );
 
 	return (pir_handle_t ) _pir;
+}
+
+
+void pir_update_timer_low_interval(pir_handle_t pir_h, uint16_t val){
+	if ( val <=0 ) return;
+	pir_t *pir = (pir_t *)pir_h;
+	pir->interval_low = val * 1000 / portTICK_PERIOD_MS;
+}
+
+void pir_update_timer_hig_interval(pir_handle_t pir_h, uint16_t val){
+	if ( val <=0 ) return;
+	pir_t *pir = (pir_t *)pir_h;
+	pir->interval_high = val * 1000 / portTICK_PERIOD_MS;
 }

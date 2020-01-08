@@ -8,35 +8,22 @@
 #include "esp_http_server.h"
 #include "rom/ets_sys.h"
 
-#include "core.h"
+
 #include "wifi.h"
 #include "ota.h"
 #include "utils.h"
 #include "http_utils.h"
 
-
-#ifdef DS18B20
-#include "sensors/dsw.h"
-#endif
-
-#ifdef DHT
-#include "sensors/dht.h"
-#endif
-
 #include "mqtt.h"
 
+#define STR_ON "ВКЛ"
+#define STR_OFF "ВЫКЛ"
+#define STR_YES "ДА"
+#define STR_NO "НЕТ"
 
 void print_html_header_data(char *buf, const char *title);
 void print_html_footer_data(char *buf);
 void print_html_devinfo(char *buf);
-
-#ifdef DS18B20
-void print_html_dsw(const ds18b20_t *_dsw, uint8_t cnt, char *buf);
-#endif
-
-#ifdef DHT
-void print_html_dht(const dht_t *dht, char *buf);
-#endif
 
 void print_html_menu(char *buf);
 void httpd_resp_sendstr_chunk(httpd_req_t *req, const char *buf);

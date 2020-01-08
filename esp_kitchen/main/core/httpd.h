@@ -12,6 +12,7 @@
 #include "http_utils.h"
 #include "core.h"
 #include "http_page.h"
+#include "nvsparam.h"
 
 #ifdef LEDCTRL
     #include "led_ctrl.h"

@@ -55,4 +55,9 @@ void mqtt_publish_all_task(void *arg);
 void mqtt_load_data_from_nvs(mqtt_config_t *cfg);
 void mqtt_save_data_to_nvs(const mqtt_config_t *cfg);
 
+
+void mqtt_extern_publish(const char *topic, const char *payload);
+
+ void mqtt_publish_fan_state();
+void mqtt_publish_effect_name();
 #endif /* __MQTT_H__ */

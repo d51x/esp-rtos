@@ -18,7 +18,8 @@ relay_handle_t relay_create(gpio_num_t pin, relay_close_level_t level)
     relay_p->pin = pin;
     relay_p->close_level = level;
     relay_p->state = RELAY_STATE_CLOSE;
-    
+    relay_p->mqtt_send = NULL;
+
     gpio_config_t io_conf;
     io_conf.intr_type = GPIO_INTR_DISABLE;
     io_conf.mode = GPIO_MODE_OUTPUT;
@@ -36,8 +37,18 @@ esp_err_t relay_write(relay_handle_t relay_handle, relay_state_t state)
     POINT_ASSERT(TAG, relay_handle);
 
     gpio_set_level(relay->pin, (0x01 & state) ^ relay->close_level);
-        
+
+    if (relay->mqtt_send && relay->state != state ) {
+        char payload[2];
+        char topic[10] = "output";
+        itoa(state, payload, 10);
+        itoa(relay->pin, topic+strlen(topic), 10);
+        relay->mqtt_send(topic, payload);
+    }
+
     relay->state = state;
+
+
     return ESP_OK;
 }
 
@@ -52,4 +63,9 @@ esp_err_t relay_delete(relay_handle_t relay_handle)
     POINT_ASSERT(TAG, relay_handle);
     free(relay_handle);
     return ESP_OK;
+}
+
+void relay_add_mqtt_send_cb(relay_handle_t relay_handle, func_mqtt_send_cb cb) {
+    relay_t* relay = (relay_t*) relay_handle;
+    relay->mqtt_send = cb;
 }

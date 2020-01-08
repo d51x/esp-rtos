@@ -5,44 +5,46 @@
 #include "irrcv.h"
 #include "colors.h"
 #include "effects.h"
+#include "main.h"
+#include "core/core.h"
 
 #define IR_RECEIVER_BUTTONS_COUNT 40
 
     // row 1
 #define IR_CODE_ONOFF                    0x08F70BF4       // ALL OFF
-#define IR_CODE_MODE                     0x08F70CF3       // Auto Mode
-#define IR_CODE_PLAY_PAUSE               0x08F754AB       // FAN Attic   ?????  
-#define IR_CODE_MUTE                     0x08F748B7       // FAN Kitchen
+#define IR_CODE_MODE                     0x08F70CF3       // FAN Kitchen
+#define IR_CODE_PLAY_PAUSE               0x08F754AB       // COLOR WHEEL  
+#define IR_CODE_MUTE                     0x08F748B7       // COLOR RND RNDL
     //row 2
-#define IR_CODE_BND_SYS                  0x08F741BE         // JUMP 7 RAINBOW
-#define IR_CODE_UP                       0x08F701FE         // JUMP 3 RGB
-#define IR_CODE_TITLE                    0x08F702FD         // COLOR WHEEL
-#define IR_CODE_SUB_T                    0x08F703FC         // mode sunset
+#define IR_CODE_BND_SYS                  0x08F741BE         // JUMP 3 RGB
+#define IR_CODE_UP                       0x08F701FE         // JUMP 7 RAINBOW
+#define IR_CODE_TITLE                    0x08F702FD         // JUMP 12 RAINBOW
+#define IR_CODE_SUB_T                    0x08F703FC         // NEXT RND JUMP
     //row 3
-#define IR_CODE_LEFT                     0x08F74AB5         // FADE 7 RAINBOW
-#define IR_CODE_ENTER                    0x08F704FB         // FADE 3 RGB
-#define IR_CODE_RIGHT                    0x08F705FA         // FADE 1 CURRENT
-#define IR_CODE_SETUP                    0x08F706F9         // SPEED UP
+#define IR_CODE_LEFT                     0x08F74AB5         // FADE 3 RGB
+#define IR_CODE_ENTER                    0x08F704FB         // FADE 7 RAINBOW
+#define IR_CODE_RIGHT                    0x08F705FA         // FADE 12 RAINBOW
+#define IR_CODE_SETUP                    0x08F706F9         // NEXT RND FADE
     // row 4
 #define IR_CODE_STOP_BACK                0x08F714EB         // COLOR OLIVE
 #define IR_CODE_DOWN                     0x08F707F8         // COLOR TEAL
 #define IR_CODE_ANGLE                    0x08F708F7         // COLOR_DARKPURPLE
-#define IR_CODE_SLOW                     0x08F709F6         // SPEED DOWN
+#define IR_CODE_SLOW                     0x08F709F6         // SPEED UP
     // row 5
 #define IR_CODE_AMS_RPT                  0x08F715EA         // COLOR_YELLOW
 #define IR_CODE_ST_PROG                  0x08F751AE         // COLOR_CYAN
 #define IR_CODE_VOL_PLUS                 0x08F752AD         // COLOR_PURPLE 
-#define IR_CODE_ZOOM                     0x08F700FF         // BRIGHTNESS_UP
+#define IR_CODE_ZOOM                     0x08F700FF         // SPEED DOWN
     // row 6
 #define IR_CODE_LOC_RDM                  0x08F71FE0         // COLOR_PINK
 #define IR_CODE_SEEK_MINUS               0x08F71CE3         // COLOR_LIGHTGREEN
 #define IR_CODE_SEL                      0x08F71DE2         // COLOR_VIOLET
-#define IR_CODE_SEEK_PLUS                0x08F753AC         // BRIGHTNESS DOWN
+#define IR_CODE_SEEK_PLUS                0x08F753AC         // BRIGHTNESS UP
     // row 7
 #define IR_CODE_PBC                      0x08F71AE5       // COLOR_ORANGE
 #define IR_CODE_OSD                      0x08F759A6       // COLOR_LIMEGREEN
 #define IR_CODE_VOL_MINUS                0x08F740BF       // COLOR_LIGHTBLUE
-#define IR_CODE_AUDIO                    0x08F716E9       // RESET COLORS
+#define IR_CODE_AUDIO                    0x08F716E9       // BRIGHTNESS DOWN
     // row 8
 #define IR_CODE_BTN_1                    0x08F746B9       // RED Led - Increase
 #define IR_CODE_BTN_2                    0x08F719E6       // GREEN Led - Increase
@@ -69,66 +71,71 @@ struct ir_btn {
 */
 //==== ir receiver button callbacks
 void ir_btn_all_off(void *arg);
-void ir_btn_pir_ctrl(void *arg);
 void ir_btn_fan_ctrl(void *arg);
 void ir_btn_color_effect(void *arg);
 void ir_btn_adc_mode(void *arg);    
 void ir_btn_speed_ctrl(void *arg);
-void ir_btn_brightness_ctrl(void *arg);
+void ir_btn_brightness_dec(void *arg);
+void ir_btn_brightness_inc(void *arg);
 void ir_btn_set_color(void *arg);
-void ir_btn_led_white_ctrl(void *arg);
+void ir_btn_led_ctrl(void *arg);
+
+typedef enum {
+    IR_CM_NONE,
+    IR_CMD_ALL_OFF
+} ir_cmt_type_t;
 
 static ir_btn_t ir_buttons[IR_RECEIVER_BUTTONS_COUNT] = {
     // row 1
-        { IR_CODE_ONOFF        , "alloff"           , ir_btn_all_off            },        // ALL OFF
-        { IR_CODE_MODE         , "automode"         , ir_btn_pir_ctrl           },        // Auto Mode
-        { IR_CODE_PLAY_PAUSE   , "fan_attic"        , ir_btn_fan_ctrl           },        // FAN Attic   ?????  
-        { IR_CODE_MUTE         , "fan_kitchen"      , ir_btn_fan_ctrl           },        // FAN Kitchen
+        { IR_CODE_ONOFF        , "alloff"           , ir_btn_all_off            },      
+        { IR_CODE_MODE         , "fan"              , ir_btn_fan_ctrl           },      
+        { IR_CODE_PLAY_PAUSE   , "wheel"            , ir_btn_color_effect           },   
+        { IR_CODE_MUTE         , "rnd"              , ir_btn_color_effect           },  
     //row 2
-        { IR_CODE_BND_SYS      , "jump7"            , ir_btn_color_effect       },       // JUMP 7 RAINBOW
-        { IR_CODE_UP           , "jump3"            , ir_btn_color_effect       },       // JUMP 3 RGB
-        { IR_CODE_TITLE        , "wheel"            , ir_btn_color_effect       },       // COLOR WHEEL
-        { IR_CODE_SUB_T        , "sunset"           , ir_btn_adc_mode           },       // mode sunset
+        { IR_CODE_BND_SYS      , "jump3"            , ir_btn_color_effect       },      
+        { IR_CODE_UP           , "jump7"            , ir_btn_color_effect       },      
+        { IR_CODE_TITLE        , "jump12"           , ir_btn_color_effect       },      
+        { IR_CODE_SUB_T        , "nextrndjump"      , ir_btn_color_effect           },  
     //row 3
-        { IR_CODE_LEFT         , "fade7"            , ir_btn_color_effect       },       // FADE 7 RAINBOW
-        { IR_CODE_ENTER        , "fade3"            , ir_btn_color_effect       },       // FADE 3 RGB
-        { IR_CODE_RIGHT        , "fade12"           , ir_btn_color_effect       },       // FADE 12 
-        { IR_CODE_SETUP        ,  "up"              , ir_btn_speed_ctrl         },       // SPEED UP
+        { IR_CODE_LEFT         , "fade3"            , ir_btn_color_effect       },      
+        { IR_CODE_ENTER        , "fade7"            , ir_btn_color_effect       },      
+        { IR_CODE_RIGHT        , "fade12"           , ir_btn_color_effect       },      
+        { IR_CODE_SETUP        , "nextrndfade"      , ir_btn_color_effect         },    
     // row 4
-        { IR_CODE_STOP_BACK    ,  "COLOR_OLIVE"       , ir_btn_set_color          },      // COLOR OLIVE
-        { IR_CODE_DOWN         ,  "COLOR_TEAL"        , ir_btn_set_color          },      // COLOR TEAL
-        { IR_CODE_ANGLE        ,  "COLOR_DARKPURPLE"  , ir_btn_set_color          },      // COLOR_DARKPURPLE
-        { IR_CODE_SLOW         ,  "down"            , ir_btn_speed_ctrl         },      // SPEED DOWN
+        { IR_CODE_STOP_BACK    ,  HEX_COLOR_OLIVE       , ir_btn_set_color          },    
+        { IR_CODE_DOWN         ,  HEX_COLOR_TEAL        , ir_btn_set_color          },    
+        { IR_CODE_ANGLE        ,  HEX_COLOR_DARKPURPLE  , ir_btn_set_color          },    
+        { IR_CODE_SLOW         ,  LED_SPEED_UP          , ir_btn_speed_ctrl         },    
     // row 5
-        { IR_CODE_AMS_RPT      , "COLOR_YELLOW"       , ir_btn_set_color          },      // COLOR_YELLOW
-        { IR_CODE_ST_PROG      , "COLOR_CYAN"         , ir_btn_set_color          },      // COLOR_CYAN
-        { IR_CODE_VOL_PLUS     , "COLOR_PURPLE"       , ir_btn_set_color          },      // COLOR_PURPLE 
-        { IR_CODE_ZOOM         , "up"               , ir_btn_brightness_ctrl    },      // BRIGHTNESS_UP
+        { IR_CODE_AMS_RPT      , HEX_COLOR_YELLOW       , ir_btn_set_color          },   
+        { IR_CODE_ST_PROG      , HEX_COLOR_CYAN         , ir_btn_set_color          },   
+        { IR_CODE_VOL_PLUS     , HEX_COLOR_PURPLE       , ir_btn_set_color          },   
+        { IR_CODE_ZOOM         , LED_SPEED_DOWN         , ir_btn_speed_ctrl         },   
     // row 6
-        { IR_CODE_LOC_RDM      , "COLOR_PINK"         , ir_btn_set_color          },      // COLOR_PINK
-        { IR_CODE_SEEK_MINUS   , "COLOR_LIGHTGREEN"   , ir_btn_set_color          },      // COLOR_LIGHTGREEN
-        { IR_CODE_SEL          , "COLOR_VIOLET"       , ir_btn_set_color          },      // COLOR_VIOLET
-        { IR_CODE_SEEK_PLUS    , "down"             , ir_btn_brightness_ctrl    },      // BRIGHTNESS DOWN
+        { IR_CODE_LOC_RDM      , HEX_COLOR_PINK         , ir_btn_set_color          },   
+        { IR_CODE_SEEK_MINUS   , HEX_COLOR_LIGHTGREEN   , ir_btn_set_color          },   
+        { IR_CODE_SEL          , HEX_COLOR_VIOLET       , ir_btn_set_color          },   
+        { IR_CODE_SEEK_PLUS    , "up"                   , ir_btn_brightness_inc    },   
     // row 7
-        { IR_CODE_PBC          , "COLOR_ORANGE"       , ir_btn_set_color          },      // COLOR_ORANGE
-        { IR_CODE_OSD          , "COLOR_LIMEGREEN"    , ir_btn_set_color          },      // COLOR_LIMEGREEN
-        { IR_CODE_VOL_MINUS    , "COLOR_LIGHTBLUE"    , ir_btn_set_color          },      // COLOR_LIGHTBLUE
-        { IR_CODE_AUDIO        , "COLOR_BLACK"        , ir_btn_set_color          },      // RESET COLORS
+        { IR_CODE_PBC          , HEX_COLOR_ORANGE       , ir_btn_set_color          },   
+        { IR_CODE_OSD          , HEX_COLOR_LIMEGREEN    , ir_btn_set_color          },   
+        { IR_CODE_VOL_MINUS    , HEX_COLOR_LIGHTBLUE    , ir_btn_set_color          },   
+        { IR_CODE_AUDIO        , "down"                 , ir_btn_brightness_dec    },   
     // row 8
-        { IR_CODE_BTN_1        , "red_inc"          , ir_btn_brightness_ctrl    },     // RED Led - Increase
-        { IR_CODE_BTN_2        , "green_inc"        , ir_btn_brightness_ctrl    },     // GREEN Led - Increase
-        { IR_CODE_BTN_3        , "blue_inc"         , ir_btn_brightness_ctrl    },     // BLUE Led - Increase
-        { IR_CODE_BTN_4        , "white_inc"        , ir_btn_led_white_ctrl     },     // WHITE Led - Increase
+        { IR_CODE_BTN_1        , LED_CTRL_RED_CH          , ir_btn_brightness_inc    },     
+        { IR_CODE_BTN_2        , LED_CTRL_GREEN_CH        , ir_btn_brightness_inc    },  
+        { IR_CODE_BTN_3        , LED_CTRL_BLUE_CH         , ir_btn_brightness_inc    },  
+        { IR_CODE_BTN_4        , LED_CTRL_WHITE_CH        , ir_btn_brightness_inc     },  
     // row 9
-        { IR_CODE_BTN_5        , "red_dec"          , ir_btn_brightness_ctrl    },     // RED Led - Decrease
-        { IR_CODE_BTN_6        , "green_dec"        , ir_btn_brightness_ctrl    },     // GREEN Led - Decrease
-        { IR_CODE_BTN_7        , "blue_dec"         , ir_btn_brightness_ctrl    },     // BLUE Led - Decrease
-        { IR_CODE_BTN_8        , "white_dec"        , ir_btn_led_white_ctrl     },     // WHITE Led - Decrease
+        { IR_CODE_BTN_5        , LED_CTRL_RED_CH          , ir_btn_brightness_dec    },  
+        { IR_CODE_BTN_6        , LED_CTRL_GREEN_CH        , ir_btn_brightness_dec    },  
+        { IR_CODE_BTN_7        , LED_CTRL_BLUE_CH         , ir_btn_brightness_dec    },  
+        { IR_CODE_BTN_8        , LED_CTRL_WHITE_CH        , ir_btn_brightness_dec     },  
     // row 10
-        { IR_CODE_BTN_9        , "COLOR_RED"          , ir_btn_set_color          },    // RED Led
-        { IR_CODE_BTN_0        , "COLOR_GREEN"        , ir_btn_set_color          },    // GREEN Led  
-        { IR_CODE_BTN_10_PLUS  , "COLOR_BLUE"         , ir_btn_set_color          },    // BLUE Led
-        { IR_CODE_GOTO         , "switch"           , ir_btn_led_white_ctrl     }    // WHITE Led
+        { IR_CODE_BTN_9        , LED_CTRL_RED_CH          , ir_btn_led_ctrl          },
+        { IR_CODE_BTN_0        , LED_CTRL_GREEN_CH        , ir_btn_led_ctrl          },
+        { IR_CODE_BTN_10_PLUS  , LED_CTRL_BLUE_CH         , ir_btn_led_ctrl          },
+        { IR_CODE_GOTO         , LED_CTRL_WHITE_CH           , ir_btn_led_ctrl     }   
 };
 
 #endif

@@ -96,7 +96,7 @@ esp_err_t setup_get_handler(httpd_req_t *req){
             ESP_LOGD(TAG, "MQTT login found - %s", mqtt_cfg->login);
         }    
 
-        ESP_LOGI(TAG, "Find MQTT send interval");
+        //ESP_LOGI(TAG, "Find MQTT send interval");
         //uint32_t mqtt_sendint; 
         //if ( http_get_key_long(req, "mqtt_sint", (long *) &mqtt_sendint) != ESP_OK ) mqtt_sendint = 60;
         if ( http_get_key_long(req, "mqtt_sint", (long *)&mqtt_cfg->send_interval) != ESP_OK ) {
@@ -180,7 +180,102 @@ esp_err_t config_get_handler(httpd_req_t *req){
 }
 
 esp_err_t tools_get_handler(httpd_req_t *req){
-    char page[1024];
+    char page[2048*2];
+
+    // check get params
+    if ( http_get_has_params(req) == ESP_OK) {
+        // pir_en=1&pir_off_delay=15&fadeup=100&fadedown=150&st=1
+        char param[15];
+        int val = 0;
+        if ( http_get_key_str(req, "pir_en", param, sizeof(param)) == ESP_OK ) {     
+            val = atoi( param );
+        } else {
+            val = false;
+        }   
+        // save pir_en
+        if ( is_pir_enabled != val ) {
+            is_pir_enabled = val;
+            val = nvs_param_u8_save("pir", "enabled", is_pir_enabled);
+            if ( val == ESP_OK ) {
+                pir_t *pir = (pir_t *)pir_h;
+                if ( is_pir_enabled )   pir->enable( pir_h );
+                else                    pir->disable( pir_h );
+            }
+            esp_err_to_name( val );
+        }        
+
+        if ( http_get_key_str(req, "pir-mode", param, sizeof(param)) == ESP_OK ) {     
+            val = atoi( param );
+            if ( pir_mode != val ) {
+                pir_mode = val;
+                val = nvs_param_u8_save("pir", "mode", pir_mode);
+                esp_err_to_name( val );
+            }            
+        }         
+        if ( http_get_key_str(req, "pir_off_delay", param, sizeof(param)) == ESP_OK ) {     
+            val = atoi( param );
+            if ( pir_timer_off_delay != val ) {
+                pir_timer_off_delay = val;
+                val = nvs_param_u16_save("pir", "piroffdelay", pir_timer_off_delay);
+                esp_err_to_name( val );
+                pir_t *pir = (pir_t *)pir_h;
+                pir->set_interval_low( pir_h, pir_timer_off_delay);
+            }              
+        }      
+        if ( http_get_key_str(req, "fadeup", param, sizeof(param)) == ESP_OK ) {     
+            val = atoi( param );
+            if ( white_led_fadeup_delay != val ) {
+                white_led_fadeup_delay = val;
+                val = nvs_param_u16_save("pir", "fadeupdelay", white_led_fadeup_delay);
+                esp_err_to_name( val );
+            }               
+        }         
+        if ( http_get_key_str(req, "fadedown", param, sizeof(param)) == ESP_OK ) {     
+            val = atoi( param );
+            if ( white_led_fadeout_delay != val ) {
+                white_led_fadeout_delay = val;
+                val = nvs_param_u16_save("pir", "fadedowndelay", white_led_fadeout_delay);
+                esp_err_to_name( val );
+            }                 
+        }   
+        // ledcnt=5&ledch0=255&ledpin0=255&ledch1=255&ledpin0=255&ledch2=255&ledpin0=255&ledch3=255&ledpin0=255&ledch4=255&ledpin0=255
+        if ( http_get_key_str(req, "irpin", param, sizeof(param)) == ESP_OK ) {     
+            val = atoi( param );
+            if ( ir_pin != val ) {
+                ir_pin = val;
+                val = nvs_param_u8_save("main", "irpin", ir_pin);
+                esp_err_to_name( val );
+            }                 
+        } 
+        if ( http_get_key_str(req, "pirpin", param, sizeof(param)) == ESP_OK ) {     
+            val = atoi( param );
+            if ( pir_pin != val ) {
+                pir_pin = val;
+                ESP_LOGI(TAG, "save pirpin %d", pir_pin);
+                val = nvs_param_u8_save("main", "pirpin", pir_pin);
+                esp_err_to_name( val );
+            }                 
+        } 
+        if ( http_get_key_str(req, "fanpin", param, sizeof(param)) == ESP_OK ) {     
+            val = atoi( param );
+            if ( relay_fan_pin != val ) {
+                relay_fan_pin = val;
+                val = nvs_param_u8_save("main", "fanpin", relay_fan_pin);
+                esp_err_to_name( val );
+            }                 
+        }       
+        for (uint8_t i = 0; i < LED_CTRL_MAX; i++) {
+            char tmp[7];
+            sprintf(tmp, "ledpin%d", i);
+            if ( http_get_key_str(req, tmp, param, sizeof(param)) == ESP_OK ) {
+                val = atoi( param );
+                main_led_pins[i] = val;
+            }
+            val = nvs_param_save("main", "channels_pin", main_led_pins, LED_CTRL_MAX*sizeof(uint8_t));
+        } 
+
+    }
+
     tools_page_data(page);
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
     httpd_resp_send(req, page, strlen(page));
@@ -246,6 +341,11 @@ esp_err_t gpio_get_handler(httpd_req_t *req){
             //         break;
             //     }
             // } 
+            // КОСТЫЛЬ!!!
+            //if ( pin == RELAY_FAN_PIN ) {
+            if ( pin == relay_fan_pin ) {
+                relay_write(relay_fan_h, st);
+            }
         }
     } 
 
@@ -292,12 +392,12 @@ esp_err_t restart_get_handler(httpd_req_t *req){
     if ( found ) {  
         // restart esp and redirect to mainpage after X sec
         ESP_LOGD(TAG, "create reboot task");
-        xTaskCreate(&systemRebootTask, "systemRebootTask", 2048, (int *)2000, 5, NULL);
-        //strcpy(page, html_restart_header);
-        char header[40] = "";
-        set_redirect_header(10, "/", header);
-        strcpy(page, header);
-        restarting_page_data(page+strlen(page));  
+        xTaskCreate(&systemRebootTask, "systemRebootTask", 2048, 2000, 5, NULL);
+        httpd_resp_set_status(req, "307 Temporary Redirect");
+        httpd_resp_set_hdr(req, "Refresh", "10; /");
+        //httpd_resp_set_hdr(req, "Location", "/");
+        httpd_resp_send(req, NULL, 0);
+        return ESP_OK;
     } else {
         restart_page_data(page);          
     }
@@ -441,29 +541,27 @@ void register_uri_handlers(httpd_handle_t _server) {
 }
 
 void add_uri_get_handler(httpd_handle_t _server, const char *uri, httpd_uri_func func) {
-ESP_LOGI(TAG, __func__);
-ESP_LOGI(TAG, "func addr: %p", func);
     httpd_uri_t my_uri;
       my_uri.uri      = strdup(uri);
       my_uri.method   = HTTP_GET;
       my_uri.handler  = func;
       my_uri.user_ctx = NULL;
-    ESP_LOGI(TAG, __func__);
-ESP_LOGI(TAG, "my_uri.handler addr: %p", my_uri.handler);
-ESP_LOGI(TAG, "_server is %s", (_server != NULL) ? "not NULL" : "NULL");
+    // ESP_LOGI(TAG, __func__);
+    // ESP_LOGI(TAG, "my_uri.handler addr: %p", my_uri.handler);
+    // ESP_LOGI(TAG, "_server is %s", (_server != NULL) ? "not NULL" : "NULL");
     esp_err_t err = httpd_register_uri_handler(_server, &my_uri);
-    if ( err == ESP_OK ) {
-        ESP_LOGI(TAG, "%s registered successfully",my_uri.uri );
-    } else {
-        ESP_LOGI(TAG, "%s not registered. Error %s", my_uri.uri, esp_err_to_name(err) );
-    }
+    // if ( err == ESP_OK ) {
+    //     ESP_LOGI(TAG, "%s registered successfully",my_uri.uri );
+    // } else {
+    //     ESP_LOGI(TAG, "%s not registered. Error %s", my_uri.uri, esp_err_to_name(err) );
+    // }
 }
 
 void webserver_init(httpd_handle_t* _server) {
     /* Start the web server */
     if ( *_server == NULL) {
         *_server = start_webserver();
-        ESP_LOGI(TAG, "webserver_init _server is %s", (_server != NULL) ? "not NULL" : "NULL");
+        //ESP_LOGI(TAG, "webserver_init _server is %s", (_server != NULL) ? "not NULL" : "NULL");
     }
 }
 
@@ -483,7 +581,7 @@ httpd_handle_t start_webserver(void){
         // Set URI handlers
 
         register_uri_handlers(_server);
-        ESP_LOGI(TAG, "******** start_webserver _server is %s", (_server != NULL) ? "not NULL" : "NULL");
+        //ESP_LOGI(TAG, "******** start_webserver _server is %s", (_server != NULL) ? "not NULL" : "NULL");
         return _server;
     }
 
@@ -512,7 +610,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
             ESP_LOGD(TAG, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
             break;
         case HTTP_EVENT_ON_DATA:
-            ESP_LOGI(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
+            ESP_LOGD(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
             break;
         case HTTP_EVENT_ON_FINISH:
             ESP_LOGD(TAG, "HTTP_EVENT_ON_FINISH");

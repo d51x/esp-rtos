@@ -17,6 +17,7 @@ typedef struct pir_conf pir_conf_t;
 typedef void* pir_handle_t;
 
 typedef void (*func_cb)(void *arg);
+typedef void (*func_interval_cb)(void *arg, uint16_t interval);
 
 typedef enum {
     PIR_LEVEL_DISABLE,
@@ -91,8 +92,11 @@ struct pir {
 
 	func_cb enable;
 	func_cb disable;	
+	func_interval_cb set_interval_low;	
+	func_interval_cb set_interval_high;	
 };
 
 pir_handle_t pir_init(pir_conf_t pir_conf);
+
 
 #endif 
