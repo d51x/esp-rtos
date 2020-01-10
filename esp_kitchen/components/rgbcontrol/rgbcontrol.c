@@ -114,6 +114,11 @@ void rgbcontrol_set_color_int(uint32_t color32) {
 	int_to_rgb( color32, rgb);
 	rgbcontrol_set_color_rgb(*rgb);
 	free(rgb);
+
+    char topic[12] = MQTT_TOPIC_COLOR_INT;
+    char payload[10];
+    itoa(color32, payload, 10);
+    rgb_ctrl->mqtt_send(topic, payload);
 }
 
 void rgbcontrol_set_color_hex(const char *hex) {

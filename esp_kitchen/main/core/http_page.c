@@ -57,7 +57,7 @@ void print_html_tools(char *buf){
     const char *html_form_opt = "<div>"
                             "<form method=\"GET\" id=\"opt\">"
                             "<p><span><input type=\"checkbox\" name=\"pir_en\" value=\"%d\" %s></span>"
-                            "<span>Датчик движения</span></p>"  // checkbox
+                                "<span>Датчик движения</span></p>"  // checkbox
                             "<p><span>Режим подсветки рабочей зоны:</span></p>"  // combobox
                             "<p>"
                             "<select id=\"pir-mode\" name=\"pir-mode\" onchange=\"pirmode()\" form=\"opt\">"
@@ -66,6 +66,7 @@ void print_html_tools(char *buf){
                             "</p>"
                                 
                             "<p><span>Pir off delay: </span><input size=\"2\" name=\"pir_off_delay\" value=\"%d\"><span>sec</span></p>"
+                            "<p><span>Мин уровень освещенности: </span><input size=\"2\" name=\"adclvl\" value=\"%d\"><span>sec</span></p>"
                             "<p><span>Fadeup delay: </span><input size=\"2\" name=\"fadeup\" value=\"%d\"><span>msec</span></p>"
                             "<p><span>Fadedown delay: </span><input size=\"2\" name=\"fadedown\" value=\"%d\"><span>msec</span></p>"
                             "<p><input type=\"hidden\" name=\"st\" value=\"1\"></p>"
@@ -80,6 +81,7 @@ void print_html_tools(char *buf){
                             , is_pir_enabled ? "checked" : ""
                             , pir_mode_items
                             , pir_timer_off_delay
+                            , adc_lvl
                             , white_led_fadeup_delay
                             , white_led_fadeout_delay
     );
@@ -92,9 +94,15 @@ void print_html_tools(char *buf){
                             "<p><span>Канал W GPIO: </span><input size=\"2\" name=\"ledpin3\" value=\"%d\"></p>"
                             "<p><span>Канал WW GPIO: </span><input size=\"2\" name=\"ledpin4\" value=\"%d\"></p>"
                             
-                            "<p><span>Fan GPIO: </span><span><input size=\"2\" name=\"fanpin\" value=\"%d\"></span></p>"
+                            "<p>"
+                                "<span>Fan GPIO: </span><span><input size=\"2\" name=\"fanpin\" value=\"%d\"></span>"
+                                "<span><input type=\"checkbox\" name=\"faninv\" value=\"%d\" %s>Invert</span>"
+                            "</p>"
                             "<p><span>PIR GPIO: </span><span><input size=\"2\" name=\"pirpin\" value=\"%d\"></span></p>"
-                            "<p><span>IR GPIO: </span><span><input size=\"2\" name=\"irpin\" value=\"%d\"></span></p>"
+                            "<p>"
+                                "<span>IR GPIO: </span><span><input size=\"2\" name=\"irpin\" value=\"%d\"></span>"
+                                "<span>Delay: </span><span><input size=\"4\" name=\"irdelay\" value=\"%d\"></span>"
+                            "</p>"
                             "<p><input type=\"hidden\" name=\"st\" value=\"2\"></p>"
                             //"<p><input class=\"on\" type=\"submit\" value=\"\"></p>" 
                             "<button class=\"on\">Set</button>"
@@ -107,8 +115,9 @@ void print_html_tools(char *buf){
                                               , main_led_pins[3]
                                               , main_led_pins[4]
                                               , relay_fan_pin
-                                              , pir_pin
-                                              , ir_pin
+                                              , relay_invert, relay_invert ? "checked" : ""
+                                              , pirpin
+                                              , ir_pin, ir_delay
     );
 
     sprintf(buf+strlen(buf), html_restart_button);
@@ -179,14 +188,15 @@ void get_main_page_data(char *data) {
     sprintf(data+strlen(data), "<div style=\"text-align: left; font-size: 14px; "
                                             "border-bottom: 1px solid grey;\">");
 
+    sprintf(data+strlen(data), "<p>Датчик освещенности: <b>%d</b></p>", get_adc());
     sprintf(data+strlen(data), "<p>Датчик движения: <b>%s</b></p>", is_pir_enabled ? STR_ON : STR_OFF);
   
     sprintf(data+strlen(data), "<p>Режим работы: <b>%s</b></p>", pir_mode_desc[pir_mode] );
     sprintf(data+strlen(data), "<p>Сейчас: <b>%s</b></p>", is_dark ? "темно" : "светло" );
     sprintf(data+strlen(data), "<p>Движение: <b>%s</b></p>", is_motion ? STR_YES : STR_NO );
-    //if ( count_down_off > 0 )
+    if ( count_down_off <= pir_timer_off_delay )
         sprintf(data+strlen(data), "<p>Осталось сек до выключения: <b>%d</b> сек</p>", count_down_off);
-    //if (count_up_motion > 0) 
+    if (count_up_motion > 0) 
         sprintf(data+strlen(data), "<p>Прошло после начала движения: <b>%d</b> сек</p>", count_up_motion);
 
     sprintf(data+strlen(data), "</div>"); 

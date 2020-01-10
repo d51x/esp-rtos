@@ -283,7 +283,6 @@ pir_handle_t pir_init(pir_conf_t pir_conf){
 	pir_t * _pir = calloc(1, sizeof(pir_t));
 	
 	_pir->pin = pir_conf.pin;
-	ESP_LOGI(TAG, "pir conf pin %d", pir_conf.pin);
 	_pir->active_level = pir_conf.active_level;
 	_pir->type = pir_conf.type;
 	_pir->status = PIR_DISABLED;
@@ -340,8 +339,6 @@ pir_handle_t pir_init(pir_conf_t pir_conf){
     gpio_conf.pull_up_en = GPIO_PULLUP_DISABLE;
     gpio_config(&gpio_conf);
 
-ESP_LOGI(TAG, "pir pin: %d", _pir->pin);
-ESP_LOGI(TAG, "gpio bit mask: %d", gpio_conf.pin_bit_mask);
 	pir_enable( _pir );
 
 	return (pir_handle_t ) _pir;

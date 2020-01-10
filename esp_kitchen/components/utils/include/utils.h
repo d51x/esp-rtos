@@ -96,7 +96,7 @@ uint8_t str_to_long(long *out, char *s, int base);
 uint8_t str_to_uint(uint *out, char *s, int base);
 uint8_t str_to_uint8(uint8_t *out, char *s, int base);
 
-//uint16_t get_vdd33();
+uint16_t get_adc();
 void print_chip_info();
 void get_system_info(system_info_t *sys_info);
 char* print_wifi_mode(wifi_mode_t mode);

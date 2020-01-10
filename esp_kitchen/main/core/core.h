@@ -14,7 +14,7 @@
 #include "pir.h"
 
 
-#define FW_VER "1.14.7"
+#define FW_VER "1.14.8"
 #define CORE_FW_VER "1.14"
 
 ledcontrol_t *ledc;
@@ -73,10 +73,11 @@ int OTA_IDLE_BIT;  /* The event group allows multiple bits for each event, but w
 
     #define RELAY_FAN_PIN       16
     uint8_t relay_fan_pin;
+    uint8_t relay_invert;
 
     //#define PIR_PIN             4
     #define PIR_PIN             1
-    uint8_t pir_pin;
+    uint8_t pirpin;
 
     #define PIR_TIMER_CALLBACK_DELAY 15
 
@@ -85,9 +86,12 @@ int OTA_IDLE_BIT;  /* The event group allows multiple bits for each event, but w
 
     #define IR_RECEIVER_PIN 5
     uint8_t ir_pin;
+    uint16_t ir_delay;
 
 	#define IR_RECEIVE_DELAY 100
 	
+    #define DEFAULT_ADC_LEVEL 600
+    uint16_t adc_lvl;
 
     typedef enum {
         PIR_MODE_NONE,

@@ -3,7 +3,7 @@
 static const char *TAG = "MAIN";
 
 #define CHECK_PIR() {    if ( millis() < 10*1000 ) {\
-                        ESP_LOGI(TAG, "PIR is not yet initialized (hardware)"); \
+                        ESP_LOGE(TAG, "PIR is not yet initialized (hardware)"); \
                         return; \
                         }    \
                     }
@@ -12,7 +12,8 @@ httpd_handle_t http_server = NULL;
 
 static void  init_relay() {
     //relay_fan_h = relay_create(RELAY_FAN_PIN, RELAY_LEVEL_HIGH);
-    relay_fan_h = relay_create( relay_fan_pin, RELAY_LEVEL_LOW);
+    //relay_fan_h = relay_create( relay_fan_pin, RELAY_LEVEL_LOW);
+    relay_fan_h = relay_create( relay_fan_pin, relay_invert ? RELAY_LEVEL_LOW : RELAY_LEVEL_HIGH);
     relay_write(relay_fan_h,  RELAY_STATE_CLOSE);
     relay_add_mqtt_send_cb(relay_fan_h, mqtt_send_gpio);
 }
@@ -73,20 +74,18 @@ static void init_led_rgb_controller() {
 }
 
 static void init_pir() {
-    pir_conf_t pir_cfg = {
-        .pin = PIR_PIN,                        
-        //.pin = pir_pin,                        
-        .interval_low = pir_timer_off_delay,     // взять из настроек
-        //.interval_high = PIR_TIMER_CALLBACK_DELAY,   
-        .type = PIR_ISR,                       
-        .active_level = PIR_LEVEL_ANY,        
-        .high_cb = pir_high_cb,                 // определим начало движения и выставим переменные, плавно включим подсветку, если она не включена           
-        .low_cb = pir_low_cb,                   // определим завершение движения и обновим переменные
-        .tmr_low_cb = pir_timer_low_cb,         // запустим плавное выключение ленты      
+    pir_conf_t pir_cfg;
+    
+    //pir_cfg.pin = PIR_PIN,                        
+    pir_cfg.pin = pirpin;                        
+    pir_cfg.interval_low = pir_timer_off_delay;
+    pir_cfg.type = PIR_ISR;                       
+    pir_cfg.active_level = PIR_LEVEL_ANY;        
+    pir_cfg.high_cb = pir_high_cb;                 // определим начало движения и выставим переменные, плавно включим подсветку, если она не включена           
+    pir_cfg.low_cb = pir_low_cb;                   // определим завершение движения и обновим переменные
+    pir_cfg.tmr_low_cb = pir_timer_low_cb;         // запустим плавное выключение ленты      
         //.tmr_high_cb = pir_timer_high_cb,                     
-    };
-    //pir_cfg.pin = pir_pin;
-
+    
     pir_h = pir_init(pir_cfg);
     pir_t *pir = (pir_t *)pir_h;
     if ( is_pir_enabled )
@@ -98,7 +97,7 @@ static void init_pir() {
 
 static void init_ir_receiver() {
     //ir_rx_h = irrcv_init(IR_RECEIVER_PIN, IR_RECEIVE_DELAY, IR_RECEIVER_BUTTONS_COUNT);
-    ir_rx_h = irrcv_init(ir_pin, IR_RECEIVE_DELAY, IR_RECEIVER_BUTTONS_COUNT);
+    ir_rx_h = irrcv_init(ir_pin, ir_delay, IR_RECEIVER_BUTTONS_COUNT);
 
     if ( ir_rx_h == NULL ) {
         ESP_LOGE(TAG, "FAIL: ir receiver not created.");
@@ -160,36 +159,31 @@ static void count_up_cb(xTimerHandle tmr) {
     uint32_t *p = (uint32_t *) pvTimerGetTimerID(tmr);
     count_up_motion = *p;
     count_up_motion++;
-    ESP_LOGI(TAG, "count_up_motion: %d", count_up_motion);
 }
 
 static void count_down_cb(xTimerHandle tmr) {
     uint32_t *p = (uint32_t *) pvTimerGetTimerID(tmr);
     count_down_off = *p;
-    count_down_off++;
-    ESP_LOGI(TAG, "countdown: %d", count_down_off);
+    count_down_off--;
 }
 
 static void stop_timer(){
-    ESP_LOGI(TAG, __func__ );
     if ( tmr_cnt ) {
         xTimerStop( tmr_cnt, 0);
         xTimerDelete( tmr_cnt, 0);
         tmr_cnt = NULL;
     }
-    count_down_off = 0;
+    count_down_off = pir_timer_off_delay;
     count_up_motion = 0;
 }
 
 static void start_count_up(){
-    ESP_LOGI(TAG, __func__ );
     stop_timer();
     tmr_cnt = xTimerCreate("tmr_cnt", 1000 / portTICK_PERIOD_MS, pdTRUE, &count_up_motion, count_up_cb);	
     xTimerStart(tmr_cnt, 0);		
 }
 
 static void start_count_down(){
-    ESP_LOGI(TAG, __func__ );
     stop_timer();
     tmr_cnt = xTimerCreate("tmr_cnt", 1000 / portTICK_PERIOD_MS, pdTRUE, &count_down_off, count_down_cb);
     xTimerStart(tmr_cnt, 0);	
@@ -198,7 +192,6 @@ static void start_count_down(){
 
 
 void pir_low_cb(void *arg) {
-    ESP_LOGI(TAG, "PIR active LOW");
     CHECK_PIR();
     if ( !is_motion ) return;
     is_motion = false;
@@ -209,7 +202,6 @@ void pir_low_cb(void *arg) {
 }
 
 void pir_high_cb(void *arg) {
-    ESP_LOGI(TAG, "PIR active HIGH");
     CHECK_PIR();
     is_motion = true;
     mqtt_send_pir();
@@ -221,7 +213,6 @@ void pir_high_cb(void *arg) {
 }
 
 void pir_timer_low_cb(void *arg) {
-    ESP_LOGI(TAG, "PIR timer low end");
     CHECK_PIR();
     stop_timer();
     if ( !is_white_led_auto ) return;
@@ -242,9 +233,6 @@ void white_led_smooth_on(){
 }
 
 void mqtt_send_gpio(const char *topic, const char *payload){
-    ESP_LOGI(TAG, "mqtt topic %s", topic);
-    ESP_LOGI(TAG, "mqtt payload %s", payload);
-
     mqtt_extern_publish(topic, payload);
 }
 
@@ -254,14 +242,19 @@ void mqtt_send_pir(){
     mqtt_extern_publish("pir", payload);
 }
 
+
+static bool check_adc_dark() {
+    return get_adc() < adc_lvl;
+}
+
 bool get_dark_mode(pir_mode_t mode) {
     bool res = false;
     if ( mode == PIR_MODE_SUSNSET) {
         res = is_sunset; 
     } else if (mode == PIR_MODE_MIX ) {
-        res = is_sunset & 1; // TODO: adc value
+        res = is_sunset || check_adc_dark();
     } else if ( mode == PIR_MODE_DLR ) {
-        res = true; // TODO: adc value
+        res = check_adc_dark(); 
     } else {
         res = true;
     }  
@@ -276,13 +269,22 @@ void load_params(){
     if ( err != ESP_OK ) memset(main_led_pins, 255, LED_CTRL_MAX*sizeof(uint8_t)) ;
 
     err = nvs_param_u8_load("main", "fanpin",        &relay_fan_pin); 
-    if ( err != ESP_OK ) relay_fan_pin = RELAY_FAN_PIN;
+    if ( err != ESP_OK ) relay_fan_pin = RELAY_FAN_PIN;    
     
-    err = nvs_param_u8_load("main", "pirpin",        &pir_pin); 
-    if ( err != ESP_OK ) pir_pin = PIR_PIN;
-       ESP_LOGI(TAG, "loaded pirpin %d", pir_pin);
+    err = nvs_param_u8_load("main", "faninv",        &relay_invert); 
+    if ( err != ESP_OK ) relay_invert = RELAY_LEVEL_HIGH;
+    
+    err = nvs_param_u8_load("main", "pirpin",        &pirpin); 
+    if ( err != ESP_OK ) pirpin = PIR_PIN;
+
     err = nvs_param_u8_load("main", "irpin",        &ir_pin); 
-    if ( err != ESP_OK ) ir_pin = IR_RECEIVER_PIN;
+    if ( err != ESP_OK ) ir_pin = IR_RECEIVER_PIN;    
+    
+    err = nvs_param_u16_load("main", "irdelay",        &ir_delay); 
+    if ( err != ESP_OK ) ir_delay = IR_RECEIVE_DELAY;
+    
+    err = nvs_param_u16_load("main", "adclvl",        &adc_lvl); 
+    if ( err != ESP_OK ) adc_lvl = DEFAULT_ADC_LEVEL;
     
     
 
@@ -302,7 +304,7 @@ void load_params(){
     if ( err != ESP_OK ) white_led_fadeout_delay = WHITE_LED_FADEDOWN_DELAY;
 
     is_motion = false;
-    is_sunset = true;
+    is_sunset = false;
     is_dark = get_dark_mode( pir_mode );
     white_led_max_duty = MAX_DUTY; 
 

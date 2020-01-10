@@ -214,6 +214,7 @@ void mqtt_publish_all_task(void *arg){
         // TODO: make array with func_cb and data and register method for callbacks
         mqtt_publish_fan_state();
         mqtt_publish_effect_name();
+        mqtt_publish_effect_id();
         vTaskDelay( delay_ms / portTICK_RATE_MS);
     }
 
@@ -324,14 +325,26 @@ static void process_data(esp_mqtt_event_handle_t event){
     } else if ( strstr( _topic, "effect" ) != NULL ) {
         // process effect
         char effect[15];
-        strcpy(effect, _topic + 6 );
-        effects_t *ef = (effects_t *) rgb_ledc->effects;
-        if ( ef != NULL )  {                 
-            effect_t *e = ef->effect + ef->effect_id;
-            if ( strcmp(e->name, data) != ESP_OK) {
-                ef->set_by_name( data );   
+        strcpy(effect, _topic + 6 + 1 /* 1 = "/"" */ );
+        if ( strstr(effect, "name" ) != NULL ) {
+            effects_t *ef = (effects_t *) rgb_ledc->effects;
+            if ( ef != NULL )  {                 
+                effect_t *e = ef->effect + ef->effect_id;
+                if ( strcmp(e->name, data) != ESP_OK) {
+                    ef->set_by_name( data );   
+                }
             }
-        }    
+        } else if ( strstr(effect, "id") != NULL ) {
+            effects_t *ef = (effects_t *) rgb_ledc->effects;
+            if ( ef != NULL )  {                 
+                uint8_t val = atoi(data);
+                if ( ef->effect_id != val ) {
+                    ef->set( val );   
+                }
+            }
+        }
+
+    
     } else if ( strstr( _topic, "color" ) != NULL ) {
         // process color
         char color[15];
@@ -367,7 +380,13 @@ static void process_data(esp_mqtt_event_handle_t event){
             effects_t *ef = (effects_t *) rgb_ledc->effects;
             if ( ef != NULL ) ef->stop();     
             rgb_ledc->set_color_hex(data);          
-        }     
+        } else if ( strstr( color, "int" ) != NULL ) {
+            // process hex color
+            effects_t *ef = (effects_t *) rgb_ledc->effects;
+            if ( ef != NULL ) ef->stop();     
+            uint32_t val = atoi(data);
+            rgb_ledc->set_color_int(val);          
+        }       
     }  else if ( strstr( _topic, "sunset" ) != NULL ) {
         uint8_t val = atoi( data );
         is_sunset = val;
@@ -393,7 +412,15 @@ static void process_data(esp_mqtt_event_handle_t event){
  void mqtt_publish_effect_name(){
     effects_t *ef = (effects_t *) rgb_ledc->effects;
     effect_t *e = ef->effect + ef->effect_id;
-    char name[12];
-    strcpy(name, e->name);
-    mqtt_publish_generic( "effect", name);
+    char payload[12];
+    strcpy(payload, e->name);
+    mqtt_publish_generic( MQTT_TOPIC_EFFECT_NAME, payload);
+ }
+
+  void mqtt_publish_effect_id(){
+    effects_t *ef = (effects_t *) rgb_ledc->effects;
+    effect_t *e = ef->effect + ef->effect_id;
+    char payload[3];
+    itoa(ef->effect_id, payload, 10);
+    mqtt_publish_generic( MQTT_TOPIC_EFFECT_ID, payload);
  }

@@ -3,24 +3,24 @@
 
 
 static const char *TAG = "utils";
-/*
-uint16_t get_vdd33() {
+
+uint16_t get_adc() {
     uint16_t adc = 0;
     adc_config_t adc_cfg;
-    adc_cfg.mode = ADC_READ_VDD_MODE;
+    adc_cfg.mode = ADC_READ_TOUT_MODE;
     adc_cfg.clk_div = 8;
     if ( adc_init(&adc_cfg) == ESP_OK ) {
         if ( adc_read(&adc) == ESP_OK ) {
         } else {
-            ESP_LOGI(TAG_UTILS, "FAIL: adc_read error\n"); 
+            ESP_LOGE(TAG, "FAIL: adc_read error\n"); 
         }
         adc_deinit();
     } else {
-       ESP_LOGI(TAG_UTILS, "FAIL: adc_init error\n"); 
+       ESP_LOGE(TAG, "FAIL: adc_init error\n"); 
     }
     return adc;
 }
-*/
+
 uint32_t get_chip_id(uint8_t *mac){
  return mac[5] + mac[4]*256 + mac[3]*256*256;
 }

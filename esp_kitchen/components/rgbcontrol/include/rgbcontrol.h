@@ -24,6 +24,10 @@
 
 #define RGB_URI "/colors"
 
+#define MQTT_TOPIC_EFFECT_NAME "effect/name"
+#define MQTT_TOPIC_EFFECT_ID "effect/id"
+#define MQTT_TOPIC_COLOR_INT "color/int"
+
 typedef void *rgbcontrol_handle_t;      // rgbcontrol object
 typedef struct rgbcontrol rgbcontrol_t;
 

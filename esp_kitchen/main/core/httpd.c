@@ -187,12 +187,9 @@ esp_err_t tools_get_handler(httpd_req_t *req){
         // pir_en=1&pir_off_delay=15&fadeup=100&fadedown=150&st=1
         char param[15];
         int val = 0;
-        if ( http_get_key_str(req, "pir_en", param, sizeof(param)) == ESP_OK ) {     
-            val = atoi( param );
-        } else {
-            val = false;
-        }   
+        val = http_get_key_str(req, "pir_en", param, sizeof(param)) == ESP_OK ;
         // save pir_en
+
         if ( is_pir_enabled != val ) {
             is_pir_enabled = val;
             val = nvs_param_u8_save("pir", "enabled", is_pir_enabled);
@@ -246,16 +243,35 @@ esp_err_t tools_get_handler(httpd_req_t *req){
                 val = nvs_param_u8_save("main", "irpin", ir_pin);
                 esp_err_to_name( val );
             }                 
-        } 
-        if ( http_get_key_str(req, "pirpin", param, sizeof(param)) == ESP_OK ) {     
+        }         
+        
+        if ( http_get_key_str(req, "irdelay", param, sizeof(param)) == ESP_OK ) {     
             val = atoi( param );
-            if ( pir_pin != val ) {
-                pir_pin = val;
-                ESP_LOGI(TAG, "save pirpin %d", pir_pin);
-                val = nvs_param_u8_save("main", "pirpin", pir_pin);
+            if ( ir_delay != val ) {
+                ir_delay = val;
+                val = nvs_param_u16_save("main", "irdelay", ir_delay);
                 esp_err_to_name( val );
             }                 
         } 
+
+        if ( http_get_key_str(req, "pirpin", param, sizeof(param)) == ESP_OK ) {     
+            val = atoi( param );
+            if ( pirpin != val ) {
+                pirpin = val;
+                val = nvs_param_u8_save("main", "pirpin", pirpin);
+                esp_err_to_name( val );
+            }                 
+        }     
+        
+        if ( http_get_key_str(req, "adclvl", param, sizeof(param)) == ESP_OK ) {     
+            val = atoi( param );
+            if ( adc_lvl != val ) {
+                adc_lvl = val;
+                val = nvs_param_u8_save("main", "adclvl", adc_lvl);
+                esp_err_to_name( val );
+            }                 
+        } 
+
         if ( http_get_key_str(req, "fanpin", param, sizeof(param)) == ESP_OK ) {     
             val = atoi( param );
             if ( relay_fan_pin != val ) {
@@ -263,7 +279,16 @@ esp_err_t tools_get_handler(httpd_req_t *req){
                 val = nvs_param_u8_save("main", "fanpin", relay_fan_pin);
                 esp_err_to_name( val );
             }                 
-        }       
+        }           
+        
+        val = http_get_key_str(req, "faninv", param, sizeof(param)) == ESP_OK;             
+
+        if ( relay_invert != val ) {
+            relay_invert = val;
+            val = nvs_param_u8_save("main", "faninv", relay_invert);
+            esp_err_to_name( val );
+        }    
+
         for (uint8_t i = 0; i < LED_CTRL_MAX; i++) {
             char tmp[7];
             sprintf(tmp, "ledpin%d", i);

@@ -18,6 +18,7 @@
 #include "wifi.h"
 #include "core.h"
 #include "utils.h"
+#include "rgbcontrol.h"
 
 
 
@@ -60,4 +61,5 @@ void mqtt_extern_publish(const char *topic, const char *payload);
 
  void mqtt_publish_fan_state();
 void mqtt_publish_effect_name();
+void mqtt_publish_effect_id();
 #endif /* __MQTT_H__ */
