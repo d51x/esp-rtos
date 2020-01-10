@@ -147,15 +147,7 @@ void get_localtime(char* buf){
     //return buf;
 }
 
-char* set_hostname(char *_hostname){
-    if ( _hostname == NULL || strlen(_hostname) == 0 ) {
-        // default name like "ESP_XXXXXX"
-        snprintf(hostname, TCPIP_HOSTNAME_MAX_SIZE, "ESP_%02X%02X%02X", wifi_info.mac[3], wifi_info.mac[4], wifi_info.mac[5]);
-        return hostname;
-    } else {
-        return _hostname;
-    }
-}
+
 
     
 uint8_t str_to_long(long *out, char *s, int base) {

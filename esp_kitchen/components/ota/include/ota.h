@@ -10,9 +10,8 @@
 #include "esp_http_client.h"
 #include "esp_partition.h"
 #include "esp_http_server.h"
-#include "nvs.h"
 #include "utils.h"
-
+#include "nvsparam.h"
 
 
 typedef enum esp_ota_firm_state {
@@ -51,9 +50,9 @@ void set_ota_size(size_t ota_size);
 void set_ota_progress(size_t bytes);
 
 void save_ota_upgrade_dt();
-esp_err_t get_ota_upgraded_dt(char *buf);
+void get_ota_upgraded_dt(char *buf);
 
-esp_err_t get_ota_nvs_data(ota_nvs_data_t *ota_nvs);
+void get_ota_nvs_data(ota_nvs_data_t *ota_nvs);
 void set_ota_nvs_data(const ota_nvs_data_t *ota_nvs);
 
 #endif /* __HTTP_OTA_H__ */

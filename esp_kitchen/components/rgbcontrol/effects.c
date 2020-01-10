@@ -84,13 +84,13 @@ void effects_set_effect( int8_t id ){
     }            
 
     rgbcontrol_t *rgbctl = (rgbcontrol_t *)effects->rgbctrl;
-    if ( rgbctl->mqtt_send && effects->effect_id != id ) {
+    if ( rgbctl->ledc->mqtt_send && effects->effect_id != id ) {
         char topic[12] = MQTT_TOPIC_EFFECT_NAME;
-        rgbctl->mqtt_send(topic, e->name);
+        rgbctl->ledc->mqtt_send(topic, e->name);
         char payload[3];
         itoa(id, payload, 10);
         strcpy(topic, MQTT_TOPIC_EFFECT_ID);
-        rgbctl->mqtt_send(topic, payload);
+        rgbctl->ledc->mqtt_send(topic, payload);
     }
 
     effects->effect_id = id;

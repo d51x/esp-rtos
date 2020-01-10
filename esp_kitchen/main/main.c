@@ -11,8 +11,6 @@ httpd_handle_t http_server = NULL;
 
 
 static void  init_relay() {
-    //relay_fan_h = relay_create(RELAY_FAN_PIN, RELAY_LEVEL_HIGH);
-    //relay_fan_h = relay_create( relay_fan_pin, RELAY_LEVEL_LOW);
     relay_fan_h = relay_create( relay_fan_pin, relay_invert ? RELAY_LEVEL_LOW : RELAY_LEVEL_HIGH);
     relay_write(relay_fan_h,  RELAY_STATE_CLOSE);
     relay_add_mqtt_send_cb(relay_fan_h, mqtt_send_gpio);
@@ -20,22 +18,18 @@ static void  init_relay() {
 
 static void init_led_rgb_controller() {
     ledcontrol_channel_t *ch_red = calloc(1, sizeof(ledcontrol_channel_t));
-    //ch_red->pin = LED_CTRL_RED_PIN;
     ch_red->pin = main_led_pins[LED_CTRL_RED_CH];
     ch_red->channel = LED_CTRL_RED_CH;
     
     ledcontrol_channel_t *ch_green = calloc(1, sizeof(ledcontrol_channel_t));
-    //ch_green->pin = LED_CTRL_GREEN_PIN;
     ch_green->pin = main_led_pins[LED_CTRL_GREEN_CH];
     ch_green->channel = LED_CTRL_GREEN_CH;
 
     ledcontrol_channel_t *ch_blue = calloc(1, sizeof(ledcontrol_channel_t));
-    //ch_blue->pin = LED_CTRL_BLUE_PIN;
     ch_blue->pin = main_led_pins[LED_CTRL_BLUE_CH];
     ch_blue->channel = LED_CTRL_BLUE_CH;
 
     ledcontrol_channel_t *ch_white = calloc(1, sizeof(ledcontrol_channel_t));
-    //ch_white->pin = LED_CTRL_WHITE_PIN;
     ch_white->pin = main_led_pins[LED_CTRL_WHITE_CH];
     ch_white->channel = LED_CTRL_WHITE_CH;
     ch_white->bright_tbl = TBL_32B;
@@ -53,6 +47,7 @@ static void init_led_rgb_controller() {
 
     // ====== initialize led controller =======================
     ledc->init();
+    ledcontrol_set_mqtt_send_cb( mqtt_extern_publish );
 
     // ===== add uri handler of led controller ================
     add_uri_get_handler( http_server, ledc->uri, ledc->http_get_handler);
@@ -70,13 +65,11 @@ static void init_led_rgb_controller() {
 
     // === add uri handler of RGB controller ================
     add_uri_get_handler( http_server, rgb_ledc->uri, rgb_ledc->http_get_handler);
-    rgbcontrol_set_mqtt_send_cb( mqtt_extern_publish );
+    
 }
 
 static void init_pir() {
-    pir_conf_t pir_cfg;
-    
-    //pir_cfg.pin = PIR_PIN,                        
+    pir_conf_t pir_cfg;                   
     pir_cfg.pin = pirpin;                        
     pir_cfg.interval_low = pir_timer_off_delay;
     pir_cfg.type = PIR_ISR;                       
@@ -96,7 +89,6 @@ static void init_pir() {
 
 
 static void init_ir_receiver() {
-    //ir_rx_h = irrcv_init(IR_RECEIVER_PIN, IR_RECEIVE_DELAY, IR_RECEIVER_BUTTONS_COUNT);
     ir_rx_h = irrcv_init(ir_pin, ir_delay, IR_RECEIVER_BUTTONS_COUNT);
 
     if ( ir_rx_h == NULL ) {
@@ -115,12 +107,9 @@ static void init_ir_receiver() {
 
 
 void app_main(void){
-
     ESP_LOGI("*******  FW_VER: ", FW_VER);
     ESP_LOGI("*******  CORE_VER: ", CORE_FW_VER);
-
-
-
+    
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES) {
         nvs_flash_erase();
@@ -128,11 +117,11 @@ void app_main(void){
     }
     ESP_ERROR_CHECK(ret);
 
-    // TODO: get options
-
     OTA_IDLE_BIT = BIT7;
     ota_event_group = xEventGroupCreate();
     xEventGroupSetBits(ota_event_group, OTA_IDLE_BIT);
+
+    load_params();
 
     wifi_mode_t wf = WIFI_MODE_STA; //
     wifi_init(wf); 
@@ -140,18 +129,11 @@ void app_main(void){
 
     // todo wait wifi connected bit
     mqtt_start();
-    
     sntp_start();
-
-
-    load_params();
-
-
     init_led_rgb_controller();
     init_relay();
     init_pir();
     init_ir_receiver();
-
 }
 
 
@@ -189,15 +171,11 @@ static void start_count_down(){
     xTimerStart(tmr_cnt, 0);	
 }
 
-
-
 void pir_low_cb(void *arg) {
     CHECK_PIR();
     if ( !is_motion ) return;
     is_motion = false;
     mqtt_send_pir();
-
-    // start countdown
     start_count_down();
 }
 
@@ -205,9 +183,7 @@ void pir_high_cb(void *arg) {
     CHECK_PIR();
     is_motion = true;
     mqtt_send_pir();
-
     start_count_up();
-
     if ( !is_white_led_auto ) return;
     white_led_smooth_on();
 }

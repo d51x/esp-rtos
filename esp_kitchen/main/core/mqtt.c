@@ -10,14 +10,17 @@ static mqtt_config_t _mqtt_cfg;
 
 static TaskHandle_t xHanldeAll = NULL;
 
-static char *_mqtt_dev_name = MQTT_DEVICE;
+char *_mqtt_dev_name[30];
 
 static void mqtt_uninitialize();
 
 static void process_data(esp_mqtt_event_handle_t event);
 
-void mqtt_set_device_name(const char *dev_name){
-    strcpy(_mqtt_dev_name, dev_name);
+void mqtt_set_device_name(const char *dev_name, const char *login){
+    strcpy(_mqtt_dev_name, login);
+    strcat(_mqtt_dev_name, "/");
+    strcat(_mqtt_dev_name, dev_name);
+    strcat(_mqtt_dev_name, "/");
 }
 
 esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
@@ -89,7 +92,10 @@ void mqtt_start(){/*const char *broker_url, uint16_t send_interval*/
     strcpy(_mqtt_cfg.passw, "");
     _mqtt_cfg.send_interval = MQTT_SEND_INTERVAL;
 
-    //mqtt_load_data_from_nvs(&_mqtt_cfg);
+    mqtt_load_data_from_nvs(&_mqtt_cfg);
+
+    mqtt_set_device_name(wifi_hostname, _mqtt_cfg.login);
+
 
     if ( !_mqtt_cfg.enabled ) {
         ESP_LOGI(TAG, "MQTT disabled. Return.");
@@ -166,7 +172,7 @@ static void mqtt_publish_generic(const char *_topic, const char *payload) {
     strcpy( topic, _mqtt_dev_name /*MQTT_DEVICE*/ );
     strcpy( topic + strlen( topic ), _topic);
     
-    //ESP_LOGI(TAG, "mqtt publish topic %s with payload %s", topic, payload);
+    ESP_LOGI(TAG, "mqtt publish topic %s with payload %s", topic, payload);
 
     int res = esp_mqtt_client_publish(mqtt_client, topic, payload, strlen(payload), 0, 1);
     if ( res == -1 ) {
@@ -215,73 +221,59 @@ void mqtt_publish_all_task(void *arg){
         mqtt_publish_fan_state();
         mqtt_publish_effect_name();
         mqtt_publish_effect_id();
+        mqtt_publish_ledc_duty( LED_CTRL_RED_CH );
+        mqtt_publish_ledc_duty( LED_CTRL_GREEN_CH );
+        mqtt_publish_ledc_duty( LED_CTRL_BLUE_CH );
+        mqtt_publish_ledc_duty( LED_CTRL_WHITE_CH );
+        mqtt_publish_adc_thld();
         vTaskDelay( delay_ms / portTICK_RATE_MS);
     }
 
 }
 
 void mqtt_load_data_from_nvs(mqtt_config_t *cfg){
-    //ESP_LOGI(TAG, __func__);
-    nvs_handle mqtt_handle;
-    if ( nvs_open("mqtt", NVS_READONLY, &mqtt_handle) == ESP_OK ) {
-        size_t size_buf = strlen(cfg->broker_url)-1;
-        nvs_get_str(mqtt_handle, "url", NULL, &size_buf);
-        if ( nvs_get_str(mqtt_handle, "url", cfg->broker_url, &size_buf) != ESP_OK ) {
-            strcpy( cfg->broker_url, MQTT_BROKER_URL );        
-            ESP_LOGE(TAG, "FAIL to load mqtt broker url. Using defaul %s", cfg->broker_url);
-        }
 
-        if ( nvs_get_u32(mqtt_handle, "interval", &cfg->send_interval) != ESP_OK ) {
-            cfg->send_interval = MQTT_SEND_INTERVAL;
-            ESP_LOGE(TAG, "FAIL to load mqtt send initerval. Using default: %d", cfg->send_interval);
-        }      
+    // broker url
+    if ( nvs_param_str_load("mqtt", "url",  cfg->broker_url) != ESP_OK ) {
+        strcpy(cfg->broker_url, MQTT_BROKER_URL);
+        ESP_LOGE(TAG, "FAIL to load mqtt broker url. Using defaul %s", cfg->broker_url);
+    }
 
-        if ( nvs_get_u8(mqtt_handle, "enabled", (uint8_t *)&cfg->enabled) != ESP_OK ) {
-            cfg->enabled = 0;
-            ESP_LOGE(TAG, "FAIL to load mqtt enabled. Using default: %d", cfg->enabled);
-        }   
+    // mqtt send interval
+    if ( nvs_param_u32_load("mqtt", "interval", &cfg->send_interval) != ESP_OK ) {
+        cfg->send_interval = MQTT_SEND_INTERVAL;
+        ESP_LOGE(TAG, "FAIL to load mqtt send initerval. Using default: %d", cfg->send_interval);
+    }
 
-        size_buf = strlen(cfg->login)-1;
-        nvs_get_str(mqtt_handle, "login", NULL, &size_buf);
-        if ( nvs_get_str(mqtt_handle, "login", cfg->login, &size_buf) != ESP_OK ) {
-            strcpy( cfg->login, "" );        
-            ESP_LOGE(TAG, "FAIL to load mqtt broker login. Using defaul <empty>");
-        }
+    // mqtt enabled
+    if ( nvs_param_u8_load("mqtt", "enabled", &cfg->enabled) != ESP_OK ) {
+        cfg->enabled = 0;
+        ESP_LOGE(TAG, "FAIL to load mqtt enabled. Using default: %d", cfg->enabled);
+    }
 
-        size_buf = strlen(cfg->passw)-1;
-        nvs_get_str(mqtt_handle, "passw", NULL, &size_buf);
-        if ( nvs_get_str(mqtt_handle, "passw", cfg->passw, &size_buf) != ESP_OK ) {
-            strcpy( cfg->passw, "" );        
-            ESP_LOGE(TAG, "FAIL to load mqtt broker passw. Using defaul <empty>");
-        }
+    // mqtt login
+    if ( nvs_param_str_load("mqtt", "login",  cfg->login) != ESP_OK ) {
+        strcpy(cfg->login, "");
+        ESP_LOGE(TAG, "FAIL to load mqtt broker login. Using defaul <empty>");
+    }
 
-        nvs_close(mqtt_handle);         
-    } else {
-        ESP_LOGE(TAG, "cannot open mqtt section in nvs");
+    // mqtt password
+    if ( nvs_param_str_load("mqtt", "passw",  cfg->passw) != ESP_OK ) {
+        strcpy(cfg->passw, "");
+        ESP_LOGE(TAG, "FAIL to load mqtt broker passw. Using defaul <empty>");
     }
 }
 
 void mqtt_save_data_to_nvs(const mqtt_config_t *cfg){
-    ESP_LOGI(TAG, __func__);
-    nvs_handle mqtt_handle;
-    if ( nvs_open("mqtt", NVS_READWRITE, &mqtt_handle) == ESP_OK ) {
-        if ( nvs_set_str(mqtt_handle, "url", cfg->broker_url) != ESP_OK ) ESP_LOGE(TAG, "ERROR: cannot save mqtt url to nvs");
-        if ( nvs_set_u32(mqtt_handle, "interval", cfg->send_interval) != ESP_OK) ESP_LOGE(TAG, "ERROR: cannot save mqtt interval to nvs");
-        
+    nvs_param_str_save("mqtt", "url",  cfg->broker_url);  
+    nvs_param_u32_save("mqtt", "interval", cfg->send_interval); 
+    nvs_param_u8_save("mqtt", "enabled", cfg->enabled);
+    ESP_LOGI(TAG, "save login %s", cfg->login);
+    if ( nvs_param_str_save("mqtt", "login",  cfg->login) != ESP_OK ) 
+        ESP_LOGE(TAG, "fail to save login");
+    nvs_param_str_save("mqtt", "passw",  cfg->passw);
 
-        ESP_LOGI(TAG, "save mqtt send enabled to nvs - %d", cfg->enabled);
-        if ( nvs_set_u8(mqtt_handle, "enabled", cfg->enabled) == ESP_OK) {
-            ESP_LOGI(TAG, "mqtt enabled saved to nvs successfully");
-        } else {
-            ESP_LOGE(TAG, "ERROR: cannot save mqtt enabled to nvs");
-        }
-
-        if ( nvs_set_str(mqtt_handle, "login", cfg->login) != ESP_OK) ESP_LOGE(TAG, "ERROR: cannot save mqtt login to nvs");
-        if ( nvs_set_str(mqtt_handle, "passw", cfg->passw) != ESP_OK) ESP_LOGE(TAG, "ERROR: cannot save mqtt passw to nvs");
-    } else {
-        ESP_LOGE(TAG, "Cannot open MQTT nvs for write");
-    }
-    nvs_close(mqtt_handle);
+    memcpy(&_mqtt_cfg, cfg, sizeof(mqtt_config_t));
 }
 
 void mqtt_extern_publish(const char *_topic, const char *payload){
@@ -387,11 +379,27 @@ static void process_data(esp_mqtt_event_handle_t event){
             uint32_t val = atoi(data);
             rgb_ledc->set_color_int(val);          
         }       
-    }  else if ( strstr( _topic, "sunset" ) != NULL ) {
+    } else if ( strstr( _topic, "sunset" ) != NULL ) {
         uint8_t val = atoi( data );
         is_sunset = val;
         is_dark = get_dark_mode( pir_mode );
-    } 
+    } else if ( strstr( _topic, MQTT_TOPIC_LEDC_CHANNEL ) != NULL ) {
+        char s_ch[2];
+        strcpy(s_ch, _topic + strlen(MQTT_TOPIC_LEDC_CHANNEL) );
+        uint8_t ch = atoi( s_ch );
+        uint32_t duty = atoi( data );
+        if ( duty != ledc->get_duty( ledc->channels + ch ) ) {
+            ledc->set_duty( ledc->channels + ch, duty );
+            ledc->update();
+        }
+    } else if ( strstr( _topic, "adcthld") != NULL ) {
+        uint16_t val = atoi( data );
+        if (val > 1023) val = 1023;
+        if ( val != adc_lvl ) {
+            adc_lvl = val;
+            nvs_param_u16_save("main", "adclvl", adc_lvl);
+        }
+    }
 
 
     free(topic);
@@ -423,4 +431,21 @@ static void process_data(esp_mqtt_event_handle_t event){
     char payload[3];
     itoa(ef->effect_id, payload, 10);
     mqtt_publish_generic( MQTT_TOPIC_EFFECT_ID, payload);
+ }
+
+void mqtt_publish_ledc_duty(uint8_t channel){
+    char payload[3];
+    char topic[10];
+    char s_id[2];
+    itoa(channel, s_id, 10);
+    strcpy(topic, MQTT_TOPIC_LEDC_CHANNEL);
+    strcat(topic, s_id);
+    itoa(ledc->get_duty( ledc->channels + channel), payload, 10);
+    mqtt_publish_generic( topic, payload);
+ }
+
+ void mqtt_publish_adc_thld() {
+    char payload[5];
+    itoa(adc_lvl, payload, 10);
+    mqtt_publish_generic( "adcthld", payload);    
  }

@@ -71,6 +71,7 @@ ledcontrol_handle_t* ledcontrol_create(uint32_t freq_hz, uint8_t channel_cnt)
     ledc->print_html_data = ledcontrol_print_html_data;
     strcpy(ledc->uri, LEDC_URI);
     ledc->http_get_handler = ledcontrol_http_get_handler; 
+    ledc->mqtt_send = NULL;
 
     return (ledcontrol_handle_t) ledc;
 }
@@ -491,4 +492,8 @@ end:
     // show page data
     httpd_resp_send(req, page, strlen(page));
     return ESP_OK;              
+}
+
+void ledcontrol_set_mqtt_send_cb(func_mqtt_send_cb cb){
+    ledc->mqtt_send = cb;
 }

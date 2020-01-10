@@ -37,7 +37,7 @@ httpd_uri_t uri_handlers[] = {
     { .uri      = "/setup",
       .method   = HTTP_GET,
       .handler  = setup_get_handler,
-      .user_ctx = "Setup page",
+      .user_ctx = "/setup",
     },
     {   .uri   = "/debug",
         .method    = HTTP_GET,
@@ -47,7 +47,7 @@ httpd_uri_t uri_handlers[] = {
     {   .uri   = "/tools",
         .method    = HTTP_GET,
         .handler   = tools_get_handler,
-        .user_ctx  = "Tools page",
+        .user_ctx  = "/tools",
     },
     {   .uri   = "/gpio",    // get request from internal system
         .method    = HTTP_GET,

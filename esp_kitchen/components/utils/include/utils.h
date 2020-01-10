@@ -89,7 +89,6 @@ typedef struct {
 
 
 m_wifi_info_t wifi_info;
-char hostname[TCPIP_HOSTNAME_MAX_SIZE];
 
 uint8_t str_to_int(int *out, char *s, int base);
 uint8_t str_to_long(long *out, char *s, int base);
@@ -102,7 +101,7 @@ void get_system_info(system_info_t *sys_info);
 char* print_wifi_mode(wifi_mode_t mode);
 
 uint32_t get_chip_id(uint8_t *mac);
-char* set_hostname(char *_hostname);
+
 
 void get_uptime(char*  buf);
 void get_localtime(char*  buf);

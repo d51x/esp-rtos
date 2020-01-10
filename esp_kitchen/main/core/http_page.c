@@ -26,7 +26,7 @@ void print_html_footer_data(char *buf) {
 void print_html_devinfo(char *buf) {
     char * buf2 = malloc(20);
     get_uptime(buf2);
-    sprintf(buf, html_devinfo, hostname, esp_get_free_heap_size(), wifi_get_rssi(), esp_wifi_get_vdd33(), buf2);
+    sprintf(buf, html_devinfo, wifi_hostname, esp_get_free_heap_size(), wifi_get_rssi(), esp_wifi_get_vdd33(), buf2);
     free(buf2);
 }
 
@@ -127,10 +127,6 @@ void print_html_tools(char *buf){
 void print_html_setup(char *buf){
     sprintf(buf, html_setup_body);
 
-    // load from nvs
-    // wifi_ssid, wifi_pass, wifi_mode
-    // mqtt_en, mqtt_host, mqtt_login, mqtt_sint
-    // ota_uri, ota_bufsz
     char wifi_ssid[20], wifi_pass[20];
     uint8_t wifi_mode = WIFI_MODE_NULL;
 
@@ -143,7 +139,7 @@ void print_html_setup(char *buf){
     ota_nvs_data_t *nvs_ota = malloc( sizeof(ota_nvs_data_t));
 
     ESP_LOGD(TAG, "setup page: get_ota_nvs_data");
-    err = get_ota_nvs_data(nvs_ota);
+    get_ota_nvs_data(nvs_ota);
 
     ESP_LOGD(TAG, "Loaded ota uri %s", nvs_ota->uri);
     ESP_LOGD(TAG, "Loaded ota size buf %d", nvs_ota->buf_size);
@@ -152,26 +148,20 @@ void print_html_setup(char *buf){
     mqtt_get_current_config(mqtt_cfg);
 
     ESP_LOGD(TAG, "MQTT CFG broker url %s", mqtt_cfg->broker_url);
-    ESP_LOGD(TAG, "MQTT CFG login %s", mqtt_cfg->login);
+    ESP_LOGI(TAG, "MQTT CFG login %s", mqtt_cfg->login);
     ESP_LOGD(TAG, "MQTT CFG send_interval %d", mqtt_cfg->send_interval);
     ESP_LOGD(TAG, "MQTT CFG enabled %d", mqtt_cfg->enabled);
 
     sprintf(buf+strlen(buf), html_setup_form_post, 
+                                wifi_nvs_cfg->hostname, 
                                 wifi_nvs_cfg->ssid, //wifi_ssid, 
                                 wifi_nvs_cfg->password, //wifi_pass,
-                                //(wifi_mode == WIFI_MODE_STA) ? "checked=\"checked\"" : "",
                                 (wifi_nvs_cfg->mode == WIFI_MODE_STA) ? "checked=\"checked\"" : "",
-                                //(wifi_mode == WIFI_MODE_AP) ? "checked=\"checked\"" : "",
                                 (wifi_nvs_cfg->mode == WIFI_MODE_AP) ? "checked=\"checked\"" : "",
-                                //mqtt_cfg->enabled, 
                                 mqtt_cfg->enabled ? "checked" : "",
-                                //mqtt_en ? "checked" : "",
                                 mqtt_cfg->broker_url, 
-                                //mqtt_host, 
                                 mqtt_cfg->login, 
-                                //mqtt_login, 
                                 mqtt_cfg->send_interval,
-                                //mqtt_sint,
                                 nvs_ota->uri, //(err) ? "" : nvs_ota->uri, 
                                 nvs_ota->buf_size );
                              
@@ -195,7 +185,7 @@ void get_main_page_data(char *data) {
     sprintf(data+strlen(data), "<p>Режим работы: <b>%s</b></p>", pir_mode_desc[pir_mode] );
     sprintf(data+strlen(data), "<p>Сейчас: <b>%s</b></p>", is_dark ? "темно" : "светло" );
     sprintf(data+strlen(data), "<p>Движение: <b>%s</b></p>", is_motion ? STR_YES : STR_NO );
-    if ( count_down_off <= pir_timer_off_delay )
+    if ( count_down_off < pir_timer_off_delay )
         sprintf(data+strlen(data), "<p>Осталось сек до выключения: <b>%d</b> сек</p>", count_down_off);
     if (count_up_motion > 0) 
         sprintf(data+strlen(data), "<p>Прошло после начала движения: <b>%d</b> сек</p>", count_up_motion);
@@ -305,7 +295,7 @@ void get_debug_page_data(char *data) {
     get_uptime(buf);
 
     char *ota_updated = malloc(25);
-    if ( get_ota_upgraded_dt(ota_updated) != ESP_OK ) strcpy(ota_updated, "unknown");
+    get_ota_upgraded_dt(ota_updated);
     sprintf(data+strlen(data), html_debug, (sys_info->chip_info.chip_model == 0) ? "esp8266" : "esp32",
                                 sys_info->chip_info.chip_id,
                                 sys_info->chip_info.chip_revision,
@@ -401,7 +391,7 @@ void get_ota_page_data(char *data){
     get_ota_nvs_data(nvs_ota);
 
     char * updated = malloc(25);
-    if ( get_ota_upgraded_dt(updated) != ESP_OK ) strcpy(updated, "unknown");
+    get_ota_upgraded_dt(updated);
     sprintf(data+strlen(data), html_ota_body, part->label, __TIME__, __DATE__, updated, nvs_ota->uri  );
 
     print_html_menu(data+strlen(data));

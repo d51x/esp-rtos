@@ -76,17 +76,13 @@ esp_err_t wifi_event_handler(void *ctx, system_event_t *event){
         case SYSTEM_EVENT_STA_START:
             ESP_LOGI(TAG, "SYSTEM_EVENT_STA_START");
 
-            
-            char* _hostname = malloc(TCPIP_HOSTNAME_MAX_SIZE);
-            _hostname = set_hostname(NULL);
-            ESP_LOGI(TAG, _hostname);
-            tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, _hostname);  //TCPIP_HOSTNAME_MAX_SIZE    32
+            ESP_LOGI(TAG, wifi_hostname);
+            tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, wifi_hostname);  //TCPIP_HOSTNAME_MAX_SIZE    32
             // ????
             //esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
             // ????
             esp_wifi_connect();
             wifi_info.wifi_reconnect = 0;
-            free(_hostname);
             break;
         case SYSTEM_EVENT_STA_GOT_IP:
             ESP_LOGI(TAG, "SYSTEM_EVENT_STA_GOT_IP");
@@ -178,8 +174,9 @@ void wifi_init(wifi_mode_t wifi_mode) {
             break;    
     }
     
+    set_hostname( wifi_nvs_cfg->hostname );
     esp_wifi_start();
-    //free(wifi_nvs_cfg);
+    free(wifi_nvs_cfg);
 }
 
 int8_t wifi_get_rssi(){
@@ -191,55 +188,48 @@ int8_t wifi_get_rssi(){
 }
 
 void wifi_load_data_from_nvs(wifi_nvs_cfg_t *cfg ){
-    ESP_LOGI(TAG, __func__);
-    nvs_handle wifi_handle;
-    if ( nvs_open("wifi", NVS_READONLY, &wifi_handle) == ESP_OK ) {
-        size_t size_buf = strlen(cfg->ssid)-1;
-        nvs_get_str(wifi_handle, "ssid", NULL, &size_buf);
-        if ( nvs_get_str(wifi_handle, "ssid", cfg->ssid, &size_buf) != ESP_OK ) {
-            strcpy( cfg->ssid, ESP_WIFI_SSID );        
-            ESP_LOGE(TAG, "FAIL to load wifi ssid. Using defaul %s", cfg->ssid);
-        }
-        size_buf = strlen(cfg->password)-1;
-        nvs_get_str(wifi_handle, "passw", NULL, &size_buf);
-        if ( nvs_get_str(wifi_handle, "passw", cfg->password, &size_buf) != ESP_OK ) {
-            strcpy( cfg->password, ESP_WIFI_PASS );        
-            ESP_LOGE(TAG, "FAIL to load wifi password. Using defaul %s", cfg->password);
-        }
-        if ( nvs_get_u8(wifi_handle, "mode", (uint8_t *)&cfg->mode) != ESP_OK ) {
-            cfg->mode = WIFI_MODE_AP;
-            ESP_LOGE(TAG, "FAIL to load wifi mode. Using default: %d", cfg->mode);
-        }        
-        if ( nvs_get_u8(wifi_handle, "first", (uint8_t *)&cfg->first) != ESP_OK ) {
-            cfg->first = 1;
-            ESP_LOGE(TAG, "FAIL to load wifi first. Using default: %d", cfg->first);
-        } else {
-            ESP_LOGE(TAG, "Loaded wifi first %d", cfg->first);
-        }                
-        nvs_close(wifi_handle); 
-    }  else {
-        ESP_LOGE(TAG, "cannot open wifi section in nvs");
-    }        
+    
+    nvs_param_str_load("wifi", "hostname", cfg->hostname);
+    
+    if ( nvs_param_str_load("wifi", "ssid", cfg->ssid) != ESP_OK ) {
+        strcpy(cfg->ssid, ESP_WIFI_SSID);
+        ESP_LOGE(TAG, "FAIL to load wifi ssid. Using defaul %s", cfg->ssid);
+    }
+
+    if ( nvs_param_str_load("wifi", "passw", cfg->password) != ESP_OK ) {
+        strcpy(cfg->password, ESP_WIFI_PASS);
+        ESP_LOGE(TAG, "FAIL to load wifi password. Using defaul %s", cfg->password);
+    }
+
+    uint8_t val = 0;
+    if ( nvs_param_u8_load("wifi", "mode", &val) == ESP_OK ) {
+        cfg->mode = val;
+    } else {
+        cfg->mode = WIFI_MODE_AP;
+        ESP_LOGE(TAG, "FAIL to load wifi mode. Using default: %d", cfg->mode);
+    }
+
+    if ( nvs_param_u8_load("wifi", "first", &cfg->first) != ESP_OK ) {
+        cfg->first = 1;
+        ESP_LOGE(TAG, "FAIL to load wifi first. Using default: %d", cfg->first);
+    }   
+
 }
 
 void wifi_save_data_to_nvs(const wifi_nvs_cfg_t *cfg){
-    ESP_LOGI(TAG, __func__);
-    nvs_handle wifi_handle;
-    if ( nvs_open("wifi", NVS_READWRITE, &wifi_handle) == ESP_OK ) {
-        if ( nvs_set_str(wifi_handle, "ssid", cfg->ssid) != ESP_OK) {
-            ESP_LOGE(TAG, "ERROR: cannot save wifi ssid to nvs");
-        }
-        if ( nvs_set_str(wifi_handle, "passw", cfg->password) != ESP_OK) {
-            ESP_LOGE(TAG, "ERROR: cannot save wifi password to nvs");
-        }
-        if ( nvs_set_u8(wifi_handle, "mode", cfg->mode) != ESP_OK) {
-            ESP_LOGE(TAG, "ERROR: cannot save wifi mode to nvs");
-        }
-        if ( nvs_set_u8(wifi_handle, "first", cfg->first) != ESP_OK) {
-            ESP_LOGE(TAG, "ERROR: cannot save wifi first to nvs");
-        } 
+    nvs_param_str_save("wifi", "hostname", cfg->hostname);
+    nvs_param_str_save("wifi", "ssid", cfg->ssid);
+    nvs_param_str_save("wifi", "passw", cfg->password);
+    nvs_param_u8_save("wifi", "mode", cfg->mode);
+    nvs_param_u8_save("wifi", "first", cfg->first);
+}
+
+
+void set_hostname(const char *_hostname){
+    if ( _hostname == NULL || strlen(_hostname) == 0 || (strcmp(_hostname, "" ) == ESP_OK)) {
+        // default name like "ESP_XXXXXX"
+        snprintf(wifi_hostname, TCPIP_HOSTNAME_MAX_SIZE, "ESP_%02X%02X%02X", wifi_info.mac[3], wifi_info.mac[4], wifi_info.mac[5]);
     } else {
-        ESP_LOGE(TAG, "Cannot open WIFI nvs for write");
+        strcpy(wifi_hostname, _hostname);
     }
-    nvs_close(wifi_handle);
 }

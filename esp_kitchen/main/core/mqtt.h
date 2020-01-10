@@ -14,6 +14,7 @@
 //#include "esp_wifi.h"
 //#include "esp_wifi_types.h"
 #include "mqtt_client.h" 
+#include "nvsparam.h" 
 
 #include "wifi.h"
 #include "core.h"
@@ -39,7 +40,7 @@ uint8_t mqtt_state;
 
 void mqtt_start(); /*const char *broker_url, uint16_t send_interval*/
 void mqtt_stop();
-void mqtt_set_device_name(const char *_mqtt_dev_name);
+void mqtt_set_device_name(const char *dev_name, const char *login);
 
 
 void mqtt_get_current_config(mqtt_config_t *cfg);
@@ -62,4 +63,7 @@ void mqtt_extern_publish(const char *topic, const char *payload);
  void mqtt_publish_fan_state();
 void mqtt_publish_effect_name();
 void mqtt_publish_effect_id();
+void mqtt_publish_ledc_duty(uint8_t channel);
+void mqtt_publish_adc_thld();
+
 #endif /* __MQTT_H__ */

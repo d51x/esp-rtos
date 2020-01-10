@@ -85,6 +85,7 @@ const char *html_gpio_end = "</div>";
 const char *html_setup_form_post = "<form method=\"GET\">"
                                         "<h3>Wifi Settings</h3>"
                                         "<p><small>not used yet</small></p>"
+                                        "<p>Hostname: <input size=\"20\" name=\"hostname\" value=\"%s\"></p>" 
                                         "<p>SSID: <input size=\"20\" name=\"ssid\" value=\"%s\"></p>" 
                                         "<p>Password: <input size=\"20\" name=\"pass\" value=\"%s\"></p>"
                                         "<p>Mode:"

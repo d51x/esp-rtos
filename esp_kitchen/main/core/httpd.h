@@ -13,6 +13,7 @@
 #include "core.h"
 #include "http_page.h"
 #include "nvsparam.h"
+#include "mqtt.h"
 
 #ifdef LEDCTRL
     #include "led_ctrl.h"
@@ -28,5 +29,6 @@ httpd_handle_t start_webserver(void);
 void stop_webserver(httpd_handle_t server);
 void register_uri_handlers(httpd_handle_t _server);
 void add_uri_get_handler(httpd_handle_t _server, const char *uri, httpd_uri_func func);
+void make_redirect(httpd_req_t *req, uint8_t timeout, const char *path);
 
 #endif /* __HTTPD_H__ */

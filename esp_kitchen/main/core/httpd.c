@@ -16,151 +16,98 @@ esp_err_t main_get_handler(httpd_req_t *req){
     return ESP_OK;
 }
 
+
+static void process_mqtt_param(httpd_req_t *req) {
+    mqtt_config_t *mqtt_cfg = malloc(sizeof(mqtt_config_t));
+    char param[100];
+
+    if ( http_get_key_str(req, "mqtt_en", param, sizeof(param)) == ESP_OK ) {
+        mqtt_cfg->enabled = 1;
+    } else {
+        mqtt_cfg->enabled = 0;
+    }
+
+    if ( http_get_key_str(req, "mqtt_host", param, sizeof(param)) == ESP_OK ) {
+        url_decode(param, mqtt_cfg->broker_url);
+    }
+
+
+    if ( http_get_key_str(req, "mqtt_login",  param, sizeof( param )) == ESP_OK ) {
+        strcpy(mqtt_cfg->login, param);
+    } else {
+        ESP_LOGE(TAG, "mqtt login not found");    
+    }
+
+    if ( http_get_key_str(req, "mqtt_sint",  param, sizeof( param )) == ESP_OK ) {
+        mqtt_cfg->send_interval = atoi(param);
+    }
+
+    mqtt_save_data_to_nvs(mqtt_cfg);
+    free(mqtt_cfg);
+}
+
+static void process_wifi_param(httpd_req_t *req){
+    char param[100];
+    wifi_nvs_cfg_t *wifi_nvs_cfg = malloc( sizeof(wifi_nvs_cfg_t));
+
+    if ( http_get_key_str(req, "hostname", param, sizeof(param)) == ESP_OK ) {
+        strcpy(wifi_nvs_cfg->hostname, param);
+        set_hostname( wifi_nvs_cfg->hostname );
+        tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, wifi_hostname);
+    }
+
+    
+    if ( http_get_key_str(req, "ssid", param, sizeof(param)) == ESP_OK ) {
+        strcpy(wifi_nvs_cfg->ssid, param);
+    }
+
+    if ( http_get_key_str(req, "pass", param, sizeof(param)) == ESP_OK ) {
+        strcpy(wifi_nvs_cfg->password, param);
+    }
+
+    wifi_nvs_cfg->mode = WIFI_MODE_NULL;
+    if ( http_get_key_str(req, "wifi_mode", param, sizeof(param)) == ESP_OK ) {
+        wifi_nvs_cfg->mode = atoi(param);
+    } 
+
+    wifi_save_data_to_nvs(wifi_nvs_cfg);
+    free(wifi_nvs_cfg);
+
+}
+
+static void process_ota_param(httpd_req_t *req){
+    char param[100];
+    ota_nvs_data_t *nvs_ota = malloc( sizeof(ota_nvs_data_t));
+    if ( http_get_key_str(req, "ota_uri", param, sizeof(param)) == ESP_OK ) {
+        url_decode(param, nvs_ota->uri);
+    } 
+    
+    if ( http_get_key_str(req, "ota_bufsz", param, sizeof(param)) == ESP_OK ) {
+        nvs_ota->buf_size = atoi(param);
+    } else {
+        nvs_ota->buf_size = UPLOAD_BUFFER_SIZE;
+    }
+
+    set_ota_nvs_data( nvs_ota );
+    free(nvs_ota);
+}
+
 esp_err_t setup_get_handler(httpd_req_t *req){
     
     char page[PAGE_DEFAULT_BUFFER_SIZE];
     
     if ( http_get_has_params(req) == ESP_OK) {
-
-        wifi_nvs_cfg_t *wifi_nvs_cfg = malloc( sizeof(wifi_nvs_cfg_t));
-        // wifi ssid
-        //char wifi_ssid[20], wifi_pass[20];
-        ESP_LOGD(TAG, "Find wifi ssid");
-        if ( http_get_key_str(req, "ssid", wifi_nvs_cfg->ssid, sizeof(wifi_nvs_cfg->ssid)) != ESP_OK ) {
-            strcpy(wifi_nvs_cfg->ssid, "");
-            ESP_LOGE(TAG, "wifi ssid not found, set to %s", wifi_nvs_cfg->ssid);
-        } else {
-            ESP_LOGD(TAG, "wifi ssid found - %s", wifi_nvs_cfg->ssid);
-        }
-
-        ESP_LOGD(TAG, "Find wifi pass");
-        //if ( http_get_key_str(req, "pass", wifi_pass, sizeof(wifi_pass)) != ESP_OK ) {
-        if ( http_get_key_str(req, "pass", wifi_nvs_cfg->password, sizeof(wifi_nvs_cfg->password)) != ESP_OK ) {
-            strcpy(wifi_nvs_cfg->password, "");
-            ESP_LOGE(TAG, "wifi pass not found, set to %s", wifi_nvs_cfg->password);
-        } else {
-            ESP_LOGD(TAG, "wifi pass found - %s", wifi_nvs_cfg->password);
-        }
-
-        //uint8_t wifi_mode;
-        //char wifi_mode[10];
-        uint8_t wifi_mode = WIFI_MODE_NULL;
-        ESP_LOGD(TAG, "Find wifi mode");
-        //if ( http_get_key_str(req, "wifi_mode", wifi_mode, sizeof(wifi_mode)) != ESP_OK ) {
-        //if ( http_get_key_uint8(req, "wifi_mode", (uint8_t *)&wifi_mode) != ESP_OK ) {
-        if ( http_get_key_uint8(req, "wifi_mode", (uint8_t *)&wifi_nvs_cfg->mode) != ESP_OK ) {
-            //strcpy(wifi_mode, "wifi_sta");
-            ESP_LOGE(TAG, "wifi mode not found, set to %d", wifi_nvs_cfg->mode);
-        } else {
-            ESP_LOGD(TAG, "wifi mode found - %d", wifi_nvs_cfg->mode);
-        }
-
-
-        wifi_save_data_to_nvs(wifi_nvs_cfg);
-        free(wifi_nvs_cfg);
-
-        ESP_LOGD(TAG, "Find MQTT data");
-        // ======= mqtt data =====
-        mqtt_config_t *mqtt_cfg = malloc(sizeof(mqtt_config_t));
-        //uint32_t mqtt_en;        
-        //if ( http_get_key_long(req, "mqtt_en", (long *)&mqtt_en) != ESP_OK ) mqtt_en = 1;
-        //if ( http_get_key_uint8(req, "mqtt_en", (uint8_t *)&mqtt_cfg->enabled) != ESP_OK ) {
-        char en[10];    
-        if ( http_get_key_str(req, "mqtt_en", en, sizeof(en)) != ESP_OK ) {
-            mqtt_cfg->enabled = 0;
-            ESP_LOGE(TAG, "MQTT Enabled not found, set to %d", mqtt_cfg->enabled);
-        } else {
-            mqtt_cfg->enabled = 1;
-            ESP_LOGD(TAG, "MQTT Enabled found - %d", mqtt_cfg->enabled);
-        }
-
-        ESP_LOGD(TAG, "Find MQTT broker url");
-        char mqtt_host[100];
-        //if ( http_get_key_str(req, "mqtt_host", mqtt_host, sizeof(mqtt_host)) != ESP_OK ) strcpy(mqtt_host, "");
-        if ( http_get_key_str(req, "mqtt_host", mqtt_host, sizeof(mqtt_host)) != ESP_OK ) {
-            strcpy(mqtt_cfg->broker_url, MQTT_BROKER_URL);
-            ESP_LOGE(TAG, "MQTT broker url not found, set to %s", mqtt_cfg->broker_url);
-        } else {
-            url_decode(mqtt_host, mqtt_cfg->broker_url);
-            ESP_LOGD(TAG, "MQTT broker url found %s", mqtt_cfg->broker_url);
-        }
-
-
-        ESP_LOGD(TAG, "Find MQTT login");
-        //char mqtt_login[20];
-        //if ( http_get_key_str(req, "mqtt_login", mqtt_login, sizeof(mqtt_login)) != ESP_OK ) strcpy(mqtt_login, "");
-        if ( http_get_key_str(req, "mqtt_login",  mqtt_cfg->login, sizeof( mqtt_cfg->login)) != ESP_OK ) {
-            strcpy( mqtt_cfg->login, "");
-            ESP_LOGE(TAG, "MQTT login not found, set to %s", mqtt_cfg->login);
-        } else {
-            ESP_LOGD(TAG, "MQTT login found - %s", mqtt_cfg->login);
-        }    
-
-        //ESP_LOGI(TAG, "Find MQTT send interval");
-        //uint32_t mqtt_sendint; 
-        //if ( http_get_key_long(req, "mqtt_sint", (long *) &mqtt_sendint) != ESP_OK ) mqtt_sendint = 60;
-        if ( http_get_key_long(req, "mqtt_sint", (long *)&mqtt_cfg->send_interval) != ESP_OK ) {
-            mqtt_cfg->send_interval = MQTT_SEND_INTERVAL;
-            ESP_LOGE(TAG, "MQTT send interval not found, set to %d", mqtt_cfg->send_interval);
-        } else {
-            ESP_LOGD(TAG, "MQTT send interval found - %d", mqtt_cfg->send_interval);
-        }
-
-        ESP_LOGD(TAG, "Try to save MQTT data to nvs......");
-        mqtt_save_data_to_nvs(mqtt_cfg);
-
-        free(mqtt_cfg);
-
-
-        ESP_LOGD(TAG, "Find OTA url...");
-        char ota_uri[100];
-        if ( http_get_key_str(req, "ota_uri", ota_uri, sizeof(ota_uri)) != ESP_OK ) {
-            strcpy(ota_uri, "");
-            ESP_LOGE(TAG, "OTA url not found, set to %s", ota_uri);
-        } else {
-            ESP_LOGD(TAG, "OTA url found - %s", ota_uri);
-        }
-        
-
-        ESP_LOGD(TAG, "Find OTA buf size...");
-        uint32_t ota_bufsz; 
-        if ( http_get_key_long(req, "ota_bufsz", (long *)&ota_bufsz) != ESP_OK ) {
-            ota_bufsz = UPLOAD_BUFFER_SIZE;
-            ESP_LOGE(TAG, "OTA buf size not found, set to %d", ota_bufsz);
-        } else {
-            ESP_LOGD(TAG, "OTA buf size found - %d", ota_bufsz);
-        }
-
-        // nvs save
-        ESP_LOGD(TAG, "Try to save OTA data to nvs......");
-        ota_nvs_data_t *nvs_ota = malloc( sizeof(ota_nvs_data_t));
-        url_decode(ota_uri, nvs_ota->uri);
-        ESP_LOGD(TAG, "Try to save ota_uri %s", ota_uri);
-        ESP_LOGD(TAG, "Try to save ota_uri %s", nvs_ota->uri);
-        nvs_ota->buf_size = ota_bufsz;
-        set_ota_nvs_data( nvs_ota );
-        free(nvs_ota);
-
-
-        // TODO: restart mqtt
-        //mqtt_stop();
-        //mqtt_start();
-        //char header[40] = "";
-        //set_redirect_header(0, "/setup", header);
-        //strcpy(page, header);
-        httpd_resp_set_status(req, "307 Temporary Redirect");
-        httpd_resp_set_hdr(req, "Location", "/setup");
-        //httpd_resp_send(req, page, strlen(page));
-        httpd_resp_send(req, NULL, 0);
-        return ESP_OK;
-    } else {
-        ESP_LOGD(TAG, "Just show setup data");
-        get_setup_page_data(page);            
-        
-        httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
-        httpd_resp_send(req, page, strlen(page));
-        return ESP_OK;
-    }
+        process_wifi_param(req);
+        process_mqtt_param(req);
+        process_ota_param(req);
+        make_redirect(req, 0, req->user_ctx);
+    } 
+    
+    get_setup_page_data(page);            
+    
+    httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
+    httpd_resp_send(req, page, strlen(page));
+    return ESP_OK;
 }
 
 esp_err_t debug_get_handler(httpd_req_t *req){
@@ -213,10 +160,11 @@ static void process_pir_off_delay(httpd_req_t *req, const char *param, size_t sz
 
 static void process_pir_adc(httpd_req_t *req, const char *param, size_t sz){
     if ( http_get_key_str(req, "adclvl", param, sizeof(param)) != ESP_OK ) return;     
-    uint8_t val = atoi( param );
+    uint16_t val = atoi( param );
     if ( adc_lvl == val ) return;
     adc_lvl = val;
-    nvs_param_u8_save("main", "adclvl", adc_lvl);
+    nvs_param_u16_save("main", "adclvl", adc_lvl);
+    mqtt_publish_adc_thld();
 }
 
 static void process_pir_fadeup(httpd_req_t *req, const char *param, size_t sz){
@@ -316,6 +264,7 @@ esp_err_t tools_get_handler(httpd_req_t *req){
                 process_led_channels_gpio(req, param, sizeof(param));
             }
         }
+        make_redirect(req, 0, (char *)req->user_ctx);
     }
 
     tools_page_data(page);
@@ -394,11 +343,7 @@ esp_err_t gpio_get_handler(httpd_req_t *req){
     if ( redirect == 1)
         //strcpy(page, "<head><meta http-equiv=\"refresh\" content=\"0; URL=/\" /></head>");
         ESP_LOGD(TAG, "Redirecting....");
-        char header[40] = "";
-        set_redirect_header(0, "/", header);
-        ESP_LOGD(TAG, header);
-        strcpy(page, header);
-        ESP_LOGD(TAG, page);
+        make_redirect(req, 0, "/");
 
     httpd_resp_send(req, page, strlen(page));
     return ESP_OK;
@@ -435,8 +380,7 @@ esp_err_t restart_get_handler(httpd_req_t *req){
         // restart esp and redirect to mainpage after X sec
         ESP_LOGD(TAG, "create reboot task");
         xTaskCreate(&systemRebootTask, "systemRebootTask", 2048, 2000, 5, NULL);
-        httpd_resp_set_status(req, "307 Temporary Redirect");
-        httpd_resp_set_hdr(req, "Refresh", "10; /");
+        httpd_resp_set_hdr(req, "Refresh", "3; /");
         //httpd_resp_set_hdr(req, "Location", "/");
         httpd_resp_send(req, NULL, 0);
         return ESP_OK;
@@ -490,9 +434,7 @@ esp_err_t ota_get_handler(httpd_req_t *req){
             //strcpy(page, "<head><meta http-equiv=\"refresh\" content=\"10; URL=/\" /></head>");
 
             // handle_error_msg(esp_err_t err)
-            char header[40] = "";
-            set_redirect_header(10, "/ota", header);
-            strcpy(page, header);
+            httpd_resp_set_hdr(req, "Refresh", "3; /ota");
             // incorrect redirect header call reset!!!!!!
             strcpy(page+strlen(page), "OTA upgrade failed...\n");
             strcpy(page+strlen(page), err_text);
@@ -529,9 +471,7 @@ esp_err_t ota_post_handler(httpd_req_t *req){
         // upgrading fail show ota page again
         // show upgrade fail and redirect to ota page in 10 sec
         //strcpy(page, "<head><meta http-equiv=\"refresh\" content=\"10; URL=/\" /></head>");
-        char header[40] = "";
-        set_redirect_header(10, "/", header);
-        strcpy(page, header);
+        
 
         strcpy(page+strlen(page), "OTA upgrade failed...\n");        
         strcpy(page+strlen(page), err_text);        
@@ -664,3 +604,14 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
     return ESP_OK;
 }
 
+void make_redirect(httpd_req_t *req, uint8_t timeout, const char *path) {
+    char t[3];
+    itoa(timeout, t, 10);
+    char *hdr = calloc(1, strlen(t) + 2 + strlen(path) + 1);
+    strcpy(hdr, t);
+    strcat(hdr, "; ");
+    strcat(hdr, path);
+    httpd_resp_set_hdr(req, "Refresh", hdr);
+    httpd_resp_send(req, NULL, 0);
+    free(hdr);
+}

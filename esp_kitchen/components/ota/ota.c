@@ -43,11 +43,7 @@ esp_err_t ota_task_upgrade_from_url(char *err_text){
     int buf_size = CONFIG_OTA_BUF_SIZE;  //default value
 
     ota_nvs_data_t ota_nvs;
-    esp_err_t nvs_err = get_ota_nvs_data(&ota_nvs);
-
-    if ( nvs_err == ESP_OK ) {
-        buf_size = ota_nvs.buf_size;
-    } 
+    get_ota_nvs_data(&ota_nvs); 
     ESP_LOGI(TAG, "OTA OTA_BUF_SIZE: %d", buf_size ); //CONFIG_OTA_BUF_SIZE);
 
     set_ota_state(ESP_OTA_PREPARE);
@@ -222,12 +218,7 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
     int buf_size = CONFIG_OTA_BUF_SIZE;  // default
 
     ota_nvs_data_t ota_nvs;
-    esp_err_t nvs_err = get_ota_nvs_data(&ota_nvs);
-    if ( nvs_err == ESP_OK ) {
-        ESP_LOGI(TAG, "nvs: ota buf size %d", ota_nvs.buf_size);
-        buf_size = ota_nvs.buf_size;
-    } 
-
+    get_ota_nvs_data(&ota_nvs);
     set_ota_size(total_len);
 
     esp_ota_handle_t ota_handle; 
@@ -359,108 +350,26 @@ void set_ota_progress(size_t bytes){
         esp_ota.progress = bytes * 100 / esp_ota.ota_size;
 }
 
-esp_err_t get_ota_nvs_data(ota_nvs_data_t *ota_nvs) {
-    ESP_LOGI(TAG, __func__);
-    nvs_handle ota_handle;
-    uint8_t error = 0;
-    esp_err_t err = nvs_open("ota", NVS_READONLY, &ota_handle);
-    if ( err != ESP_OK) {
-        error = 1;
-        ESP_LOGI(TAG, "!!! Unable to open nvs ota !!!");
-        ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
+void get_ota_nvs_data(ota_nvs_data_t *ota_nvs) {
+    if ( nvs_param_str_load("ota", "uri",  ota_nvs->uri) != ESP_OK ) {
         strcpy(ota_nvs->uri, "");
+    }
+    if ( nvs_param_u16_load("ota", "bufsz",  &ota_nvs->buf_size) != ESP_OK ) {
         ota_nvs->buf_size = CONFIG_OTA_BUF_SIZE;
-        return err;
-    }
-
-    size_t size_buf = strlen(ota_nvs->uri)-1;
-    err = nvs_get_str(ota_handle, "uri", NULL, &size_buf);
-    err = nvs_get_str(ota_handle, "uri", ota_nvs->uri, &size_buf);
-    ESP_LOGI(TAG, "ota uri size needed %d", size_buf);
-    ESP_LOGI(TAG, "ota uri %s", ota_nvs->uri);
-
-    if ( err != ESP_OK) {
-        error = 1;
-        ESP_LOGI(TAG, "!!! Unable to get ota_uri from nvs ota !!! Error code %d", err);
-        ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-        //err |= err;
-    } else {
-        ESP_LOGI(TAG, "ota uri %s, size %d", ota_nvs->uri, size_buf);
-    }
-   // strcpy(ota_nvs->uri, t);
-    err = nvs_get_u16(ota_handle, "bufsz", &ota_nvs->buf_size); 
-    if ( err != ESP_OK) {
-        error = 1;
-        ESP_LOGI(TAG, "!!! Unable to get ota_bufsz from nvs ota !!! Error code %d", err);
-        ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-        //err |= err;
-    }
-    nvs_close(ota_handle);
-    ESP_LOGI(TAG, "returning from %s", __func__);
-    return error;
+    }  
 }
 
 void set_ota_nvs_data(const ota_nvs_data_t *ota_nvs) {
-    ESP_LOGI(TAG, __func__);
-    nvs_handle ota_handle;
-    esp_err_t err = 0;
-    if ( nvs_open("ota", NVS_READWRITE, &ota_handle) == ESP_OK) {
-        char t[100];
-        strcpy(t, ota_nvs->uri);
-        err = nvs_set_str(ota_handle, "uri", t);
-        if ( err != ESP_OK ) {
-            ESP_LOGI(TAG, "!!! Unable to write ota_uri to nvs ota !!! Error code %d", err);
-            ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-
-        }
-        err = nvs_set_u16(ota_handle, "bufsz", ota_nvs->buf_size); 
-        if ( err != ESP_OK ) {
-            ESP_LOGI(TAG, "!!! Unable to write ota_bufsz to nvs ota !!! Error code %d", err);
-            ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-        }        
-        nvs_commit(ota_handle);
-        nvs_close(ota_handle);
-    } else {
-        ESP_LOGI(TAG, "!!! Unable to open nvs ota !!! Error code %d", err);
-        ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-    }
+    nvs_param_str_save("ota", "uri",  ota_nvs->uri);  
+    nvs_param_u16_save("ota", "bufsz",  ota_nvs->buf_size);  
 }
 
 void save_ota_upgrade_dt(){
-    ESP_LOGI(TAG, __func__);
-    char * buf = malloc(25);
+    char buf[25];
     get_localtime(buf);
-    esp_err_t err;
-    nvs_handle ota_handle;
-    err = nvs_open("ota", NVS_READWRITE, &ota_handle);
-    if ( err == ESP_OK) {
-        err = nvs_set_str(ota_handle, "upgrade_dt", buf);
-        if ( err != ESP_OK ) {
-            ESP_LOGE(TAG, "!!!unable to set ota upgraded date time to nvs !!! Error code %d", err);
-            ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-        }
-        err = nvs_commit(ota_handle);
-        if ( err != ESP_OK ) {
-            ESP_LOGE(TAG, "!!!unable to commit ota upgraded date time to nvs !!! Error code %d", err);
-            ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-        }    
-        nvs_close(ota_handle);
-    } else {
-        ESP_LOGE(TAG, "!!!unable to save ota upgraded date time to nvs !!! Error code %d", err);
-        ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-    }
-    free(buf);
+    nvs_param_str_save("ota", "upgrade_dt",  buf); 
 }
 
-esp_err_t get_ota_upgraded_dt(char *buf){
-    ESP_LOGI(TAG, __func__);
-    nvs_handle ota_handle;
-    esp_err_t err = nvs_open("ota", NVS_READONLY, &ota_handle);
-    if ( err != ESP_OK ) return err;
-    size_t required_size;
-    err = nvs_get_str(ota_handle, "upgrade_dt", buf, &required_size);
-    nvs_close(ota_handle);
-    ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-    ESP_LOGI(TAG, "nvs ota upgrade_dt is %s", buf);
-    return err;
+void get_ota_upgraded_dt(char *buf){
+    nvs_param_str_load("ota", "upgrade_dt", buf); 
 }

@@ -81,7 +81,6 @@ rgbcontrol_t* rgbcontrol_init(ledcontrol_t *ledc, ledcontrol_channel_t *red, led
     strcpy(rgb_ctrl->uri, RGB_URI);
     rgb_ctrl->http_get_handler = rgbcontrol_http_get_handler; 
 
-    rgb_ctrl->mqtt_send = NULL;
     return rgb_ctrl;
 }
 
@@ -118,7 +117,7 @@ void rgbcontrol_set_color_int(uint32_t color32) {
     char topic[12] = MQTT_TOPIC_COLOR_INT;
     char payload[10];
     itoa(color32, payload, 10);
-    rgb_ctrl->mqtt_send(topic, payload);
+    rgb_ctrl->ledc->mqtt_send(topic, payload);
 }
 
 void rgbcontrol_set_color_hex(const char *hex) {
@@ -398,8 +397,4 @@ esp_err_t http_process_hsv2(httpd_req_t *req) {
     }
     free(hsv);
     return err;
-}
-
-void rgbcontrol_set_mqtt_send_cb(func_mqtt_send_cb cb){
-    rgb_ctrl->mqtt_send = cb;
 }
