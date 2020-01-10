@@ -108,6 +108,7 @@ void print_html_tools(char *buf){
                             "<button class=\"on\">Set</button>"
                             "</form>"                       
                             "</div>"
+                            
                            ;
     sprintf(buf+strlen(buf), html_form_opt_pin, main_led_pins[0]
                                               , main_led_pins[1]

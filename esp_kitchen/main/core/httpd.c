@@ -179,6 +179,112 @@ esp_err_t config_get_handler(httpd_req_t *req){
     return ESP_OK;
 }
 
+
+static void process_pir_enabled(httpd_req_t *req, const char *param, size_t sz){
+    uint8_t val = http_get_key_str(req, "pir_en", param, sz) == ESP_OK ;
+    if ( is_pir_enabled == val ) return;
+        // save pir_en
+    is_pir_enabled = val;
+    nvs_param_u8_save("pir", "enabled", is_pir_enabled);
+
+    pir_t *pir = (pir_t *)pir_h;
+    if ( is_pir_enabled )   pir->enable( pir_h );
+    else                    pir->disable( pir_h );
+}
+
+static void process_pir_mode(httpd_req_t *req, const char *param, size_t sz){
+    if ( http_get_key_str(req, "pir-mode", param, sizeof(param)) != ESP_OK ) return;
+    uint8_t val = atoi( param );
+    if ( pir_mode == val ) return;
+    pir_mode = val;
+    nvs_param_u8_save("pir", "mode", pir_mode);
+}
+
+static void process_pir_off_delay(httpd_req_t *req, const char *param, size_t sz){
+    if ( http_get_key_str(req, "pir_off_delay", param, sizeof(param)) != ESP_OK ) return;
+    uint8_t val = atoi( param );
+    if ( pir_timer_off_delay == val ) return;
+    pir_timer_off_delay = val;
+    nvs_param_u16_save("pir", "piroffdelay", pir_timer_off_delay);
+    
+    pir_t *pir = (pir_t *)pir_h;
+    pir->set_interval_low( pir_h, pir_timer_off_delay);
+}
+
+static void process_pir_adc(httpd_req_t *req, const char *param, size_t sz){
+    if ( http_get_key_str(req, "adclvl", param, sizeof(param)) != ESP_OK ) return;     
+    uint8_t val = atoi( param );
+    if ( adc_lvl == val ) return;
+    adc_lvl = val;
+    nvs_param_u8_save("main", "adclvl", adc_lvl);
+}
+
+static void process_pir_fadeup(httpd_req_t *req, const char *param, size_t sz){
+    if ( http_get_key_str(req, "fadeup", param, sizeof(param)) != ESP_OK ) return;
+    uint16_t val = atoi( param );
+    if ( white_led_fadeup_delay == val ) return;
+    white_led_fadeup_delay = val;
+    nvs_param_u16_save("pir", "fadeupdelay", white_led_fadeup_delay);
+}
+
+static void process_pir_fadedown(httpd_req_t *req, const char *param, size_t sz){
+    if ( http_get_key_str(req, "fadedown", param, sizeof(param)) != ESP_OK ) return;
+    uint16_t val = atoi( param );
+    if ( white_led_fadeout_delay == val ) return;
+    white_led_fadeout_delay = val;
+    nvs_param_u16_save("pir", "fadedowndelay", white_led_fadeout_delay);
+}
+
+static void process_ir_gpio(httpd_req_t *req, const char *param, size_t sz){
+    if ( http_get_key_str(req, "irpin", param, sizeof(param)) != ESP_OK ) return;   
+    uint8_t val = atoi( param );
+    if ( ir_pin == val ) return;
+    ir_pin = val;
+    nvs_param_u8_save("main", "irpin", ir_pin);
+}
+
+static void process_ir_delay(httpd_req_t *req, const char *param, size_t sz){
+    if ( http_get_key_str(req, "irdelay", param, sizeof(param)) != ESP_OK ) return;
+    uint8_t val = atoi( param );
+    if ( ir_delay == val ) return;
+    ir_delay = val;
+    nvs_param_u16_save("main", "irdelay", ir_delay); 
+}
+
+static void process_pir_gpio(httpd_req_t *req, const char *param, size_t sz){
+    if ( http_get_key_str(req, "pirpin", param, sizeof(param)) != ESP_OK ) return;
+    uint8_t val = atoi( param );
+    if ( pirpin == val ) return;
+    pirpin = val;
+    nvs_param_u8_save("main", "pirpin", pirpin);
+}
+
+static void process_fan_gpio(httpd_req_t *req, const char *param, size_t sz){
+    if ( http_get_key_str(req, "fanpin", param, sizeof(param)) != ESP_OK ) return;
+    uint8_t val = atoi( param );
+    if ( relay_fan_pin == val ) return;
+    relay_fan_pin = val;
+    nvs_param_u8_save("main", "fanpin", relay_fan_pin);
+}
+
+static void process_fan_gpio_invert(httpd_req_t *req, const char *param, size_t sz){
+    uint8_t val = http_get_key_str(req, "faninv", param, sizeof(param)) == ESP_OK;             
+    if ( relay_invert == val ) return;
+    relay_invert = val;
+    nvs_param_u8_save("main", "faninv", relay_invert);
+}
+
+static void process_led_channels_gpio(httpd_req_t *req, const char *param, size_t sz){
+    for (uint8_t i = 0; i < LED_CTRL_MAX; i++) {
+        char tmp[7];
+        sprintf(tmp, "ledpin%d", i);
+        if ( http_get_key_str(req, tmp, param, sizeof(param)) == ESP_OK ) {
+            main_led_pins[i] = atoi( param );
+        }
+        nvs_param_save("main", "channels_pin", main_led_pins, LED_CTRL_MAX*sizeof(uint8_t));
+    } 
+}
+
 esp_err_t tools_get_handler(httpd_req_t *req){
     char page[2048*2];
 
@@ -187,118 +293,29 @@ esp_err_t tools_get_handler(httpd_req_t *req){
         // pir_en=1&pir_off_delay=15&fadeup=100&fadedown=150&st=1
         char param[15];
         int val = 0;
-        val = http_get_key_str(req, "pir_en", param, sizeof(param)) == ESP_OK ;
-        // save pir_en
 
-        if ( is_pir_enabled != val ) {
-            is_pir_enabled = val;
-            val = nvs_param_u8_save("pir", "enabled", is_pir_enabled);
-            if ( val == ESP_OK ) {
-                pir_t *pir = (pir_t *)pir_h;
-                if ( is_pir_enabled )   pir->enable( pir_h );
-                else                    pir->disable( pir_h );
+        if ( http_get_key_str(req, "st", param, sizeof(param)) == ESP_OK ) {  
+            val = atoi( param );
+
+            if ( val == 1 ) {
+                // process block1 params
+                process_pir_enabled(req, param, sizeof(param));
+                process_pir_mode(req, param, sizeof(param));
+                process_pir_off_delay(req, param, sizeof(param));
+                process_pir_adc(req, param, sizeof(param));
+                process_pir_fadeup(req, param, sizeof(param));
+                process_pir_fadedown(req, param, sizeof(param));
+                
+            } else if (val == 2) {
+                // process block2 params
+                process_ir_gpio(req, param, sizeof(param));
+                process_ir_delay(req, param, sizeof(param));
+                process_pir_gpio(req, param, sizeof(param));
+                process_fan_gpio(req, param, sizeof(param));
+                process_fan_gpio_invert(req, param, sizeof(param));
+                process_led_channels_gpio(req, param, sizeof(param));
             }
-            esp_err_to_name( val );
-        }        
-
-        if ( http_get_key_str(req, "pir-mode", param, sizeof(param)) == ESP_OK ) {     
-            val = atoi( param );
-            if ( pir_mode != val ) {
-                pir_mode = val;
-                val = nvs_param_u8_save("pir", "mode", pir_mode);
-                esp_err_to_name( val );
-            }            
-        }         
-        if ( http_get_key_str(req, "pir_off_delay", param, sizeof(param)) == ESP_OK ) {     
-            val = atoi( param );
-            if ( pir_timer_off_delay != val ) {
-                pir_timer_off_delay = val;
-                val = nvs_param_u16_save("pir", "piroffdelay", pir_timer_off_delay);
-                esp_err_to_name( val );
-                pir_t *pir = (pir_t *)pir_h;
-                pir->set_interval_low( pir_h, pir_timer_off_delay);
-            }              
-        }      
-        if ( http_get_key_str(req, "fadeup", param, sizeof(param)) == ESP_OK ) {     
-            val = atoi( param );
-            if ( white_led_fadeup_delay != val ) {
-                white_led_fadeup_delay = val;
-                val = nvs_param_u16_save("pir", "fadeupdelay", white_led_fadeup_delay);
-                esp_err_to_name( val );
-            }               
-        }         
-        if ( http_get_key_str(req, "fadedown", param, sizeof(param)) == ESP_OK ) {     
-            val = atoi( param );
-            if ( white_led_fadeout_delay != val ) {
-                white_led_fadeout_delay = val;
-                val = nvs_param_u16_save("pir", "fadedowndelay", white_led_fadeout_delay);
-                esp_err_to_name( val );
-            }                 
-        }   
-        // ledcnt=5&ledch0=255&ledpin0=255&ledch1=255&ledpin0=255&ledch2=255&ledpin0=255&ledch3=255&ledpin0=255&ledch4=255&ledpin0=255
-        if ( http_get_key_str(req, "irpin", param, sizeof(param)) == ESP_OK ) {     
-            val = atoi( param );
-            if ( ir_pin != val ) {
-                ir_pin = val;
-                val = nvs_param_u8_save("main", "irpin", ir_pin);
-                esp_err_to_name( val );
-            }                 
-        }         
-        
-        if ( http_get_key_str(req, "irdelay", param, sizeof(param)) == ESP_OK ) {     
-            val = atoi( param );
-            if ( ir_delay != val ) {
-                ir_delay = val;
-                val = nvs_param_u16_save("main", "irdelay", ir_delay);
-                esp_err_to_name( val );
-            }                 
-        } 
-
-        if ( http_get_key_str(req, "pirpin", param, sizeof(param)) == ESP_OK ) {     
-            val = atoi( param );
-            if ( pirpin != val ) {
-                pirpin = val;
-                val = nvs_param_u8_save("main", "pirpin", pirpin);
-                esp_err_to_name( val );
-            }                 
-        }     
-        
-        if ( http_get_key_str(req, "adclvl", param, sizeof(param)) == ESP_OK ) {     
-            val = atoi( param );
-            if ( adc_lvl != val ) {
-                adc_lvl = val;
-                val = nvs_param_u8_save("main", "adclvl", adc_lvl);
-                esp_err_to_name( val );
-            }                 
-        } 
-
-        if ( http_get_key_str(req, "fanpin", param, sizeof(param)) == ESP_OK ) {     
-            val = atoi( param );
-            if ( relay_fan_pin != val ) {
-                relay_fan_pin = val;
-                val = nvs_param_u8_save("main", "fanpin", relay_fan_pin);
-                esp_err_to_name( val );
-            }                 
-        }           
-        
-        val = http_get_key_str(req, "faninv", param, sizeof(param)) == ESP_OK;             
-
-        if ( relay_invert != val ) {
-            relay_invert = val;
-            val = nvs_param_u8_save("main", "faninv", relay_invert);
-            esp_err_to_name( val );
-        }    
-
-        for (uint8_t i = 0; i < LED_CTRL_MAX; i++) {
-            char tmp[7];
-            sprintf(tmp, "ledpin%d", i);
-            if ( http_get_key_str(req, tmp, param, sizeof(param)) == ESP_OK ) {
-                val = atoi( param );
-                main_led_pins[i] = val;
-            }
-            val = nvs_param_save("main", "channels_pin", main_led_pins, LED_CTRL_MAX*sizeof(uint8_t));
-        } 
-
+        }
     }
 
     tools_page_data(page);
