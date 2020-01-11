@@ -318,15 +318,7 @@ static void process_data(esp_mqtt_event_handle_t event){
         // process effect
         char effect[15];
         strcpy(effect, _topic + 6 + 1 /* 1 = "/"" */ );
-        if ( strstr(effect, "name" ) != NULL ) {
-            effects_t *ef = (effects_t *) rgb_ledc->effects;
-            if ( ef != NULL )  {                 
-                effect_t *e = ef->effect + ef->effect_id;
-                if ( strcmp(e->name, data) != ESP_OK) {
-                    ef->set_by_name( data );   
-                }
-            }
-        } else if ( strstr(effect, "id") != NULL ) {
+        if ( strstr(effect, "id") != NULL ) {
             effects_t *ef = (effects_t *) rgb_ledc->effects;
             if ( ef != NULL )  {                 
                 uint8_t val = atoi(data);
@@ -341,43 +333,21 @@ static void process_data(esp_mqtt_event_handle_t event){
         // process color
         char color[15];
         strcpy(color, _topic + 5 + 1 /* 1 = "/"" */ );
-        if ( strstr( color, "rgb" ) != NULL ) {
-            // process rgb color
-            char *istr = strtok (data,",");
-            color_rgb_t *rgb = malloc(sizeof(color_rgb_t));
-            rgb->r = atoi(istr);
-            istr = strtok (NULL,",");
-            rgb->g = atoi(istr); 
-            istr = strtok (NULL,",");
-            rgb->b = atoi(istr);
-            effects_t *ef = (effects_t *) rgb_ledc->effects;
-            if ( ef != NULL ) ef->stop();
-            rgb_ledc->set_color_rgb(*rgb);
-            free(rgb);  
-        } else if ( strstr( color, "hsv" ) != NULL ) {
-            // process hsv color
-            char *istr = strtok (data,",");
-            color_hsv_t *hsv = malloc( sizeof(color_hsv_t));
-            hsv->h = atoi(istr);
-            istr = strtok (NULL,",");
-            hsv->s = atoi(istr);
-            istr = strtok (NULL,",");
-            hsv->v = atoi(istr);
-            effects_t *ef = (effects_t *) rgb_ledc->effects;
-            if ( ef != NULL ) ef->stop();
-            rgb_ledc->set_color_hsv(*hsv);
-            free(hsv);
-        } else if ( strstr( color, "hex" ) != NULL ) {
-            // process hex color
-            effects_t *ef = (effects_t *) rgb_ledc->effects;
-            if ( ef != NULL ) ef->stop();     
-            rgb_ledc->set_color_hex(data);          
-        } else if ( strstr( color, "int" ) != NULL ) {
-            // process hex color
+        if ( strstr( color, "int" ) != NULL ) {
+            // process int color
             effects_t *ef = (effects_t *) rgb_ledc->effects;
             if ( ef != NULL ) ef->stop();     
             uint32_t val = atoi(data);
-            rgb_ledc->set_color_int(val);          
+
+            uint32_t current_color;
+            uint8_t r = ledc->get_duty( ledc->channels + LED_CTRL_RED_CH );
+            uint8_t g = ledc->get_duty( ledc->channels + LED_CTRL_GREEN_CH );
+            uint8_t b = ledc->get_duty( ledc->channels + LED_CTRL_BLUE_CH );
+            rgbi_to_int(r, g, b, &current_color);
+
+            if ( val != current_color )
+                    rgb_ledc->set_color_int(val);          
+
         }       
     } else if ( strstr( _topic, "sunset" ) != NULL ) {
         uint8_t val = atoi( data );
