@@ -14,7 +14,7 @@
 #include "pir.h"
 
 
-#define FW_VER "1.14.15"
+#define FW_VER "1.14.17"
 #define CORE_FW_VER "1.14"
 
 ledcontrol_t *ledc;

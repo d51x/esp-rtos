@@ -98,6 +98,8 @@ color_rgb_t *rgb;
 #define HUE_QUADRANT   ((360 + 5)/ 6)
 
 void  int_to_rgb(uint32_t color32, volatile color_rgb_t *rgb);
+void  rgb_to_int(const color_rgb_t *rgb, uint32_t *color32);
+void  rgbi_to_int(uint8_t r, uint8_t g, uint8_t b, uint32_t *color32);
 void  hex_to_rgb(const char *color, volatile color_rgb_t *rgb);
 void  hsv_to_rgb(volatile color_rgb_t *rgb, const color_hsv_t hsv);
 void  rgb_to_hsv(const color_rgb_t *rgb, color_hsv_t *hsv);
