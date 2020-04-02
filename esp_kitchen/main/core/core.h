@@ -14,7 +14,7 @@
 #include "pir.h"
 
 
-#define FW_VER "1.14.17"
+#define FW_VER "1.14.19"
 #define CORE_FW_VER "1.14"
 
 ledcontrol_t *ledc;
@@ -91,7 +91,12 @@ int OTA_IDLE_BIT;  /* The event group allows multiple bits for each event, but w
 	#define IR_RECEIVE_DELAY 100
 	
     #define DEFAULT_ADC_LEVEL 600
+    #define DEFAULT_ADC_LEVEL_MIN 600
+    #define DEFAULT_ADC_LEVEL_MAX 600
+
     uint16_t adc_lvl;
+    uint16_t adc_lvl_min;   // min - значение для включения
+    uint16_t adc_lvl_max;   // max - значение для выключения
 
     typedef enum {
         PIR_MODE_NONE,

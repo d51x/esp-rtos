@@ -184,15 +184,22 @@ void pir_high_cb(void *arg) {
     is_motion = true;
     mqtt_send_pir();
     start_count_up();
-    if ( !is_white_led_auto ) return;
-    white_led_smooth_on();
+
+    if ( is_pir_enabled && is_dark ) {
+        // включим, когда темно
+        white_led_smooth_on();
+    }
+    
 }
 
 void pir_timer_low_cb(void *arg) {
     CHECK_PIR();
     stop_timer();
-    if ( !is_white_led_auto ) return;
-    white_led_smooth_off();
+
+    if ( is_pir_enabled ) {
+        // выключим, в любом случае - темно или светло, даже если светло и включали руками
+        white_led_smooth_off();
+    }
 }
 
 void white_led_smooth_off(){
@@ -219,8 +226,24 @@ void mqtt_send_pir(){
 }
 
 
-static bool check_adc_dark() {
-    return get_adc() < adc_lvl;
+static bool check_adc_dark(bool now_dark) {
+    //return get_adc() < adc_lvl;
+    uint16_t l = get_adc();
+    bool res = ( now_dark & (l <= adc_lvl_max) ) || 
+               ( !now_dark && (l <= adc_lvl_min) );
+               /*
+    if ( now_dark && (l <= adc_lvl_max) ) {
+        // темно
+        res = true;
+    } else if () {
+        // темно
+        res = true;
+    } else {
+        // светло
+        res = false;
+    }
+    */
+    return res;
 }
 
 bool get_dark_mode(pir_mode_t mode) {
@@ -228,9 +251,9 @@ bool get_dark_mode(pir_mode_t mode) {
     if ( mode == PIR_MODE_SUSNSET) {
         res = is_sunset; 
     } else if (mode == PIR_MODE_MIX ) {
-        res = is_sunset || check_adc_dark();
+        res = is_sunset || check_adc_dark(is_dark);
     } else if ( mode == PIR_MODE_DLR ) {
-        res = check_adc_dark(); 
+        res = check_adc_dark(is_dark); 
     } else {
         res = true;
     }  
@@ -262,7 +285,11 @@ void load_params(){
     err = nvs_param_u16_load("main", "adclvl",        &adc_lvl); 
     if ( err != ESP_OK ) adc_lvl = DEFAULT_ADC_LEVEL;
     
+     err = nvs_param_u16_load("main", "adclvlmin",        &adc_lvl_min); 
+    if ( err != ESP_OK ) adc_lvl_min = DEFAULT_ADC_LEVEL_MIN;
     
+      err = nvs_param_u16_load("main", "adclvlmax",        &adc_lvl_max); 
+    if ( err != ESP_OK ) adc_lvl_max = DEFAULT_ADC_LEVEL_MAX;      
 
     err = nvs_param_u8_load("pir", "enabled",        &is_pir_enabled);           // is_pir_enabled = true;
     if ( err != ESP_OK ) is_pir_enabled = true;

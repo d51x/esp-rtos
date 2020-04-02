@@ -226,6 +226,8 @@ void mqtt_publish_all_task(void *arg){
         mqtt_publish_ledc_duty( LED_CTRL_BLUE_CH );
         mqtt_publish_ledc_duty( LED_CTRL_WHITE_CH );
         mqtt_publish_adc_thld();
+        mqtt_publish_adc_thld_min();
+        mqtt_publish_adc_thld_max();
         vTaskDelay( delay_ms / portTICK_RATE_MS);
     }
 
@@ -369,6 +371,20 @@ static void process_data(esp_mqtt_event_handle_t event){
             adc_lvl = val;
             nvs_param_u16_save("main", "adclvl", adc_lvl);
         }
+    } else if ( strstr( _topic, "adcthld_min") != NULL ) {
+        uint16_t val = atoi( data );
+        if (val > 1023) val = 1023;
+        if ( val != adc_lvl_min ) {
+            adc_lvl_min = val;
+            nvs_param_u16_save("main", "adclvlmin", adc_lvl_min);
+        }
+    } else if ( strstr( _topic, "adcthld_max") != NULL ) {
+        uint16_t val = atoi( data );
+        if (val > 1023) val = 1023;
+        if ( val != adc_lvl_max ) {
+            adc_lvl_max = val;
+            nvs_param_u16_save("main", "adclvlmax", adc_lvl_max);
+        }
     }
 
 
@@ -418,4 +434,16 @@ void mqtt_publish_ledc_duty(uint8_t channel){
     char payload[5];
     itoa(adc_lvl, payload, 10);
     mqtt_publish_generic( "adcthld", payload);    
+ }
+
+ void mqtt_publish_adc_thld_min() {
+    char payload[5];
+    itoa(adc_lvl_min, payload, 10);
+    mqtt_publish_generic( "adcthld_min", payload);    
+ }
+
+void mqtt_publish_adc_thld_max() {
+    char payload[5];
+    itoa(adc_lvl_max, payload, 10);
+    mqtt_publish_generic( "adcthld_max", payload);    
  }

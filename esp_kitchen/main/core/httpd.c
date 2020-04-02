@@ -159,12 +159,29 @@ static void process_pir_off_delay(httpd_req_t *req, const char *param, size_t sz
 }
 
 static void process_pir_adc(httpd_req_t *req, const char *param, size_t sz){
+    /*
     if ( http_get_key_str(req, "adclvl", param, sizeof(param)) != ESP_OK ) return;     
     uint16_t val = atoi( param );
     if ( adc_lvl == val ) return;
     adc_lvl = val;
     nvs_param_u16_save("main", "adclvl", adc_lvl);
     mqtt_publish_adc_thld();
+    */
+
+    if ( http_get_key_str(req, "adclvlmin", param, sizeof(param)) == ESP_OK ) {
+        uint16_t val = atoi( param );
+        if ( adc_lvl_min == val ) return;
+        adc_lvl_min = val;  
+        nvs_param_u16_save("main", "adclvlmin", adc_lvl_min);   
+        mqtt_publish_adc_thld_min();   
+    } 
+    else if ( http_get_key_str(req, "adclvlmax", param, sizeof(param)) == ESP_OK ) {
+        uint16_t val = atoi( param );
+        if ( adc_lvl_max == val ) return;
+        adc_lvl_max = val;  
+        nvs_param_u16_save("main", "adclvlmax", adc_lvl_max);   
+        mqtt_publish_adc_thld_max();   
+    } 
 }
 
 static void process_pir_fadeup(httpd_req_t *req, const char *param, size_t sz){

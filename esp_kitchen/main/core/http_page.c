@@ -66,7 +66,10 @@ void print_html_tools(char *buf){
                             "</p>"
                                 
                             "<p><span>Pir off delay: </span><input size=\"2\" name=\"pir_off_delay\" value=\"%d\"><span>sec</span></p>"
-                            "<p><span>Мин уровень освещенности: </span><input size=\"2\" name=\"adclvl\" value=\"%d\"><span>sec</span></p>"
+                            //"<p><span>Мин уровень освещенности: </span><input size=\"2\" name=\"adclvl\" value=\"%d\"><span>sec</span></p>"
+                            "<p><span>Освещенность (гистерезис): </span></p>"
+                            "<p><span>Min (вкл): </span><input size=\"2\" name=\"adclvlmin\" value=\"%d\"><span>sec</span></p>"
+                            "<p><span>Max (выкл): </span><input size=\"2\" name=\"adclvlmax\" value=\"%d\"><span>sec</span></p>"
                             "<p><span>Fadeup delay: </span><input size=\"2\" name=\"fadeup\" value=\"%d\"><span>msec</span></p>"
                             "<p><span>Fadedown delay: </span><input size=\"2\" name=\"fadedown\" value=\"%d\"><span>msec</span></p>"
                             "<p><input type=\"hidden\" name=\"st\" value=\"1\"></p>"
@@ -81,7 +84,9 @@ void print_html_tools(char *buf){
                             , is_pir_enabled ? "checked" : ""
                             , pir_mode_items
                             , pir_timer_off_delay
-                            , adc_lvl
+                            //, adc_lvl
+                            , adc_lvl_min
+                            , adc_lvl_max
                             , white_led_fadeup_delay
                             , white_led_fadeout_delay
     );

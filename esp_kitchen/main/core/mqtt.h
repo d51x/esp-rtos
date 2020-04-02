@@ -65,5 +65,7 @@ void mqtt_publish_effect_name();
 void mqtt_publish_effect_id();
 void mqtt_publish_ledc_duty(uint8_t channel);
 void mqtt_publish_adc_thld();
+void mqtt_publish_adc_thld_min();
+void mqtt_publish_adc_thld_max();
 
 #endif /* __MQTT_H__ */
