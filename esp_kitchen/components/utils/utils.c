@@ -147,7 +147,39 @@ void get_localtime(char* buf){
     //return buf;
 }
 
+uint32_t get_time(char* f){
+    time_t now;
+    struct tm timeinfo;
+    setenv("TZ", "UTC-3", 1);
+    tzset();    
+    time(&now);
+    localtime_r(&now, &timeinfo);
 
+    if ( strcmp(f, "hour") == ESP_OK ) 
+    {
+        return timeinfo.tm_hour;
+    } 
+    else if ( strcmp(f, "min") == ESP_OK ) 
+    {
+        return timeinfo.tm_min;
+    } 
+    else if ( strcmp(f, "sec") == ESP_OK ) 
+    {
+        return timeinfo.tm_sec;
+    } 
+    else if ( strcmp(f, "min_of_day") == ESP_OK ) 
+    {
+        return timeinfo.tm_hour * 60 + timeinfo.tm_min;
+    }
+    else if ( strcmp(f, "sec_of_day") == ESP_OK ) 
+    {
+        return timeinfo.tm_hour * 3660 + timeinfo.tm_min * 60 + timeinfo.tm_sec;
+    }
+    else 
+    {
+        return now;
+    }
+}
 
     
 uint8_t str_to_long(long *out, char *s, int base) {

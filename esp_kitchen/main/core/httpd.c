@@ -184,6 +184,33 @@ static void process_pir_adc(httpd_req_t *req, const char *param, size_t sz){
     } 
 }
 
+static void process_pir_dark_time(httpd_req_t *req, const char *param, size_t sz){
+    if ( http_get_key_str(req, "darktimestart", param, sizeof(param)) == ESP_OK ) {
+        uint32_t val = atoi( param );
+        if ( dark_time_start == val ) return;
+        dark_time_start = val;  
+        nvs_param_u32_save("pir", "darktimestart", dark_time_start);   
+        //mqtt_publish_adc_thld_min();   
+    } 
+    else if ( http_get_key_str(req, "darktimeend", param, sizeof(param)) == ESP_OK ) {
+        uint32_t val = atoi( param );
+        if ( dark_time_end == val ) return;
+        dark_time_end = val;  
+        nvs_param_u32_save("pir", "darktimeend", dark_time_end);   
+        //mqtt_publish_adc_thld_max();   
+    } 
+    else if ( http_get_key_str(req, "dutymaxdark", param, sizeof(param)) == ESP_OK ) {
+        uint8_t val = atoi( param );
+        if ( white_led_max_duty_dark == val ) return;
+        white_led_max_duty_dark = val;  
+        nvs_param_u8_save("pir", "dutymaxdark", white_led_max_duty_dark);   
+        //mqtt_publish_adc_thld_max();   
+    } 
+
+    
+}
+
+
 static void process_pir_fadeup(httpd_req_t *req, const char *param, size_t sz){
     if ( http_get_key_str(req, "fadeup", param, sizeof(param)) != ESP_OK ) return;
     uint16_t val = atoi( param );
@@ -268,6 +295,7 @@ esp_err_t tools_get_handler(httpd_req_t *req){
                 process_pir_mode(req, param, sizeof(param));
                 process_pir_off_delay(req, param, sizeof(param));
                 process_pir_adc(req, param, sizeof(param));
+                process_pir_dark_time(req, param, sizeof(param));
                 process_pir_fadeup(req, param, sizeof(param));
                 process_pir_fadedown(req, param, sizeof(param));
                 

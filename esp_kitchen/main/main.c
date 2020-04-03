@@ -211,8 +211,16 @@ void white_led_smooth_off(){
 void white_led_smooth_on(){
     uint32_t duty = 0;
     duty = ledc->get_duty( ledc->channels + LED_CTRL_WHITE_CH);
-    if (  duty < white_led_max_duty )  
-        ledc->fade( ledc->channels + LED_CTRL_WHITE_CH, duty, white_led_max_duty, white_led_fadeup_delay);
+    
+    uint32_t duty_max = white_led_max_duty;
+
+    uint32_t t = get_time("min_of_day");
+
+    // если ночное время
+    if ( t < dark_time_end || t > dark_time_start ) duty_max = white_led_max_duty_dark;
+    
+    if (  duty < duty_max )  
+        ledc->fade( ledc->channels + LED_CTRL_WHITE_CH, duty, duty_max, white_led_fadeup_delay);
 }
 
 void mqtt_send_gpio(const char *topic, const char *payload){
@@ -262,6 +270,9 @@ bool get_dark_mode(pir_mode_t mode) {
 
 void load_params(){
 
+    white_led_max_duty = MAX_DUTY; 
+    white_led_max_duty_dark = MAX_DUTY;
+
     esp_err_t err;
 
     err = nvs_param_load("main", "channels_pin", main_led_pins); //, LED_CTRL_MAX*sizeof(uint8_t)); 
@@ -306,11 +317,18 @@ void load_params(){
     err = nvs_param_u16_load("pir", "fadedowndelay",  &white_led_fadeout_delay);
     if ( err != ESP_OK ) white_led_fadeout_delay = WHITE_LED_FADEDOWN_DELAY;
 
+    err = nvs_param_u32_load("pir", "dutymaxdark",  &white_led_max_duty_dark);
+    if ( err != ESP_OK ) white_led_max_duty_dark = MAX_DUTY;
+
+    err = nvs_param_u32_load("pir", "darktimestart",  &dark_time_start);
+    if ( err != ESP_OK ) dark_time_start = DEFAULT_DARK_TIME_START;
+
+    err = nvs_param_u32_load("pir", "darktimeend",  &dark_time_end);
+    if ( err != ESP_OK ) dark_time_end = DEFAULT_DARK_TIME_END;
+
     is_motion = false;
     is_sunset = false;
     is_dark = get_dark_mode( pir_mode );
-    white_led_max_duty = MAX_DUTY; 
-
     is_white_led_auto = is_pir_enabled & is_dark;
 
     strcpy(pir_mode_desc[PIR_MODE_NONE],    "Всегда включать");

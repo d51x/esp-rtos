@@ -35,7 +35,7 @@ void print_html_menu(char *buf) {
     sprintf(buf, "<menu>");
     sprintf(buf+strlen(buf), html_menu_item, "/", "Main");
     sprintf(buf+strlen(buf), html_menu_item, "/setup", "Setup");
-    sprintf(buf+strlen(buf), html_menu_item, "/tools", "Tools");
+    sprintf(buf+strlen(buf), html_menu_item, "/tools", "Config");
     sprintf(buf+strlen(buf), html_menu_item, "/ota", "OTA");
     sprintf(buf+strlen(buf), html_menu_item, "/debug", "Debug");
     sprintf(buf+strlen(buf), "</menu>");
@@ -70,6 +70,12 @@ void print_html_tools(char *buf){
                             "<p><span>Освещенность (гистерезис): </span></p>"
                             "<p><span>Min (вкл): </span><input size=\"2\" name=\"adclvlmin\" value=\"%d\"><span>sec</span></p>"
                             "<p><span>Max (выкл): </span><input size=\"2\" name=\"adclvlmax\" value=\"%d\"><span>sec</span></p>"
+                            
+                            "<p><span>Ночное время (минуты дня): </span></p>"
+                            "<p><span>начало: </span><input size=\"2\" name=\"darktimestart\" value=\"%d\"><span>sec</span></p>"
+                            "<p><span>окончание: </span><input size=\"2\" name=\"darktimeend\" value=\"%d\"><span>sec</span></p>"
+                            "<p><span>освещенность: </span><input size=\"2\" name=\"dutymaxdark\" value=\"%d\"><span>sec</span></p>"
+
                             "<p><span>Fadeup delay: </span><input size=\"2\" name=\"fadeup\" value=\"%d\"><span>msec</span></p>"
                             "<p><span>Fadedown delay: </span><input size=\"2\" name=\"fadedown\" value=\"%d\"><span>msec</span></p>"
                             "<p><input type=\"hidden\" name=\"st\" value=\"1\"></p>"
@@ -87,6 +93,11 @@ void print_html_tools(char *buf){
                             //, adc_lvl
                             , adc_lvl_min
                             , adc_lvl_max
+
+                            , dark_time_start
+                            , dark_time_end
+                            , white_led_max_duty_dark
+
                             , white_led_fadeup_delay
                             , white_led_fadeout_delay
     );

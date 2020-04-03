@@ -106,6 +106,8 @@ uint32_t get_chip_id(uint8_t *mac);
 void get_uptime(char*  buf);
 void get_localtime(char*  buf);
 
+uint32_t get_time(char* f);
+
 void trim(char *s);
 
 void systemRebootTask(void * parameter);

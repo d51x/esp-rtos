@@ -14,7 +14,7 @@
 #include "pir.h"
 
 
-#define FW_VER "1.14.19"
+#define FW_VER "1.14.20"
 #define CORE_FW_VER "1.14"
 
 ledcontrol_t *ledc;
@@ -90,6 +90,9 @@ int OTA_IDLE_BIT;  /* The event group allows multiple bits for each event, but w
 
 	#define IR_RECEIVE_DELAY 100
 	
+    #define DEFAULT_DARK_TIME_START 23*60
+    #define DEFAULT_DARK_TIME_END 4*60
+
     #define DEFAULT_ADC_LEVEL 600
     #define DEFAULT_ADC_LEVEL_MIN 600
     #define DEFAULT_ADC_LEVEL_MAX 600
@@ -127,12 +130,16 @@ int OTA_IDLE_BIT;  /* The event group allows multiple bits for each event, but w
     bool is_dark; // закат или данные с датчика освещенности
     bool is_white_led_auto; // is_pir_enabled & is_dark 
 
+    //uint8_t pwm_max_light;  // максимальное значение pwm 
+    
+
     uint16_t pir_timer_off_delay; // OPTIONS: взять из настроек
     uint16_t white_led_fadeup_delay; // OPTIONS: взять из настроек
     uint16_t white_led_fadeout_delay; // OPTIONS: взять из настроек
     uint8_t  white_led_max_duty;  // макс яркость, регулируется пультом
-
-
+    uint8_t  white_led_max_duty_dark;   // макс яркость в ночное время, взять из настроек
+    uint32_t dark_time_start;  // начало ночного времени в минутах дня
+    uint32_t dark_time_end; // окончание ночного времени в минутах дня
     static TimerHandle_t tmr_cnt = NULL;
     
 
