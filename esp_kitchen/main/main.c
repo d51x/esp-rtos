@@ -214,10 +214,10 @@ void white_led_smooth_on(){
     
     uint32_t duty_max = white_led_max_duty;
 
-    uint32_t t = get_time("min_of_day");
+    
 
     // если ночное время
-    if ( t < dark_time_end || t > dark_time_start ) duty_max = white_led_max_duty_dark;
+    if ( is_night_mode() ) duty_max = white_led_max_duty_dark;
     
     if (  duty < duty_max )  
         ledc->fade( ledc->channels + LED_CTRL_WHITE_CH, duty, duty_max, white_led_fadeup_delay);
@@ -233,6 +233,10 @@ void mqtt_send_pir(){
     mqtt_extern_publish("pir", payload);
 }
 
+bool is_night_mode(){
+    uint32_t t = get_time("min_of_day");
+    return  ( t < dark_time_end ) || ( t > dark_time_start );
+}
 
 static bool check_adc_dark(bool now_dark) {
     //return get_adc() < adc_lvl;
@@ -317,13 +321,13 @@ void load_params(){
     err = nvs_param_u16_load("pir", "fadedowndelay",  &white_led_fadeout_delay);
     if ( err != ESP_OK ) white_led_fadeout_delay = WHITE_LED_FADEDOWN_DELAY;
 
-    err = nvs_param_u32_load("pir", "dutymaxdark",  &white_led_max_duty_dark);
+    err = nvs_param_u8_load("pir", "dutymaxdark",  &white_led_max_duty_dark);
     if ( err != ESP_OK ) white_led_max_duty_dark = MAX_DUTY;
 
-    err = nvs_param_u32_load("pir", "darktimestart",  &dark_time_start);
+    err = nvs_param_u16_load("pir", "darktimestart",  &dark_time_start);
     if ( err != ESP_OK ) dark_time_start = DEFAULT_DARK_TIME_START;
 
-    err = nvs_param_u32_load("pir", "darktimeend",  &dark_time_end);
+    err = nvs_param_u16_load("pir", "darktimeend",  &dark_time_end);
     if ( err != ESP_OK ) dark_time_end = DEFAULT_DARK_TIME_END;
 
     is_motion = false;

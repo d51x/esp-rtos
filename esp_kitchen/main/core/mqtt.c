@@ -393,6 +393,18 @@ static void process_data(esp_mqtt_event_handle_t event){
 
 }
 
+void mqtt_publish_dark_time_start(){
+    char payload[5];
+    itoa(dark_time_start, payload, 10);
+    mqtt_publish_generic( "darktime/start", payload);    
+}
+
+void mqtt_publish_dark_time_end(){
+    char payload[5];
+    itoa(dark_time_end, payload, 10);
+    mqtt_publish_generic( "darktime/end", payload);    
+}
+
  void mqtt_publish_fan_state(){
     uint8_t st =  relay_read(relay_fan_h);
     char payload[2];

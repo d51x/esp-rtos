@@ -67,5 +67,7 @@ void mqtt_publish_ledc_duty(uint8_t channel);
 void mqtt_publish_adc_thld();
 void mqtt_publish_adc_thld_min();
 void mqtt_publish_adc_thld_max();
+void mqtt_publish_dark_time_start();
+void mqtt_publish_dark_time_end();
 
 #endif /* __MQTT_H__ */

@@ -68,14 +68,20 @@ void print_html_tools(char *buf){
                             "<p><span>Pir off delay: </span><input size=\"2\" name=\"pir_off_delay\" value=\"%d\"><span>sec</span></p>"
                             //"<p><span>Мин уровень освещенности: </span><input size=\"2\" name=\"adclvl\" value=\"%d\"><span>sec</span></p>"
                             "<p><span>Освещенность (гистерезис): </span></p>"
-                            "<p><span>Min (вкл): </span><input size=\"2\" name=\"adclvlmin\" value=\"%d\"><span>sec</span></p>"
-                            "<p><span>Max (выкл): </span><input size=\"2\" name=\"adclvlmax\" value=\"%d\"><span>sec</span></p>"
-                            
+                            "<p>"
+                                "<span>Min (вкл): </span><input size=\"2\" name=\"adclvlmin\" value=\"%d\">"
+                                "&nbsp;"
+                                "<span>Max (выкл): </span><input size=\"2\" name=\"adclvlmax\" value=\"%d\">"
+                            "</p>"
+                            "<br>"
                             "<p><span>Ночное время (минуты дня): </span></p>"
-                            "<p><span>начало: </span><input size=\"2\" name=\"darktimestart\" value=\"%d\"><span>sec</span></p>"
-                            "<p><span>окончание: </span><input size=\"2\" name=\"darktimeend\" value=\"%d\"><span>sec</span></p>"
-                            "<p><span>освещенность: </span><input size=\"2\" name=\"dutymaxdark\" value=\"%d\"><span>sec</span></p>"
-
+                            "<p>"
+                                "<span>начало: </span><input size=\"3\" name=\"darktimestart\" value=\"%d\">"
+                                "&nbsp;"
+                                "<span>окончание: </span><input size=\"3\" name=\"darktimeend\" value=\"%d\">"
+                            "</p>"
+                            "<p><span>Макс.яркость: </span><input size=\"2\" name=\"dutymaxdark\" value=\"%d\"></p>"
+                            "<br>"
                             "<p><span>Fadeup delay: </span><input size=\"2\" name=\"fadeup\" value=\"%d\"><span>msec</span></p>"
                             "<p><span>Fadedown delay: </span><input size=\"2\" name=\"fadedown\" value=\"%d\"><span>msec</span></p>"
                             "<p><input type=\"hidden\" name=\"st\" value=\"1\"></p>"
@@ -206,6 +212,8 @@ void get_main_page_data(char *data) {
     if (count_up_motion > 0) 
         sprintf(data+strlen(data), "<p>Прошло после начала движения: <b>%d</b> сек</p>", count_up_motion);
 
+    sprintf(data+strlen(data), "<p>Ночная яркость: <b>%d</b></p>", white_led_max_duty_dark);
+    sprintf(data+strlen(data), "<p>Ночной режим: <b>%s</b></p>", is_night_mode() ? "ДА" : "НЕТ");
     sprintf(data+strlen(data), "</div>"); 
 
     // ================= print fan info =====================

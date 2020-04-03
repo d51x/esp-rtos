@@ -14,7 +14,7 @@
 #include "pir.h"
 
 
-#define FW_VER "1.14.20"
+#define FW_VER "1.14.29"
 #define CORE_FW_VER "1.14"
 
 ledcontrol_t *ledc;
@@ -138,10 +138,12 @@ int OTA_IDLE_BIT;  /* The event group allows multiple bits for each event, but w
     uint16_t white_led_fadeout_delay; // OPTIONS: взять из настроек
     uint8_t  white_led_max_duty;  // макс яркость, регулируется пультом
     uint8_t  white_led_max_duty_dark;   // макс яркость в ночное время, взять из настроек
-    uint32_t dark_time_start;  // начало ночного времени в минутах дня
-    uint32_t dark_time_end; // окончание ночного времени в минутах дня
+    uint16_t dark_time_start;  // начало ночного времени в минутах дня
+    uint16_t dark_time_end; // окончание ночного времени в минутах дня
     static TimerHandle_t tmr_cnt = NULL;
     
 
     bool get_dark_mode(pir_mode_t mode);
+    bool is_night_mode();
+
 #endif

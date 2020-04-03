@@ -170,44 +170,53 @@ static void process_pir_adc(httpd_req_t *req, const char *param, size_t sz){
 
     if ( http_get_key_str(req, "adclvlmin", param, sizeof(param)) == ESP_OK ) {
         uint16_t val = atoi( param );
-        if ( adc_lvl_min == val ) return;
-        adc_lvl_min = val;  
-        nvs_param_u16_save("main", "adclvlmin", adc_lvl_min);   
-        mqtt_publish_adc_thld_min();   
+        if ( adc_lvl_min != val ) {
+            adc_lvl_min = val;  
+            nvs_param_u16_save("main", "adclvlmin", adc_lvl_min);   
+            mqtt_publish_adc_thld_min();   
+        }
     } 
-    else if ( http_get_key_str(req, "adclvlmax", param, sizeof(param)) == ESP_OK ) {
+    
+    if ( http_get_key_str(req, "adclvlmax", param, sizeof(param)) == ESP_OK ) {
         uint16_t val = atoi( param );
-        if ( adc_lvl_max == val ) return;
-        adc_lvl_max = val;  
-        nvs_param_u16_save("main", "adclvlmax", adc_lvl_max);   
-        mqtt_publish_adc_thld_max();   
+        if ( adc_lvl_max != val ) {
+            adc_lvl_max = val;  
+            nvs_param_u16_save("main", "adclvlmax", adc_lvl_max);   
+            mqtt_publish_adc_thld_max();   
+        }
     } 
 }
 
-static void process_pir_dark_time(httpd_req_t *req, const char *param, size_t sz){
-    if ( http_get_key_str(req, "darktimestart", param, sizeof(param)) == ESP_OK ) {
-        uint32_t val = atoi( param );
-        if ( dark_time_start == val ) return;
-        dark_time_start = val;  
-        nvs_param_u32_save("pir", "darktimestart", dark_time_start);   
-        //mqtt_publish_adc_thld_min();   
-    } 
-    else if ( http_get_key_str(req, "darktimeend", param, sizeof(param)) == ESP_OK ) {
-        uint32_t val = atoi( param );
-        if ( dark_time_end == val ) return;
-        dark_time_end = val;  
-        nvs_param_u32_save("pir", "darktimeend", dark_time_end);   
-        //mqtt_publish_adc_thld_max();   
-    } 
-    else if ( http_get_key_str(req, "dutymaxdark", param, sizeof(param)) == ESP_OK ) {
-        uint8_t val = atoi( param );
-        if ( white_led_max_duty_dark == val ) return;
-        white_led_max_duty_dark = val;  
-        nvs_param_u8_save("pir", "dutymaxdark", white_led_max_duty_dark);   
-        //mqtt_publish_adc_thld_max();   
-    } 
+static void process_pir_dark_time(httpd_req_t *req, const char *param, size_t sz) 
+{
 
+    if ( http_get_key_str(req, "darktimestart", param, sizeof(param)) == ESP_OK ) {
+        uint16_t val = atoi( param );
+        if ( dark_time_start != val ) {
+            dark_time_start = val;  
+            nvs_param_u16_save("pir", "darktimestart", dark_time_start);   
+            mqtt_publish_dark_time_start();
+        }  
+    } 
     
+    if ( http_get_key_str(req, "darktimeend", param, sizeof(param)) == ESP_OK ) {
+        uint16_t val = atoi( param );
+        if ( dark_time_end != val ) {
+            dark_time_end = val;  
+            nvs_param_u16_save("pir", "darktimeend", dark_time_end);   
+            mqtt_publish_dark_time_end();
+        }   
+    } 
+    
+    if ( http_get_key_str(req, "dutymaxdark", param, sizeof(param)) == ESP_OK ) {
+        uint8_t val = atoi( param );
+        if ( white_led_max_duty_dark != val ) {
+            white_led_max_duty_dark = val;  
+            nvs_param_u8_save("pir", "dutymaxdark", white_led_max_duty_dark);   
+            //mqtt_publish_adc_thld_max();   
+        }
+    } 
+  
 }
 
 
@@ -283,7 +292,7 @@ esp_err_t tools_get_handler(httpd_req_t *req){
     // check get params
     if ( http_get_has_params(req) == ESP_OK) {
         // pir_en=1&pir_off_delay=15&fadeup=100&fadedown=150&st=1
-        char param[15];
+        char param[40];
         int val = 0;
 
         if ( http_get_key_str(req, "st", param, sizeof(param)) == ESP_OK ) {  
