@@ -9,7 +9,6 @@ static const char *TAG = "MAIN";
                     }
 httpd_handle_t http_server = NULL;
 
-
 static void  init_relay() {
     relay_fan_h = relay_create( relay_fan_pin, relay_invert ? RELAY_LEVEL_LOW : RELAY_LEVEL_HIGH);
     relay_write(relay_fan_h,  RELAY_STATE_CLOSE);
@@ -134,8 +133,15 @@ void app_main(void){
     init_relay();
     init_pir();
     init_ir_receiver();
+
+    tmr_adc = xTimerCreate("tmr_adc", 1000 / portTICK_PERIOD_MS, pdTRUE, 0, adc_cb);	
+    xTimerStart(tmr_adc, 0);		
 }
 
+
+void adc_cb(xTimerHandle tmr) {
+    is_dark = get_dark_mode( pir_mode );
+}
 
 static void count_up_cb(xTimerHandle tmr) {
     uint32_t *p = (uint32_t *) pvTimerGetTimerID(tmr);
@@ -184,6 +190,7 @@ void pir_high_cb(void *arg) {
     is_motion = true;
     mqtt_send_pir();
     start_count_up();
+
 
     if ( is_pir_enabled && is_dark ) {
         // включим, когда темно

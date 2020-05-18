@@ -190,8 +190,9 @@ static void process_pir_adc(httpd_req_t *req, const char *param, size_t sz){
 static void process_pir_dark_time(httpd_req_t *req, const char *param, size_t sz) 
 {
 
-    if ( http_get_key_str(req, "darktimestart", param, sizeof(param)) == ESP_OK ) {
-        uint16_t val = atoi( param );
+    char param1[40];
+    if ( http_get_key_str(req, "darktimestart", param1, sizeof(param1)) == ESP_OK ) {
+        uint16_t val = atoi( param1 );
         if ( dark_time_start != val ) {
             dark_time_start = val;  
             nvs_param_u16_save("pir", "darktimestart", dark_time_start);   
@@ -199,8 +200,8 @@ static void process_pir_dark_time(httpd_req_t *req, const char *param, size_t sz
         }  
     } 
     
-    if ( http_get_key_str(req, "darktimeend", param, sizeof(param)) == ESP_OK ) {
-        uint16_t val = atoi( param );
+    if ( http_get_key_str(req, "darktimeend", param1, sizeof(param1)) == ESP_OK ) {
+        uint16_t val = atoi( param1 );
         if ( dark_time_end != val ) {
             dark_time_end = val;  
             nvs_param_u16_save("pir", "darktimeend", dark_time_end);   

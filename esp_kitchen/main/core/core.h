@@ -14,7 +14,7 @@
 #include "pir.h"
 
 
-#define FW_VER "1.14.29"
+#define FW_VER "1.14.32"
 #define CORE_FW_VER "1.14"
 
 ledcontrol_t *ledc;
@@ -141,6 +141,7 @@ int OTA_IDLE_BIT;  /* The event group allows multiple bits for each event, but w
     uint16_t dark_time_start;  // начало ночного времени в минутах дня
     uint16_t dark_time_end; // окончание ночного времени в минутах дня
     static TimerHandle_t tmr_cnt = NULL;
+    static TimerHandle_t tmr_adc = NULL;
     
 
     bool get_dark_mode(pir_mode_t mode);
