@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+      <title>Main page</title>
+      <meta name="viewport" content="width=480">
+      <meta name="mobile-web-app-capable" content="yes">
+      <link rel="stylesheet" type="text/css" href="main.css">
+	</head>
+	<body>
+		<div id="main">
+			<div id="header" class="bg">
+				<div id="host">
+					<h2>Hall2-light</h2>
+				</div>
+				<div id="head-right" class="dropdown">
+					<div id="rssi">
+						<h4>-75 dBm</h4>
+					</div>
+					<div class="dropdown">
+					  <button class="dropbtn"></button>
+					  <div class="dropdown-content bg">
+						<ul>
+							<li><a href="#/">Main</a></li>
+							<li><a href="#/setup">Setup</a></li>
+							<li><a href="#/tools">Config</a></li>
+							<li><a href="#/ota">OTA</a></li>
+							<li><a href="#/debug">Debug</a></li>
+						</ul>
+					  </div>
+					</div>
+				</div>
+			</div>
+			<div id="dev-info" class="rnd brd-btm">	
+					<div id="memory"><span><b>Free heap: </b> 47764</span></div>
+					<div id="uptime"><span><b>Uptime: </b> 0 day 04:22:52</span></div>				
+			</div>
+			<div class="data">
+				<div class="group rnd">
+					<h4 class="brd-btm">Показания:</h4>
+					<p>Lfxnbxbr</p>
+					<p>Lfxnbxbr</p>
+					<p>Lfxnbxbr</p>
+					<p>Lfxnbxbr</p>
+				</div>
+				<div class="group rnd">
+					<h4 class="brd-btm">Управление:</h4>
+					<button class="button on" >Старт</button>
+					<button class="button off">Стоп</button>
+					<button class="button norm">Переключить</button>
+				</div>	
+				<div class="group rnd">
+					<h4 class="brd-btm">WiFi Settings:</h4>
+					<form method="GET">
+                                    <p><label class="lf">Hostname: </label><input size="20" name="hostname" class="edit rh" value="ESP-34AD32" /></p>
+                                    <p><label class="lf">SSID: </label><input size="20" name="ssid" class="edit rh" value="Dminty" /></p>
+                                    <p><label class="lf">Password: </label><input size="20" name="pass" class="edit rh" value="12345678" /></p>
+                                    <p><label class="lf">Mode:</label>
+										
+											<label><input type="radio" name="wifi_mode" value="1" checked /> STA</label>
+											<label><input type="radio" name="wifi_mode" value="2" /> AP</label>
+										
+                                    </p>
+                                    <p><input type="hidden" name="st" value="1"></p>
+                                    <p class="lf2"><input type="submit" value="Сохранить" class="button norm rht"></p>			
+					</form>
+				</div>				
+			</div>
+			<div id="clear"></div>
+
+			<div id="footer" class="rnd">	
+				<div id="time"><span><b>Thu, 28.05.2020 22:02:37</b></div>
+				<div id="fw"><span><b>v.1.0</b></span></div>
+			</div>
+		</div>
+   </body>
+</html>
