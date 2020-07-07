@@ -5,6 +5,10 @@
 
 static const char *TAG = "SNTP";
 
+void sntp_start(){
+    xTaskCreate(sntp_task, "sntp_task", 2048, NULL, 10, NULL);
+}
+
 void sntp_task(void *arg){
     time_t now;
     struct tm timeinfo;
@@ -74,6 +78,3 @@ void initialize_sntp(void)
 
 }
 
-void sntp_start(){
-    xTaskCreate(sntp_task, "sntp_task", 2048, NULL, 10, NULL);
-}

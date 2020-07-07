@@ -1,6 +1,9 @@
 #ifndef __SNTP_H__
 #define __SNTP_H__
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "esp_event_loop.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
@@ -9,8 +12,8 @@
 
 #include "lwip/apps/sntp.h"
 #include "esp_log.h"
-#include "esp_wifi.h"
-#include "esp_wifi_types.h"
+//#include "esp_wifi.h"
+//#include "esp_wifi_types.h"
 #include "wifi.h"
 
 

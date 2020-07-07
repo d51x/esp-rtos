@@ -23,6 +23,7 @@
 #include "sntp.h"
 #include "ir_buttons.h"
 
+extern void sntp_start();
 
 //===== pir callbacks ========
 void pir_high_cb(void *arg);

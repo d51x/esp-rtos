@@ -79,7 +79,7 @@ esp_err_t wifi_event_handler(void *ctx, system_event_t *event){
             ESP_LOGI(TAG, wifi_hostname);
             tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, wifi_hostname);  //TCPIP_HOSTNAME_MAX_SIZE    32
             // ????
-            //esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
+            //esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
             // ????
             esp_wifi_connect();
             wifi_info.wifi_reconnect = 0;
@@ -90,8 +90,8 @@ esp_err_t wifi_event_handler(void *ctx, system_event_t *event){
             wifi_info.status = 1;
             memcpy(&wifi_info.ip, &event->event_info.got_ip.ip_info.ip, 4);
             
-            //esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B );//| WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
-            esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
+            //esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B );//| WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
+            esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
             xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
             //xEventGroupSetBits(ota_event_group, OTA_IDLE_BIT);
             break;
@@ -113,7 +113,7 @@ esp_err_t wifi_event_handler(void *ctx, system_event_t *event){
             //ESP_LOGE(TAG, "Disconnect reason : %d", info->disconnected.reason);
             if (info->disconnected.reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
                 /*Switch to 802.11 bgn mode */
-                esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
+                esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
             }
             esp_wifi_connect();
             xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
@@ -161,7 +161,7 @@ void wifi_init(wifi_mode_t wifi_mode) {
             wifi_init_sta(&wifi_config);
             esp_read_mac(wifi_info.mac, ESP_MAC_WIFI_STA);
 
-            esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
+            esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
             break;
         case WIFI_MODE_AP:
             wifi_init_softap(&wifi_config);
