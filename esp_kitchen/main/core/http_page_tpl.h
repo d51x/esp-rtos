@@ -34,7 +34,7 @@ const char *html_devinfo =   "<div id=\"dev-info\">"
                                     "<p>"
                                     "<span>Freemem: %d Kb</span>"
                                     "<span>RSSI: %d dBm</span>"
-                                    "<span>Vcc: %d mV</span>"
+                                    //"<span>Vcc: %d mV</span>"
                                     "</p>"
                                     "<p class=\"uptime\"><span>uptime: %s</span></p>"
                                     "</div>";

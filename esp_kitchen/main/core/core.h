@@ -14,7 +14,7 @@
 #include "pir.h"
 
 
-#define FW_VER "1.14.32"
+#define FW_VER "1.14.33"
 #define CORE_FW_VER "1.14"
 
 ledcontrol_t *ledc;
@@ -123,10 +123,10 @@ int OTA_IDLE_BIT;  /* The event group allows multiple bits for each event, but w
     bool is_pir_enabled; // OPTIONS: взять из настроек - pir вкл / выкл
     pir_mode_t pir_mode;  // OPTIONS: взять из настроек
     bool is_motion;
-    uint32_t count_down_off;         // осталось до выключения
-    uint32_t count_up_motion;        // прошло после начала движения
+    //uint32_t count_down_off;         // осталось до выключения
+    //uint32_t count_up_motion;        // прошло после начала движения
 
-    bool is_sunset;
+    bool is_sunset;     // значение получаем по mqtt, 0 - день, 1 - ночь... там же вычисляется is_dark
     bool is_dark; // закат или данные с датчика освещенности
     bool is_white_led_auto; // is_pir_enabled & is_dark 
 

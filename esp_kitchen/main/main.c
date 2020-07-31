@@ -141,55 +141,67 @@ void app_main(void){
 
 void adc_cb(xTimerHandle tmr) {
     is_dark = get_dark_mode( pir_mode );
-}
-
-static void count_up_cb(xTimerHandle tmr) {
-    uint32_t *p = (uint32_t *) pvTimerGetTimerID(tmr);
-    count_up_motion = *p;
-    count_up_motion++;
-}
-
-static void count_down_cb(xTimerHandle tmr) {
-    uint32_t *p = (uint32_t *) pvTimerGetTimerID(tmr);
-    count_down_off = *p;
-    count_down_off--;
-}
-
-static void stop_timer(){
-    if ( tmr_cnt ) {
-        xTimerStop( tmr_cnt, 0);
-        xTimerDelete( tmr_cnt, 0);
-        tmr_cnt = NULL;
+    // is_motion - есть движения , но может быть уже нет движения, но подсветка еще включена на заданное время и выключится по таймеру
+    
+    // плавно приглушим белую подсветку, если наступил ночной режим
+    if ( get_time("min_of_day") ==  dark_time_start)  
+    {
+        uint32_t duty = ledc->get_duty( ledc->channels + LED_CTRL_WHITE_CH);
+        if ( duty > white_led_max_duty_dark ) 
+        {
+            // подсветка включена ярче минимальной в ночное время
+            ledc->fade( ledc->channels + LED_CTRL_WHITE_CH, duty, white_led_max_duty_dark, white_led_fadeup_delay);
+        }
     }
-    count_down_off = pir_timer_off_delay;
-    count_up_motion = 0;
 }
 
-static void start_count_up(){
-    stop_timer();
-    tmr_cnt = xTimerCreate("tmr_cnt", 1000 / portTICK_PERIOD_MS, pdTRUE, &count_up_motion, count_up_cb);	
-    xTimerStart(tmr_cnt, 0);		
-}
+//static void count_up_cb(xTimerHandle tmr) {
+    //uint32_t *p = (uint32_t *) pvTimerGetTimerID(tmr);
+    //count_up_motion = *p;
+    //count_up_motion++;
+//}
 
-static void start_count_down(){
-    stop_timer();
-    tmr_cnt = xTimerCreate("tmr_cnt", 1000 / portTICK_PERIOD_MS, pdTRUE, &count_down_off, count_down_cb);
-    xTimerStart(tmr_cnt, 0);	
-}
+//static void count_down_cb(xTimerHandle tmr) {
+    //uint32_t *p = (uint32_t *) pvTimerGetTimerID(tmr);
+    //count_down_off = *p;
+    //count_down_off--;
+//}
+
+//static void stop_timer(){
+    //if ( tmr_cnt ) {
+    //    xTimerStop( tmr_cnt, 0);
+    //    xTimerDelete( tmr_cnt, 0);
+    //    tmr_cnt = NULL;
+ //   }
+    //count_down_off = pir_timer_off_delay;
+    //count_up_motion = 0;
+//}
+
+//static void start_count_up(){
+    //stop_timer();
+    //tmr_cnt = xTimerCreate("tmr_cnt", 1000 / portTICK_PERIOD_MS, pdTRUE, &count_up_motion, count_up_cb);	
+    //xTimerStart(tmr_cnt, 0);		
+//}
+
+//static void start_count_down(){
+    //stop_timer();
+    //tmr_cnt = xTimerCreate("tmr_cnt", 1000 / portTICK_PERIOD_MS, pdTRUE, &count_down_off, count_down_cb);
+    //xTimerStart(tmr_cnt, 0);	
+//}
 
 void pir_low_cb(void *arg) {
     CHECK_PIR();
     if ( !is_motion ) return;
     is_motion = false;
     mqtt_send_pir();
-    start_count_down();
+    //start_count_down();
 }
 
 void pir_high_cb(void *arg) {
     CHECK_PIR();
     is_motion = true;
     mqtt_send_pir();
-    start_count_up();
+    //start_count_up();
 
 
     if ( is_pir_enabled && is_dark ) {
@@ -201,7 +213,7 @@ void pir_high_cb(void *arg) {
 
 void pir_timer_low_cb(void *arg) {
     CHECK_PIR();
-    stop_timer();
+    //stop_timer();
 
     if ( is_pir_enabled ) {
         // выключим, в любом случае - темно или светло, даже если светло и включали руками
@@ -246,10 +258,12 @@ bool is_night_mode(){
 }
 
 static bool check_adc_dark(bool now_dark) {
-    //return get_adc() < adc_lvl;
-    uint16_t l = get_adc();
-    bool res = ( now_dark & (l <= adc_lvl_max) ) || 
-               ( !now_dark && (l <= adc_lvl_min) );
+    uint16_t l = get_adc(); // данные с adc
+
+    //bool res = ( now_dark && (l <= adc_lvl_max) ) ||  ( !now_dark && (l <= adc_lvl_min) );
+    return ( now_dark && (l <= adc_lvl_max) ) ||  ( !now_dark && (l <= adc_lvl_min) );
+
+
                /*
     if ( now_dark && (l <= adc_lvl_max) ) {
         // темно
@@ -262,7 +276,7 @@ static bool check_adc_dark(bool now_dark) {
         res = false;
     }
     */
-    return res;
+    //return res;
 }
 
 bool get_dark_mode(pir_mode_t mode) {
