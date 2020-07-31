@@ -79,7 +79,7 @@ esp_err_t wifi_event_handler(void *ctx, system_event_t *event){
             ESP_LOGI(TAG, wifi_hostname);
             tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, wifi_hostname);  //TCPIP_HOSTNAME_MAX_SIZE    32
             // ????
-            //esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
+            esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
             // ????
             esp_wifi_connect();
             wifi_info.wifi_reconnect = 0;
@@ -150,9 +150,10 @@ void wifi_init(wifi_mode_t wifi_mode) {
     //}
     
 
-///ESP_LOGI(TAG, "Using SSID: %s", wifi_nvs_cfg->ssid);
-///ESP_LOGI(TAG, "Using passw: %s", wifi_nvs_cfg->password);
-///ESP_LOGI(TAG, "Using mode: %s", (wifi_nvs_cfg->mode == WIFI_MODE_STA) ? "STA" : ( (wifi_nvs_cfg->mode == WIFI_MODE_AP) ? "AP" : "Disable"));
+ESP_LOGI(TAG, "Using SSID: %s", wifi_nvs_cfg->ssid);
+ESP_LOGI(TAG, "Using passw: %s", wifi_nvs_cfg->password);
+ESP_LOGI(TAG, "Using mode: %s", (wifi_nvs_cfg->mode == WIFI_MODE_STA) ? "STA" : ( (wifi_nvs_cfg->mode == WIFI_MODE_AP) ? "AP" : "Disable"));
+ESP_LOGI(TAG, "Using mode: %s", (wifi_mode == WIFI_MODE_STA) ? "STA" : ( (wifi_mode == WIFI_MODE_AP) ? "AP" : "Disable"));
 
     wifi_config_t wifi_config;
     switch ( wifi_mode ) {
@@ -161,7 +162,7 @@ void wifi_init(wifi_mode_t wifi_mode) {
             wifi_init_sta(&wifi_config);
             esp_read_mac(wifi_info.mac, ESP_MAC_WIFI_STA);
 
-            esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
+            //esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
             break;
         case WIFI_MODE_AP:
             wifi_init_softap(&wifi_config);
