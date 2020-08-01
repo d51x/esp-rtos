@@ -207,10 +207,10 @@ void get_main_page_data(char *data) {
     sprintf(data+strlen(data), "<p>Режим работы: <b>%s</b></p>", pir_mode_desc[pir_mode] );
     sprintf(data+strlen(data), "<p>Сейчас: <b>%s</b></p>", is_dark ? "темно" : "светло" );
     sprintf(data+strlen(data), "<p>Движение: <b>%s</b></p>", is_motion ? STR_YES : STR_NO );
-    //if ( count_down_off < pir_timer_off_delay )
-    //    sprintf(data+strlen(data), "<p>Осталось сек до выключения: <b>%d</b> сек</p>", count_down_off);
-    //if (count_up_motion > 0) 
-    //    sprintf(data+strlen(data), "<p>Прошло после начала движения: <b>%d</b> сек</p>", count_up_motion);
+    if ( count_down_off < pir_timer_off_delay )
+        sprintf(data+strlen(data), "<p>Осталось сек до выключения: <b>%d</b> сек</p>", count_down_off);
+    if (count_up_motion > 0) 
+        sprintf(data+strlen(data), "<p>Прошло после начала движения: <b>%d</b> сек</p>", count_up_motion);
 
     sprintf(data+strlen(data), "<p>Ночная яркость: <b>%d</b></p>", white_led_max_duty_dark);
     sprintf(data+strlen(data), "<p>Ночной режим: <b>%s</b></p>", is_night_mode() ? "ДА" : "НЕТ");
