@@ -1,5 +1,4 @@
-#ifndef __MQTT_CL_H__
-#define __MQTT_CL_H__
+#pragma once
 
 //#include <stdio.h>
 #include <string.h>
@@ -16,8 +15,10 @@
 #include "utils.h"
 
 
-#define MQTT_BROKER_URL "mqtt://192.168.2.63:1883"
+#define MQTT_BROKER_URL CONFIG_MQTT_URL //"mqtt://192.168.2.63:1883"
 #define MQTT_SEND_INTERVAL 60  // sec
+
+#define MQTT_CLIENT_ID_MASK "ESP_%2X%2X%2X"
 
 #define MQTT_DEVICE_UPTIME          "uptime"
 #define MQTT_DEVICE_FREEMEM         "freemem"
@@ -29,6 +30,7 @@ typedef struct {
     char broker_url[32];
     char login[MQTT_CFG_LOGIN_LENGTH];
     char password[16];
+    char base_topic[16];
     uint16_t send_interval;
     uint8_t enabled;
 } mqtt_config_t;
@@ -77,5 +79,3 @@ void mqtt_add_periodic_publish_callback( const char *topic, func_mqtt_send_cb fn
 
 // зарегистрировать функцию колбека, которая будет вызвана при получении данных в указанном топике
 void mqtt_add_receive_callback( const char *topic, func_mqtt_recv_cb fn_cb);  
-
-#endif /* __MQTT_H__ */
