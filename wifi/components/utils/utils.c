@@ -437,3 +437,12 @@ void print_tasks_info()
     free(tasks_info);
 }
 #endif
+
+char* cut_str_from_str(const char *str, const char *str2)
+{
+    char *p = strstr(str, str2);
+    uint8_t pos = p - str;
+    p = (char *) calloc(1, pos + 1);
+    strncpy(p, str, pos);
+    return p;
+}

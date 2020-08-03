@@ -7,6 +7,8 @@
 //extern "C"
 //{
 //#endif
+#define I2C_SDA_DEFAULT 2
+#define I2C_SCL_DEFAULT 0
 
 typedef void* i2c_bus_handle_t;
 

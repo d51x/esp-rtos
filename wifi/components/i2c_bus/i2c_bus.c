@@ -20,8 +20,7 @@
 #define PARAM_I2C "i2c"
 #define PARAM_I2C_SDA "sda"
 #define PARAM_I2C_SCL "scl"
-#define I2C_SDA_DEFAULT 2
-#define I2C_SCL_DEFAULT 0
+
 
 typedef struct {
     i2c_config_t i2c_conf;   /*!<I2C bus parameters*/

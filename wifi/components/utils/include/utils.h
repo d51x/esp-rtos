@@ -127,4 +127,6 @@ void print_task_stack_depth(const char *TAG, const char *task_name);
 void print_tasks_info();
 #endif
 
+char* cut_str_from_str(const char *str, const char *str2);
+
 #endif /* __UTILS_H__ */

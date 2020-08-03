@@ -5,7 +5,7 @@
 static const char *TAG = "WEB";
 
 http_print_page_block_t *http_print_page_block = NULL;
-static uint8_t http_print_page_block_count = 0;
+uint8_t http_print_page_block_count = 0;
 
 void set_redirect_header(uint8_t time, const char *uri, char *data){
     sprintf(data, html_header_redirect, time, uri);
@@ -132,18 +132,21 @@ void show_http_page(httpd_req_t *req, char *data)
         //ESP_LOGI(TAG, "Custom title: %s", usr_ctx->title);
 
         char *_uri;
-	    if ( http_get_has_params(req) == ESP_OK) 
-	    {
+        _uri = http_uri_clean(req);
+	    ///if ( http_get_has_params(req) == ESP_OK) 
+	    ///{
             // remove params
             //_uri = strstr(req->uri, "?");
-            _uri = strchr(req->uri, '?');
-            uint8_t pos = _uri - req->uri;
-            _uri = (char *) calloc(1, pos + 1);
-            strncpy(_uri, req->uri, pos);
-        } else {
-            _uri = (char *) calloc(1, strlen( req->uri));
-            strcpy(_uri, req->uri);
-        }
+            
+            //_uri = strchr(req->uri, '?');
+            //uint8_t pos = _uri - req->uri;
+            //_uri = (char *) calloc(1, pos + 1);
+            //strncpy(_uri, req->uri, pos);
+            ///_uri = cut_str_from_str( req->uri, "?");
+        ///} else {
+            ///_uri = (char *) calloc(1, strlen( req->uri));
+            ///strcpy(_uri, req->uri);
+        ///}
         //char *_title = (char *) calloc(1, strlen(title) + strlen(wifi_cfg->hostname) + 3);
         char *_title = (char *) calloc(1, strlen(usr_ctx->title) + strlen(wifi_cfg->hostname) + 3);
         //sprintf(_title, "%s: %s", wifi_cfg->hostname, title);
@@ -316,6 +319,8 @@ void show_page_tools(const char *title, char *data)
     
     print_page_block( PAGES_URI[ PAGE_URI_TOOLS ], page_data);
 
+    sprintf( page_data + strlen(page_data), html_page_reboot_button_block);
+    
     generate_page(data, title, page_data);
     free(page_data);
 }
@@ -348,7 +353,7 @@ void show_restarting_page_data(char *data)
 
 }
 
-esp_err_t register_print_page_block(const char *uri, uint8_t index, func_http_print_page_block fn_cb)
+esp_err_t register_print_page_block(const char *uri, uint8_t index, func_http_print_page_block fn_print_block, httpd_uri_func fn_cb)
 {
     //ESP_LOGI(TAG, "function %s started", __func__);
 
@@ -357,7 +362,7 @@ esp_err_t register_print_page_block(const char *uri, uint8_t index, func_http_pr
     for ( uint8_t i = 0; i < http_print_page_block_count; i++) 
     {
         //ESP_LOGI(TAG, "[%d] compare registered uri %s with page uri %s", i, http_print_page_block[i].uri, uri);
-        if (strcmp(http_print_page_block[i].uri, uri) == 0 && http_print_page_block[i].fn_print_block == fn_cb) 
+        if (strcmp(http_print_page_block[i].uri, uri) == 0 && http_print_page_block[i].fn_print_block == fn_print_block) 
         {
             //ESP_LOGI(TAG, "[%d] found uri %s, return...", i, http_print_page_block[i].uri);
             return ESP_FAIL;
@@ -372,7 +377,8 @@ esp_err_t register_print_page_block(const char *uri, uint8_t index, func_http_pr
     http_print_page_block = (http_print_page_block_t *) realloc(http_print_page_block, http_print_page_block_count * sizeof(http_print_page_block_t));
     strcpy( http_print_page_block[ http_print_page_block_count - 1 ].uri, uri); 
     http_print_page_block[ http_print_page_block_count - 1 ].index = index; 
-    http_print_page_block[ http_print_page_block_count - 1 ].fn_print_block = fn_cb;
+    http_print_page_block[ http_print_page_block_count - 1 ].fn_print_block = fn_print_block;
+    http_print_page_block[ http_print_page_block_count - 1 ].process_cb = fn_cb;
 
     //ESP_LOGI(TAG, "registered printpage block %s\t\t%d\t\t%p", 
     //        http_print_page_block[ http_print_page_block_count - 1 ].uri, 
@@ -398,3 +404,5 @@ esp_err_t register_http_page_menu(const char *uri, const char *name)
     strcpy(http_menu[menu_items_count - 1].name, name);
     return ESP_OK;
 }
+
+

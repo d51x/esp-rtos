@@ -50,6 +50,21 @@ http_menu_item_t *http_menu = NULL;
 
 uint8_t menu_items_count = MENU_ITEM_COUNT;
 
+
+void process_params(httpd_req_t *req)
+{
+    for (uint8_t i = 0; i < http_print_page_block_count; i++)
+    {
+        char *_uri;
+        _uri = http_uri_clean(req);
+        if ( strcmp( _uri, http_print_page_block[i].uri) == 0 && http_print_page_block[i].process_cb != NULL) {
+            // do
+            http_print_page_block[i].process_cb(req); 
+        }
+        free(_uri);
+    }
+}
+
 esp_err_t main_get_handler(httpd_req_t *req) {
     
 
@@ -77,6 +92,7 @@ esp_err_t setup_get_handler(httpd_req_t *req){
 	{
 		process_wifi_param(req);
 		process_mqtt_param(req);
+        process_params(req);
 	}
 	  
   strncpy(page, HTTP_STR_SETUP, PAGE_DEFAULT_BUFFER_SIZE);
@@ -182,6 +198,13 @@ esp_err_t config_get_handler(httpd_req_t *req){
 }
 
 esp_err_t tools_get_handler(httpd_req_t *req){
+
+  // check params
+	if ( http_get_has_params(req) == ESP_OK) 
+	{
+        process_params(req);
+	}
+
   char page[PAGE_DEFAULT_BUFFER_SIZE];  
   strncpy(page, HTTP_STR_TOOLS, PAGE_DEFAULT_BUFFER_SIZE);
   //show_page_tools( page );
@@ -334,3 +357,8 @@ esp_err_t main_ajax_get_handler(httpd_req_t *req)
 
 // TODO show custom page handler from component
 //show_http_page( req, page);
+
+esp_err_t register_http_process_page_data(const char *uri, httpd_uri_func fn_cb)
+{
+    return ESP_OK;
+}

@@ -30,4 +30,5 @@ esp_err_t http_get_key_long(httpd_req_t *req, const char *param_name, long *valu
 esp_err_t http_get_key_uint16(httpd_req_t *req, const char *param_name, uint16_t *value);
 esp_err_t http_get_key_uint8(httpd_req_t *req, const char *param_name, uint8_t *value);
 
+char *http_uri_clean(httpd_req_t *req);
 #endif

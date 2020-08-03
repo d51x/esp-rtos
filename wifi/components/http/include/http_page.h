@@ -31,15 +31,16 @@
 #define PAGE_DEFAULT_BUFFER_SIZE    1024*4
 
 typedef void (* func_http_print_page_block)(const char *data);  
-
+extern uint8_t http_print_page_block_count;
 
 typedef struct {
     const char uri[HTTPD_MAX_URI_LEN + 1];
     uint8_t index;
     func_http_print_page_block fn_print_block;
+    httpd_uri_func process_cb;
 } http_print_page_block_t;
 
-
+extern http_print_page_block_t *http_print_page_block;
 
 
 void show_page_main(const char *title, char *data);
@@ -82,9 +83,8 @@ void set_redirect_header(uint8_t time, const char *uri, char *data);
 // uri - на какой странице выводить
 // index - очередность вывода
 // fn_cb - функция коллбека для формирования буфера
-esp_err_t register_print_page_block(const char *uri, uint8_t index, func_http_print_page_block fn_cb);
+esp_err_t register_print_page_block(const char *uri, uint8_t index, func_http_print_page_block fn_cb, httpd_uri_func fn_cb2);
 
-// TODO: еще надо функцию регистрации callback'a обработчика, чтобы обработку wifi_param, mqtt_param вынести в соответствующие модули
 
 esp_err_t register_http_page_menu(const char *uri, const char *name);
 

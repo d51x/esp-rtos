@@ -49,9 +49,9 @@ void i2c_register_http_menu()
 void i2c_register_http_print_data() 
 {
 
-    register_print_page_block( PAGES_URI[ PAGE_URI_TOOLS], 3, i2c_print_options );
-    register_print_page_block( PAGES_URI[ PAGE_URI_ROOT], 1, i2c_print_options2 );
-    register_print_page_block( PAGES_URI[ PAGE_URI_ROOT], 2, i2c_print_options3 );
+    register_print_page_block( PAGES_URI[ PAGE_URI_TOOLS], 3, i2c_print_options, i2c_http_process_params );
+    register_print_page_block( PAGES_URI[ PAGE_URI_ROOT], 1, i2c_print_options2, NULL );
+    register_print_page_block( PAGES_URI[ PAGE_URI_ROOT], 2, i2c_print_options3, NULL );
 }
 
 void i2c_register_http_handler(httpd_handle_t _server)
@@ -69,16 +69,43 @@ void i2c_register_http_handler(httpd_handle_t _server)
     //free(ctx);
 }
 
-esp_err_t i2c_get_handler(httpd_req_t *req)
+void i2c_http_process_params(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "function %s started...", __func__ );
+
    // check params
 	if ( http_get_has_params(req) == ESP_OK) 
 	{
         ESP_LOGI( TAG, "Has params");
-    } else {
-        ESP_LOGI(TAG, "no params");
-    }
+        char param[100];
+        if ( http_get_key_str(req, "st", param, sizeof(param)) == ESP_OK ) {
+            if ( strcmp(param, "i2c") != 0 ) {
+                return;	
+            }
+        } 
+        
+        i2c_config_t *cfg = (i2c_config_t *) calloc(1, sizeof(i2c_config_t));
+        if ( http_get_key_str(req, "sda", param, sizeof(param)) == ESP_OK ) {
+            cfg->sda_io_num = atoi(param);
+        }  else {
+            cfg->sda_io_num = I2C_SDA_DEFAULT;
+        }
+
+        if ( http_get_key_str(req, "scl", param, sizeof(param)) == ESP_OK ) {
+            cfg->scl_io_num = atoi(param);
+        }  else {
+            cfg->scl_io_num = I2C_SCL_DEFAULT;
+        }   
+
+        i2c_save_cfg( cfg );
+        free( cfg );
+    } 
+}
+
+esp_err_t i2c_get_handler(httpd_req_t *req)
+{
+    ESP_LOGI(TAG, "function %s started...", __func__ );
+
 
     ESP_LOGI(TAG, "show page");
 
