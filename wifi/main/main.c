@@ -38,7 +38,8 @@ void app_main(void)
     
     i2c_register_http_handler(http_server);
     i2c_register_http_print_data();
-
+    i2c_register_http_menu();
+    
        // mqtt_init();
        // mqtt_set_device_name(wifi_cfg->hostname);
 

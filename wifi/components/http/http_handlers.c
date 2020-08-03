@@ -17,34 +17,38 @@ static void process_wifi_param(httpd_req_t *req);
 static void process_mqtt_param(httpd_req_t *req);
 
 const char *PAGES_URI[PAGE_URI_MAX] = { 
-    "/",                    // PAGE_URI_ROOT
-    "/setup",               // PAGE_URI_SETUP
-    "/debug",               // PAGE_URI_DEBUG
-    "/tools",               // PAGE_URI_TOOLS
-    "/update",              // PAGE_URI_OTA
-    "/reboot",              // PAGE_URI_REBOOT
+    HTTP_URI_ROOT,                    // PAGE_URI_ROOT
+    HTTP_URI_SETUP,               // PAGE_URI_SETUP
+    HTTP_URI_DEBUG,               // PAGE_URI_DEBUG
+    HTTP_URI_TOOLS,               // PAGE_URI_TOOLS
+    HTTP_URI_UPDATE,              // PAGE_URI_OTA
+    HTTP_URI_REBOOT,              // PAGE_URI_REBOOT
     "/main.css",            // PAGE_URI_CSS
     "/ajax.js",             // PAGE_URI_AJAX
     "/favicon.ico",         // PAGE_URI_FAVICO
-    "/menu.png",            // PAGE_URI_ICON_MENU
-    "/menu2.png"            // PAGE_URI_ICON_MENU2
+    HTTP_URI_ICON_MENU,            // PAGE_URI_ICON_MENU
+    HTTP_URI_ICON_MENU2            // PAGE_URI_ICON_MENU2
     };
 
 
 
 user_ctx_t PAGES_HANDLER[PAGE_URI_MAX] = {
-    {"Main",    true,   show_page_main,       NULL},
-    {"Setup",   true,   show_page_setup,      NULL},
-    {"Debug",   true,   show_page_debug,      NULL},
-    {"Tools",   true,   show_page_tools,      NULL},
-    {"OTA",     true,   show_page_update,     NULL},
-    {"Reboot",  false,  reboot_get_handler,     NULL},
-    {"",        false,  NULL,   NULL},
-    {"",        false,  NULL,  NULL},
-    {"",        false,  NULL,    NULL},
-    {"",        false,  NULL,      NULL},
-    {"",        false,  NULL,      NULL}
+    {HTTP_STR_MAIN,    true,   show_page_main,       NULL},
+    {HTTP_STR_SETUP,   true,   show_page_setup,      NULL},
+    {HTTP_STR_DEBUG,   true,   show_page_debug,      NULL},
+    {HTTP_STR_TOOLS,   true,   show_page_tools,      NULL},
+    {HTTP_STR_UPDATE,  true,   show_page_update,     NULL},
+    {HTTP_STR_REBOOT,  false,  reboot_get_handler,   NULL},
+    {"",               false,  NULL,                 NULL},
+    {"",               false,  NULL,                 NULL},
+    {"",               false,  NULL,                 NULL},
+    {"",               false,  NULL,                 NULL},
+    {"",               false,  NULL,                 NULL}
 };
+
+http_menu_item_t *http_menu = NULL;
+
+uint8_t menu_items_count = MENU_ITEM_COUNT;
 
 esp_err_t main_get_handler(httpd_req_t *req) {
     
@@ -52,7 +56,7 @@ esp_err_t main_get_handler(httpd_req_t *req) {
     char page[PAGE_MAIN_BUFFER_SIZE];  
     // const char* resp_str = (const char*) req->user_ctx;
     //get_main_page_data(page);
-    strncpy(page, "Hello", PAGE_MAIN_BUFFER_SIZE);
+    strncpy(page, HTTP_STR_MAIN, PAGE_MAIN_BUFFER_SIZE);
     //show_page_main( page );
     show_http_page( req, page);
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
@@ -75,7 +79,7 @@ esp_err_t setup_get_handler(httpd_req_t *req){
 		process_mqtt_param(req);
 	}
 	  
-  strncpy(page, "Setup", PAGE_DEFAULT_BUFFER_SIZE);
+  strncpy(page, HTTP_STR_SETUP, PAGE_DEFAULT_BUFFER_SIZE);
   //show_page_setup( page );
   show_http_page( req, page);
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
@@ -169,7 +173,7 @@ esp_err_t config_get_handler(httpd_req_t *req){
 
 
 	// show page
-  	strncpy(page, "Config", PAGE_DEFAULT_BUFFER_SIZE);
+  	strncpy(page, HTTP_STR_CONFIG, PAGE_DEFAULT_BUFFER_SIZE);
   	//show_page_config( page );
     show_http_page( req, page);
   	httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
@@ -179,7 +183,7 @@ esp_err_t config_get_handler(httpd_req_t *req){
 
 esp_err_t tools_get_handler(httpd_req_t *req){
   char page[PAGE_DEFAULT_BUFFER_SIZE];  
-  strncpy(page, "Tools", PAGE_DEFAULT_BUFFER_SIZE);
+  strncpy(page, HTTP_STR_TOOLS, PAGE_DEFAULT_BUFFER_SIZE);
   //show_page_tools( page );
   show_http_page( req, page);
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
@@ -189,7 +193,7 @@ esp_err_t tools_get_handler(httpd_req_t *req){
 
 esp_err_t update_get_handler(httpd_req_t *req){
   char page[PAGE_DEFAULT_BUFFER_SIZE];  
-  strncpy(page, "OTA", PAGE_DEFAULT_BUFFER_SIZE);
+  strncpy(page, HTTP_STR_UPDATE, PAGE_DEFAULT_BUFFER_SIZE);
   //show_page_update( page );
   show_http_page( req, page);
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
@@ -232,7 +236,7 @@ esp_err_t update_post_handler(httpd_req_t *req){
 
 esp_err_t debug_get_handler(httpd_req_t *req){
   char page[PAGE_DEFAULT_BUFFER_SIZE];  
-  strncpy(page, "Debug", PAGE_DEFAULT_BUFFER_SIZE);
+  strncpy(page, HTTP_STR_DEBUG, PAGE_DEFAULT_BUFFER_SIZE);
   //show_page_debug( page );
     show_http_page( req, page);
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
@@ -280,7 +284,7 @@ esp_err_t favicon_get_handler(httpd_req_t *req)
     extern const unsigned char favicon_ico_start[] asm("_binary_favicon_ico_start");
     extern const unsigned char favicon_ico_end[]   asm("_binary_favicon_ico_end");
     const size_t favicon_ico_size = (favicon_ico_end - favicon_ico_start);
-    httpd_resp_set_type(req, "image/x-icon");
+    httpd_resp_set_type(req, HTTP_MEDIA_TYPE_ICON);
     httpd_resp_send(req, (const char *)favicon_ico_start, favicon_ico_size);
     return ESP_OK;
 }
@@ -290,18 +294,18 @@ esp_err_t icons_get_handler(httpd_req_t *req)
     size_t icon_size = 0;
     char *icon_start = NULL;
 
-	if ( strcmp(req->uri, "/menu.png") == ESP_OK) 
+	if ( strcmp(req->uri, HTTP_URI_ICON_MENU) == ESP_OK) 
     {
         icon_size = (menu_png_end - menu_png_start);
         icon_start = (char *)menu_png_start;
     }
-    else if ( strcmp(req->uri, "/menu2.png") == ESP_OK) 
+    else if ( strcmp(req->uri, HTTP_URI_ICON_MENU2) == ESP_OK) 
     {
         icon_size = (menu2_png_end - menu2_png_start);
         icon_start = (char *)menu2_png_start;
     }        
 
-    httpd_resp_set_type(req, "image/x-icon");
+    httpd_resp_set_type(req, HTTP_MEDIA_TYPE_ICON);
     httpd_resp_send(req, (const char *)icon_start, icon_size);
     return ESP_OK;
 }

@@ -25,6 +25,25 @@ pages:
 */
 #define WEB_SERVER_MAX_URI_HANDLERS 40
 
+#define HTTP_STR_MAIN "Main"
+#define HTTP_STR_SETUP "Setup"
+#define HTTP_STR_CONFIG "Config"
+#define HTTP_STR_DEBUG "Debug"
+#define HTTP_STR_TOOLS "Tools"
+#define HTTP_STR_UPDATE "Update"
+#define HTTP_STR_REBOOT "Reboot"
+
+#define HTTP_URI_ROOT "/"
+#define HTTP_URI_SETUP "/setup"
+#define HTTP_URI_TOOLS "/tools"
+#define HTTP_URI_UPDATE "/update"
+#define HTTP_URI_DEBUG "/debug"
+#define HTTP_URI_REBOOT "/reboot"
+#define HTTP_URI_ICON_MENU "/menu.png"
+#define HTTP_URI_ICON_MENU2 "/menu2.png"
+
+#define HTTP_MEDIA_TYPE_ICON "image/x-icon"
+
 typedef enum {
     HTML_PAGE_CFG_WIFI = 1,
     HTML_PAGE_CFG_MQTT,
@@ -59,6 +78,17 @@ enum {
 extern const char *PAGES_URI[PAGE_URI_MAX];
 extern user_ctx_t PAGES_HANDLER[PAGE_URI_MAX];
 
+#define MENU_ITEM_COUNT 5
+#define MENU_ITEM_LENGTH 10
+
+extern uint8_t menu_items_count;
+
+typedef struct http_menu_item {
+  char uri[MENU_ITEM_LENGTH];
+  char name[MENU_ITEM_LENGTH];
+} http_menu_item_t;
+
+extern http_menu_item_t *http_menu;
 
     //extern const unsigned char device_png_start[] asm("_binary_device_png_start");
     //extern const unsigned char device_png_end[]   asm("_binary_device_png_end");

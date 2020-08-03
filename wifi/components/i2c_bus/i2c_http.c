@@ -37,6 +37,15 @@ void i2c_print_options3(char *data)
     strcpy(data+strlen(data), "<br>i2c print options3");
 }
 
+
+void i2c_register_http_menu()
+{
+    register_http_page_menu( "/i2c", "I2C");
+    register_http_page_menu( "/mcp23017", "MCP23017");
+    register_http_page_menu( "/pcf8574", "PCF8574");
+    register_http_page_menu( "/pcf8583", "PCF8583");
+}
+
 void i2c_register_http_print_data() 
 {
 

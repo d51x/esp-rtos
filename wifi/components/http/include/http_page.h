@@ -42,7 +42,6 @@ typedef struct {
 
 
 
-
 void show_page_main(const char *title, char *data);
 void show_page_setup(const char *title, char *data);
 void show_page_config(const char *title, char *data);
@@ -54,7 +53,8 @@ void show_custom_page(const char *title, char *data);
 void page_generate_html_start(char *buf, const char *title);
 void page_generate_html_end(char *buf);
 void page_generate_top_header(char *buf);
-void page_generate_menu(char *buf);
+void page_show_menu(char *buf);
+void page_initialize_menu();
 
 void page_generate_data(char *buf, const char *data);
 
@@ -83,6 +83,8 @@ void set_redirect_header(uint8_t time, const char *uri, char *data);
 // index - очередность вывода
 // fn_cb - функция коллбека для формирования буфера
 esp_err_t register_print_page_block(const char *uri, uint8_t index, func_http_print_page_block fn_cb);
+
+// TODO: еще надо функцию регистрации callback'a обработчика, чтобы обработку wifi_param, mqtt_param вынести в соответствующие модули
 
 esp_err_t register_http_page_menu(const char *uri, const char *name);
 

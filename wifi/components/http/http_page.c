@@ -17,6 +17,34 @@ void httpd_resp_sendstr_chunk(httpd_req_t *req, const char *buf){
 
 
 
+void page_initialize_menu()
+{
+    http_menu = (http_menu_item_t *)calloc(MENU_ITEM_COUNT, sizeof(http_menu_item_t));
+    
+    strcpy(http_menu[0].uri,    HTTP_URI_ROOT   );
+    strcpy(http_menu[0].name,   HTTP_STR_MAIN   );    
+    
+    strcpy(http_menu[1].uri,    HTTP_URI_SETUP  );
+    strcpy(http_menu[1].name,   HTTP_STR_SETUP  );
+    
+    strcpy(http_menu[2].uri,    HTTP_URI_TOOLS  );
+    strcpy(http_menu[2].name,   HTTP_STR_TOOLS  );   
+
+    strcpy(http_menu[3].uri,    HTTP_URI_UPDATE );
+    strcpy(http_menu[3].name,   HTTP_STR_UPDATE );
+
+    strcpy(http_menu[4].uri,    HTTP_URI_DEBUG  );
+    strcpy(http_menu[4].name,   HTTP_STR_DEBUG  );
+/*
+{
+    { HTTP_URI_ROOT,   HTTP_STR_MAIN   },
+    { HTTP_URI_SETUP,  HTTP_STR_SETUP  },
+    { HTTP_URI_TOOLS,  HTTP_STR_TOOLS  },
+    { HTTP_URI_UPDATE, HTTP_STR_UPDATE },
+    { HTTP_URI_DEBUG,  HTTP_STR_DEBUG  }
+};
+*/
+}
 
 void page_generate_html_start(char *buf, const char *title)
 {
@@ -41,8 +69,8 @@ void page_generate_top_header(char *buf)
     char * uptime = malloc(20);
     get_uptime(uptime);
 
-    char *menu = malloc((strlen(html_page_menu_item) + 10 + 10)* MENU_ITEM_COUNT + 1);
-    page_generate_menu(menu);
+    char *menu = malloc((strlen(html_page_menu_item) + 10 + 10)* menu_items_count + 1);
+    page_show_menu(menu);
 
     sprintf(buf + strlen(buf), html_page_top_header
                 , wifi_cfg->hostname  // hostname
@@ -67,13 +95,14 @@ void page_generate_data(char *buf, const char *data)
 
 
 
-void page_generate_menu(char *buf)
+void page_show_menu(char *buf)
 {
     // TODO add callback to add custom menu item from component
     uint8_t i;
     strcpy(buf, "");
-    for ( i = 0; i < MENU_ITEM_COUNT; i++) {
-        sprintf(buf+strlen(buf), html_page_menu_item, menu_uri[i], menu_names[i]);
+    for ( i = 0; i < menu_items_count; i++) {
+        //sprintf(buf+strlen(buf), html_page_menu_item, menu_uri[i], menu_names[i]);
+        sprintf(buf+strlen(buf), html_page_menu_item, http_menu[i].uri, http_menu[i].name);
     }
 }
 
@@ -355,5 +384,17 @@ esp_err_t register_print_page_block(const char *uri, uint8_t index, func_http_pr
 
 esp_err_t register_http_page_menu(const char *uri, const char *name)
 {
-    
+    //menu_uri
+    for (uint8_t i = 0; i < menu_items_count; i++)
+    {
+        if ( strcmp( http_menu[i].uri, uri ) == 0 ) {
+            return ESP_FAIL;
+        }
+    }
+
+    menu_items_count++;
+    http_menu = (http_menu_item_t *) realloc( http_menu, menu_items_count * sizeof(http_menu_item_t));
+    strcpy(http_menu[menu_items_count - 1].uri, uri);
+    strcpy(http_menu[menu_items_count - 1].name, name);
+    return ESP_OK;
 }

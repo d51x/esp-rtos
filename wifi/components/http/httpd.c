@@ -122,6 +122,7 @@ httpd_handle_t webserver_start(void){
 
         register_uri_handlers(_server);
         //ESP_LOGI(TAG, "******** start_webserver _server is %s", (_server != NULL) ? "not NULL" : "NULL");
+        page_initialize_menu();
         return _server;
     }
 
