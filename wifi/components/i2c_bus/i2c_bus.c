@@ -107,3 +107,4 @@ uint8_t i2c_bus_scan(i2c_bus_handle_t bus, uint8_t* devices)
     }
     return devices_found;
 }
+
