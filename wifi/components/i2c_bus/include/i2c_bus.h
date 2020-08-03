@@ -1,6 +1,7 @@
 #ifndef _I2C_BUS_H_
 #define _I2C_BUS_H_
 #include "driver/i2c.h"
+#include "nvsparam.h"
 
 //#ifdef __cplusplus
 //extern "C"
@@ -51,6 +52,8 @@ portBASE_TYPE ticks_to_wait);
 uint8_t i2c_bus_scan(i2c_bus_handle_t bus, uint8_t* devices);
 i2c_bus_handle_t i2c_bus_init();
 
+void i2c_load_cfg(i2c_config_t *cfg);
+void i2c_save_cfg(const i2c_config_t *cfg);
 
 //#ifdef __cplusplus
 /**

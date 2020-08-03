@@ -16,6 +16,13 @@
 #include "driver/i2c.h"
 #include "i2c_bus.h"
 
+
+#define PARAM_I2C "i2c"
+#define PARAM_I2C_SDA "sda"
+#define PARAM_I2C_SCL "scl"
+#define I2C_SDA_DEFAULT 2
+#define I2C_SCL_DEFAULT 0
+
 typedef struct {
     i2c_config_t i2c_conf;   /*!<I2C bus parameters*/
     i2c_port_t i2c_port;     /*!<I2C port number */
@@ -28,6 +35,24 @@ static const char* TAG = "i2c_bus";
     }
 #define ESP_INTR_FLG_DEFAULT  (0)
 #define ESP_I2C_MASTER_BUF_LEN  (0)
+
+
+void i2c_load_cfg(i2c_config_t *cfg)
+{
+    if ( nvs_param_u8_load(PARAM_I2C, PARAM_I2C_SDA, &cfg->sda_io_num) != ESP_OK ) {
+        cfg->sda_io_num = I2C_SDA_DEFAULT;
+    }
+
+    if ( nvs_param_u8_load(PARAM_I2C, PARAM_I2C_SCL, &cfg->scl_io_num) != ESP_OK ) {
+        cfg->scl_io_num = I2C_SCL_DEFAULT;
+    }
+}
+
+void i2c_save_cfg(const i2c_config_t *cfg)
+{
+    nvs_param_u8_save(PARAM_I2C, PARAM_I2C_SDA, cfg->sda_io_num);
+    nvs_param_u8_save(PARAM_I2C, PARAM_I2C_SCL, cfg->scl_io_num);
+}
 
 i2c_bus_handle_t i2c_bus_create(i2c_port_t port, i2c_config_t* conf)
 {
