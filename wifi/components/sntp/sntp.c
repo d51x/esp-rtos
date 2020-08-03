@@ -1,10 +1,23 @@
 
 #include "sntp.h"
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/event_groups.h"
 
-#ifdef DEBUG
+#include "lwip/apps/sntp.h"
+#include "wifi.h"
+#include "utils.h"
+
+#define NTP_TASK_DELAY 5*1000*60  // 5 min
+#define NTP_TASK_TIMEOUT 5000  //msec
+#define NTP_TASK_PRIORITY 13
+
+//#ifdef DEBUG
 static const char *TAG = "SNTP";
-#endif
+//#endif
+
+void sntp_task(void *arg);
+void obtain_time(void);
 
 void vSntpTaskCb(void *arg){
 
@@ -54,5 +67,6 @@ void obtain_time(void)
 }
 
 void sntp_start(){
-    xTaskCreate(vSntpTaskCb, "vSntpTaskCb", 1024, NULL, 10, NULL);
+    // from sntp example: SNTP service uses LwIP, please allocate large stack space.
+    xTaskCreate(vSntpTaskCb, "vSntpTaskCb", 2048, NULL, NTP_TASK_PRIORITY, NULL);
 }
