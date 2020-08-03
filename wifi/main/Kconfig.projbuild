@@ -1,0 +1,123 @@
+# put here your custom config value
+menu "Project config"
+
+        config FW_VER
+            string "project version"
+            default "1.0"
+            help
+                Project version
+
+
+    menu "WIFI Config"
+        config ESP_WIFI_SSID
+            string "WiFi SSID"
+            default "myssid"
+            help
+            SSID (network name) for the example to connect to.
+
+        config ESP_WIFI_PASSWORD
+            string "WiFi Password"
+            default "mypassword"
+            help
+            WiFi password (WPA or WPA2) for the example to use.
+
+        config WIFI_AP_PASSWORD
+            string "WiFi AP Password"
+            default ""
+            help
+                WiFi password used in recovery network
+
+        config ESP_MAXIMUM_RETRY
+            int "Maximum retry"
+            default 5
+            help
+                Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
+                    
+    endmenu
+
+
+    menu "Debug options"
+        config COMPONENT_DEBUG
+            bool "Enable Debug Component"
+            default false
+            help
+                Active the debug control component / tasks.
+
+            config DEBUG_PRINT_TASK_INFO
+                bool "Print task info"
+                default n
+                depends on COMPONENT_DEBUG
+                help
+                    Enable this option to print task info - name, state, prio, free stack size
+    endmenu
+
+    menu "MQTT Component"        
+        config MQTT_URL
+            string "MQTT URL"
+            default "mqtt://192.168.2.63:1883"
+            help
+                URL of the broker to connect to
+
+         config MQTT_LOGIN
+            string "MQTT username"
+            default ""
+            help
+                MQTT username for login
+
+         config MQTT_PASS
+            string "MQTT password"
+            default ""
+            help
+                MQTT password for login
+
+        config MQTT_TOPIC_BASE
+            string "MQTT Base for default topic"
+            default "home/"
+            help
+                Base for default topic, which is concatenate with ESP Name (hostname). It is important
+                to remember to put a slash (/) at the end.
+                    
+        config MQTT_KEEPALIVE_TIMEOUT
+            int "MQTT Keep Alive (ses)"
+            default 60
+            help
+                Number of miliseconds to send keep alive
+
+        config MQTT_TASK_PRIORITY
+            int "Task priority"
+            default 12
+            help
+                MQTT Task priority (default 12)                
+    endmenu    
+
+    menu "I2C Component"        
+        config COMPONENT_I2C
+            bool "Enable I2C driver"
+            default y
+            help
+                Enable I2C driver
+
+        config COMPONENT_I2C_GPIO_SDA
+            int "SDA GPIO"
+            default 2
+            depends on COMPONENT_I2C
+            help
+                SDA Gpio number
+
+        config COMPONENT_I2C_GPIO_SCL
+            int "SCL GPIO"
+            default 0
+            depends on COMPONENT_I2C
+            help
+                SCL Gpio number
+
+        config COMPONENT_I2C_SCANNER
+            bool "Enable I2C scanner"
+            default y
+            depends on COMPONENT_I2C
+            help
+                Enable I2C scanner
+
+    endmenu
+
+endmenu

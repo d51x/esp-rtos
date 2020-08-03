@@ -11,23 +11,15 @@ static const char *TAG = "HTTPD";
 
 
 void register_uri_handlers(httpd_handle_t _server) {
-
-    //add_uri_get_handler( _server, "/", main_get_handler); 
-    add_uri_get_handler( _server, PAGES_URI[PAGE_URI_ROOT], main_get_handler, NULL); 
     
-    //add_uri_get_handler( _server, "/setup", setup_get_handler); 
-    add_uri_get_handler( _server, PAGES_URI[PAGE_URI_SETUP], setup_get_handler, NULL); 
-
-    //add_uri_get_handler( _server, "/debug", debug_get_handler); 
-    add_uri_get_handler( _server, PAGES_URI[PAGE_URI_DEBUG], debug_get_handler, NULL); 
-
-    //add_uri_get_handler( _server, "/tools", tools_get_handler); 
-    add_uri_get_handler( _server, PAGES_URI[PAGE_URI_TOOLS], tools_get_handler, NULL); 
-    
-    //add_uri_get_handler( _server, "/update", update_get_handler); 
-    add_uri_get_handler( _server, PAGES_URI[PAGE_URI_OTA], update_get_handler, NULL); 
+    add_uri_get_handler( _server, PAGES_URI[PAGE_URI_ROOT], main_get_handler, &PAGES_HANDLER[PAGE_URI_ROOT]); 
+    add_uri_get_handler( _server, PAGES_URI[PAGE_URI_SETUP], setup_get_handler, &PAGES_HANDLER[PAGE_URI_SETUP]); 
+    add_uri_get_handler( _server, PAGES_URI[PAGE_URI_DEBUG], debug_get_handler, &PAGES_HANDLER[PAGE_URI_DEBUG]); 
+    add_uri_get_handler( _server, PAGES_URI[PAGE_URI_TOOLS], tools_get_handler, &PAGES_HANDLER[PAGE_URI_TOOLS]); 
+    add_uri_get_handler( _server, PAGES_URI[PAGE_URI_OTA], update_get_handler, &PAGES_HANDLER[PAGE_URI_OTA]); 
     add_uri_post_handler( _server, "/update", update_post_handler); 
 
+    
     //add_uri_get_handler( _server, "/reboot", reboot_get_handler); 
     add_uri_get_handler( _server, PAGES_URI[PAGE_URI_REBOOT], reboot_get_handler, NULL); 
 
@@ -40,9 +32,7 @@ void register_uri_handlers(httpd_handle_t _server) {
     //add_uri_get_handler( _server, "/ajax.js", main_ajax_get_handler); 
     add_uri_get_handler( _server, PAGES_URI[PAGE_URI_AJAX], main_ajax_get_handler, NULL); 
 
-    #ifdef CONFIG_COMPONENT_I2C_SCANNER
-    add_uri_get_handler( _server, "/i2cscan", i2cscan_get_handler, NULL); 
-    #endif
+
     
     //add_uri_get_handler( _server, "/device.png", icons_get_handler); 
     //add_uri_get_handler( _server, "/wifi.png", icons_get_handler); 
@@ -50,6 +40,8 @@ void register_uri_handlers(httpd_handle_t _server) {
     //add_uri_get_handler( _server, "/uptime.png", icons_get_handler); 
     add_uri_get_handler( _server, "/menu.png", icons_get_handler, NULL); 
     add_uri_get_handler( _server, "/menu2.png", icons_get_handler, NULL); 
+
+    
 
 /*
     for (int i = 0; i < uri_handlers_no; i++) {
@@ -62,20 +54,29 @@ void register_uri_handlers(httpd_handle_t _server) {
 }
 
 void add_uri_get_handler(httpd_handle_t _server, const char *uri, httpd_uri_func func, void *ctx) {
+
+    user_ctx_t *_ctx = (user_ctx_t *) ctx;
+
     httpd_uri_t my_uri;
       my_uri.uri      = strdup(uri);
       my_uri.method   = HTTP_GET;
       my_uri.handler  = func;
+
+
+    if ( ctx != NULL ) 
+    {
       my_uri.user_ctx = ctx;
-    // ESP_LOGI(TAG, __func__);
-    // ESP_LOGI(TAG, "my_uri.handler addr: %p", my_uri.handler);
-    // ESP_LOGI(TAG, "_server is %s", (_server != NULL) ? "not NULL" : "NULL");
+    }
+
     esp_err_t err = httpd_register_uri_handler(_server, &my_uri);
-    // if ( err == ESP_OK ) {
-    //     ESP_LOGI(TAG, "%s registered successfully",my_uri.uri );
-    // } else {
-    //     ESP_LOGI(TAG, "%s not registered. Error %s", my_uri.uri, esp_err_to_name(err) );
-    // }
+    
+    /*
+     if ( err == ESP_OK ) {
+         ESP_LOGI(TAG, "%s registered successfully",my_uri.uri );
+     } else {
+         ESP_LOGI(TAG, "%s not registered. Error %s", my_uri.uri, esp_err_to_name(err) );
+     }
+     */
 }
 
 

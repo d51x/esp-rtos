@@ -1,5 +1,6 @@
 
 #include "http_handlers.h"
+#include "http_page.h"
 
 /*
 pages:
@@ -24,9 +25,27 @@ const char *PAGES_URI[PAGE_URI_MAX] = {
     "/reboot",              // PAGE_URI_REBOOT
     "/main.css",            // PAGE_URI_CSS
     "/ajax.js",             // PAGE_URI_AJAX
-    "/favicon.ico"         // PAGE_URI_FAVICO
+    "/favicon.ico",         // PAGE_URI_FAVICO
+    "/menu.png",            // PAGE_URI_ICON_MENU
+    "/menu2.png"            // PAGE_URI_ICON_MENU2
     };
-    
+
+
+
+user_ctx_t PAGES_HANDLER[PAGE_URI_MAX] = {
+    {"Main",    true,   show_page_main,       NULL},
+    {"Setup",   true,   show_page_setup,      NULL},
+    {"Debug",   true,   show_page_debug,      NULL},
+    {"Tools",   true,   show_page_tools,      NULL},
+    {"OTA",     true,   show_page_update,     NULL},
+    {"Reboot",  false,  reboot_get_handler,     NULL},
+    {"",        false,  NULL,   NULL},
+    {"",        false,  NULL,  NULL},
+    {"",        false,  NULL,    NULL},
+    {"",        false,  NULL,      NULL},
+    {"",        false,  NULL,      NULL}
+};
+
 esp_err_t main_get_handler(httpd_req_t *req) {
     
 
@@ -35,7 +54,7 @@ esp_err_t main_get_handler(httpd_req_t *req) {
     //get_main_page_data(page);
     strncpy(page, "Hello", PAGE_MAIN_BUFFER_SIZE);
     //show_page_main( page );
-    show_http_page( req->uri, "Main", page);
+    show_http_page( req, page);
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
     httpd_resp_send(req, page, strlen(page));
 
@@ -58,7 +77,7 @@ esp_err_t setup_get_handler(httpd_req_t *req){
 	  
   strncpy(page, "Setup", PAGE_DEFAULT_BUFFER_SIZE);
   //show_page_setup( page );
-  show_http_page( req->uri, "Setup", page);
+  show_http_page( req, page);
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
   httpd_resp_send(req, page, strlen(page));
   return ESP_OK;
@@ -152,7 +171,7 @@ esp_err_t config_get_handler(httpd_req_t *req){
 	// show page
   	strncpy(page, "Config", PAGE_DEFAULT_BUFFER_SIZE);
   	//show_page_config( page );
-    show_http_page( req->uri, "Config", page);
+    show_http_page( req, page);
   	httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
   	httpd_resp_send(req, page, strlen(page));
   	return ESP_OK;
@@ -162,7 +181,7 @@ esp_err_t tools_get_handler(httpd_req_t *req){
   char page[PAGE_DEFAULT_BUFFER_SIZE];  
   strncpy(page, "Tools", PAGE_DEFAULT_BUFFER_SIZE);
   //show_page_tools( page );
-  show_http_page( req->uri, "Tools", page);
+  show_http_page( req, page);
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
   httpd_resp_send(req, page, strlen(page));
   return ESP_OK;
@@ -172,7 +191,7 @@ esp_err_t update_get_handler(httpd_req_t *req){
   char page[PAGE_DEFAULT_BUFFER_SIZE];  
   strncpy(page, "OTA", PAGE_DEFAULT_BUFFER_SIZE);
   //show_page_update( page );
-  show_http_page( req->uri, "Update with OTA", page);
+  show_http_page( req, page);
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
   httpd_resp_send(req, page, strlen(page));
   return ESP_OK;
@@ -215,7 +234,7 @@ esp_err_t debug_get_handler(httpd_req_t *req){
   char page[PAGE_DEFAULT_BUFFER_SIZE];  
   strncpy(page, "Debug", PAGE_DEFAULT_BUFFER_SIZE);
   //show_page_debug( page );
-    show_http_page( req->uri, "Debug", page);
+    show_http_page( req, page);
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
   httpd_resp_send(req, page, strlen(page));
   return ESP_OK;
@@ -308,40 +327,6 @@ esp_err_t main_ajax_get_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-#ifdef CONFIG_COMPONENT_I2C_SCANNER
-esp_err_t i2cscan_get_handler(httpd_req_t *req)
-{
-	uint8_t found = 0;
-	
-    i2c_bus_handle_t bus_handle = i2c_bus_init();
-		char page[512] = "";        
-        
-
-    uint8_t *devices = malloc(128);
-    uint8_t count = 0;
-    count = i2c_bus_scan(bus_handle, devices);
-
-    if ( count == 0) {
-        sprintf(page + strlen(page), "Устройства не найдены");
-    }
-
-    for ( uint8_t i = 0; i<count;i++) {
-            ESP_LOGI(TAG, "-> found device %02d with address 0x%02x", 
-                    i+1, 
-                    devices[i]);
-        sprintf(page + strlen(page), "%d: 0x%02x<br>", i+1, devices[i]);
-    }
-
-    free(devices);
-    devices = NULL;
-
-   
-    httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
-		httpd_resp_send(req, page, strlen(page)); 
-     
-    return ESP_OK;
-}
-#endif
 
 // TODO show custom page handler from component
-//show_http_page( req->uri, "Tools", page);
+//show_http_page( req, page);

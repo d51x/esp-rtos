@@ -31,31 +31,22 @@ void app_main(void)
     
     wifi_init();
 
-    sntp_start();
-    
-        mqtt_init();
-        mqtt_set_device_name(wifi_cfg->hostname);
-
-        mqtt_add_periodic_publish_callback( "test1", test1);
-        mqtt_add_periodic_publish_callback( "test2", test2);
-
-        mqtt_add_receive_callback("recv1", test_recv1);
-        mqtt_add_receive_callback("recv2", test_recv2);
-
-    
-        
+    //sntp_start();
     
     webserver_init(&http_server);
 
+    
+    i2c_register_http_handler(http_server);
+    i2c_register_http_print_data();
 
-    ESP_LOGI(TAG, "i2c_http_register_main_page_block addr: %p", i2c_http_register_main_page_block);
-    register_print_page_block( PAGES_URI[ PAGE_URI_ROOT], 3, i2c_http_register_main_page_block );
+       // mqtt_init();
+       // mqtt_set_device_name(wifi_cfg->hostname);
 
-    ESP_LOGI(TAG, "i2c_http_register_main_page_block addr: %p", i2c_http_register_main_page_block2);
-    register_print_page_block( PAGES_URI[ PAGE_URI_ROOT], 1, i2c_http_register_main_page_block2 );
+       // mqtt_add_periodic_publish_callback( "test1", test1);
+       // mqtt_add_periodic_publish_callback( "test2", test2);
 
-    ESP_LOGI(TAG, "i2c_http_register_main_page_block addr: %p", i2c_http_register_main_page_block3);
-    register_print_page_block( PAGES_URI[ PAGE_URI_TOOLS], 2, i2c_http_register_main_page_block3 );
+       // mqtt_add_receive_callback("recv1", test_recv1);
+       // mqtt_add_receive_callback("recv2", test_recv2);
 
     while (true) {
         

@@ -15,9 +15,6 @@
 
 #include "mqtt_cl.h"
 
-#ifdef CONFIG_COMPONENT_I2C
-#include "i2c_bus.h"
-#endif
 
 /*
 pages:
@@ -35,6 +32,15 @@ typedef enum {
     
 } html_page_cfg_num_t;
 
+typedef void (* func_http_show_page)(const char *t, char *d); 
+
+typedef struct user_ctx {
+    char title[20];
+    uint8_t show;
+    func_http_show_page fn;
+    void *args;
+} user_ctx_t;
+
 enum {
     PAGE_URI_ROOT = 0,
     PAGE_URI_SETUP,
@@ -45,10 +51,13 @@ enum {
     PAGE_URI_CSS,
     PAGE_URI_AJAX,
     PAGE_URI_FAVICO,
+    PAGE_URI_ICON_MENU,
+    PAGE_URI_ICON_MENU2,
     PAGE_URI_MAX
 } pages_uri_indext;
 
 extern const char *PAGES_URI[PAGE_URI_MAX];
+extern user_ctx_t PAGES_HANDLER[PAGE_URI_MAX];
 
 
     //extern const unsigned char device_png_start[] asm("_binary_device_png_start");
@@ -82,9 +91,7 @@ esp_err_t reboot_get_handler(httpd_req_t *req);
 esp_err_t favicon_get_handler(httpd_req_t *req);
 esp_err_t icons_get_handler(httpd_req_t *req);
 
-#ifdef CONFIG_COMPONENT_I2C_SCANNER
-esp_err_t i2cscan_get_handler(httpd_req_t *req);
-#endif
+
 
 /*
 esp_err_t icon_device_get_handler(httpd_req_t *req);

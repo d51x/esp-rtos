@@ -32,6 +32,7 @@
 
 typedef void (* func_http_print_page_block)(const char *data);  
 
+
 typedef struct {
     const char uri[HTTPD_MAX_URI_LEN + 1];
     uint8_t index;
@@ -39,6 +40,17 @@ typedef struct {
 } http_print_page_block_t;
 
 
+
+
+
+void show_page_main(const char *title, char *data);
+void show_page_setup(const char *title, char *data);
+void show_page_config(const char *title, char *data);
+void show_page_tools(const char *title, char *data);
+void show_page_update(const char *title, char *data);
+void show_page_debug(const char *title, char *data);
+
+void show_custom_page(const char *title, char *data);
 void page_generate_html_start(char *buf, const char *title);
 void page_generate_html_end(char *buf);
 void page_generate_top_header(char *buf);
@@ -50,7 +62,7 @@ void page_generate_data(char *buf, const char *data);
 
 
 
-void show_http_page(const char* uri, const char *title, char *data);
+void show_http_page(httpd_req_t *req, char *data);
 
 
 
@@ -72,5 +84,6 @@ void set_redirect_header(uint8_t time, const char *uri, char *data);
 // fn_cb - функция коллбека для формирования буфера
 esp_err_t register_print_page_block(const char *uri, uint8_t index, func_http_print_page_block fn_cb);
 
+esp_err_t register_http_page_menu(const char *uri, const char *name);
 
 #endif 

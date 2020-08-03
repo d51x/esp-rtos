@@ -96,23 +96,5 @@ const char *html_page_reboot_button_block = "<div class='group rnd'><div class='
                                             "<button id='reboot' class='button off rht' onclick='reboot()'>Перезагрузить</button>"
                                             "<div id='rbt'>Rebooting... Please, wait!</div>"
                                             "</div></div>";     
-#ifdef CONFIG_COMPONENT_I2C
-const char *html_page_tools_i2c = "<div class='group rnd'>"
-                                    "<h4 class='brd-btm'>I2C Settings:</h4>"
-                                    "<form method='GET'>"
-                                      "<div class='lf3'><p><label class='lf'>SDA: </label><input size='20' name='sda' class='edit rh' value='%d' /></p>"
-                                      "<p><label class='lf'>SCL: </label><input size='20' name='scl' class='edit rh' value='%d' /></p>"
-                                      "</div>"
-                                      "<div class='rh2'><p><input type='hidden' name='st' value='i2c'></p>"
-                                      "<p><input type='submit' value='Сохранить' class='button norm rht'></p>"
-                                      
-                                      "</div>"
-                                    "</form>"
-                                    #ifdef CONFIG_COMPONENT_I2C_SCANNER
-                                    "<button id='i2cscan' class='button off rht' onclick='i2cscan()'>Сканировать</button>"
-                                    "<div id='i2cres'></div>"
-                                    #endif
-                                  "</div>";                                                                                                            
-#endif
 
 #endif 
