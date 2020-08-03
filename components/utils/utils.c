@@ -3,24 +3,24 @@
 
 
 static const char *TAG = "utils";
-/*
-uint16_t get_vdd33() {
+
+uint16_t get_adc() {
     uint16_t adc = 0;
     adc_config_t adc_cfg;
-    adc_cfg.mode = ADC_READ_VDD_MODE;
+    adc_cfg.mode = ADC_READ_TOUT_MODE;
     adc_cfg.clk_div = 8;
     if ( adc_init(&adc_cfg) == ESP_OK ) {
         if ( adc_read(&adc) == ESP_OK ) {
         } else {
-            ESP_LOGI(TAG_UTILS, "FAIL: adc_read error\n"); 
+            ESP_LOGE(TAG, "FAIL: adc_read error\n"); 
         }
         adc_deinit();
     } else {
-       ESP_LOGI(TAG_UTILS, "FAIL: adc_init error\n"); 
+       ESP_LOGE(TAG, "FAIL: adc_init error\n"); 
     }
     return adc;
 }
-*/
+
 uint32_t get_chip_id(uint8_t *mac){
  return mac[5] + mac[4]*256 + mac[3]*256*256;
 }
@@ -147,13 +147,37 @@ void get_localtime(char* buf){
     //return buf;
 }
 
-char* set_hostname(char *_hostname){
-    if ( _hostname == NULL || strlen(_hostname) == 0 ) {
-        // default name like "ESP_XXXXXX"
-        snprintf(hostname, TCPIP_HOSTNAME_MAX_SIZE, "ESP_%02X%02X%02X", wifi_info.mac[3], wifi_info.mac[4], wifi_info.mac[5]);
-        return hostname;
-    } else {
-        return _hostname;
+uint32_t get_time(char* f){
+    time_t now;
+    struct tm timeinfo;
+    setenv("TZ", "UTC-3", 1);
+    tzset();    
+    time(&now);
+    localtime_r(&now, &timeinfo);
+
+    if ( strcmp(f, "hour") == ESP_OK ) 
+    {
+        return timeinfo.tm_hour;
+    } 
+    else if ( strcmp(f, "min") == ESP_OK ) 
+    {
+        return timeinfo.tm_min;
+    } 
+    else if ( strcmp(f, "sec") == ESP_OK ) 
+    {
+        return timeinfo.tm_sec;
+    } 
+    else if ( strcmp(f, "min_of_day") == ESP_OK ) 
+    {
+        return timeinfo.tm_hour * 60 + timeinfo.tm_min;
+    }
+    else if ( strcmp(f, "sec_of_day") == ESP_OK ) 
+    {
+        return timeinfo.tm_hour * 3660 + timeinfo.tm_min * 60 + timeinfo.tm_sec;
+    }
+    else 
+    {
+        return now;
     }
 }
 
@@ -340,3 +364,76 @@ uint32_t uround(float val) {
     if ( val2 % 10 >=5 ) ++res;
     return res;
 }
+
+
+void print_task_stack_depth(const char *TAG, const char *func_name){
+    TaskStatus_t xTaskDetails;
+    // configUSE_TRACE_FACILITY  CONFIG_FREERTOS_USE_TRACE_FACILITY
+    // #if configGENERATE_RUN_TIME_STATS == 1  CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
+    vTaskGetInfo( NULL, &xTaskDetails, pdTRUE, eInvalid );
+    ESP_LOGI(TAG, "Function: %s, Task %s stack depth: %d", func_name, xTaskDetails.pcTaskName, xTaskDetails.usStackHighWaterMark);
+
+        //UBaseType_t uxHighWaterMark;
+        //uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+        //ESP_LOGI(TAG, "%s stack depth: %d", task_name, uxHighWaterMark);
+}
+
+#ifdef CONFIG_DEBUG_PRINT_TASK_INFO
+char get_task_state_name(eTaskState _t) 
+{
+    char res;
+    
+    if ( _t  == eRunning )      res = 'A';
+    else if ( _t == eReady )    res = 'R';
+    else if ( _t == eBlocked )  res = 'B';
+    else if ( _t == eSuspended) res = 'S';
+    else if ( _t == eDeleted)   res = 'D'; 
+    else res = 'U';
+    return res;
+}
+
+void print_tasks_info()
+{
+    UBaseType_t tasks_count = uxTaskGetNumberOfTasks();
+    ESP_LOGI(TAG, "------------------------------------");
+    //ESP_LOGI(TAG, "----- Tasks: %d", tasks_count);
+    ESP_LOGI(TAG, "----- Heap free size: %d", esp_get_free_heap_size());
+    //ESP_LOGI(TAG, "Minimal Heap free size: %d", xPortGetMinimumEverFreeHeapSize());
+
+    unsigned long _total_runtime, ulStatsAsPercentage;
+    TaskStatus_t *tasks_info = (TaskStatus_t *) calloc(tasks_count, sizeof(TaskStatus_t));
+    if ( tasks_info != NULL ) 
+    {
+       // configGENERATE_RUN_TIME_STATS 
+       tasks_count = uxTaskGetSystemState(tasks_info, tasks_count, &_total_runtime);
+       ESP_LOGI(TAG, "----- Tasks: %d", tasks_count);
+
+       _total_runtime /= 100UL; //percents
+        ESP_LOGI(TAG, "----- total runtime: %lu", _total_runtime);
+
+        //if ( _total_runtime > 0 )
+        //{
+           for ( uint8_t i = 0; i < tasks_count; i++)
+            {
+                
+                ulStatsAsPercentage = ( _total_runtime > 0 ) ?  tasks_info[ i ].ulRunTimeCounter / _total_runtime : 0;
+                
+                ESP_LOGI(TAG, "---- %02d Task name: %20s, state: %c, priority: %2d (%2d), free stack: %5d, run time: %10d\t\t, percent: %lu%%", 
+                            tasks_info[ i ].xTaskNumber,
+                            tasks_info[ i ].pcTaskName,
+                            get_task_state_name( tasks_info[ i ].eCurrentState ),
+                            tasks_info[ i ].uxCurrentPriority,
+                            tasks_info[ i ].uxBasePriority,
+                            tasks_info[ i ].usStackHighWaterMark,
+                            tasks_info[ i ].ulRunTimeCounter,
+                            ulStatsAsPercentage);
+                            
+
+           }
+        //}
+
+    }
+    ESP_LOGI(TAG, "------------------------------------\n");
+    free(tasks_info);
+}
+#endif
