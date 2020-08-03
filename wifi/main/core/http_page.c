@@ -4,6 +4,16 @@
 
 static const char *TAG = "WEB";
 
+static void show_page_main(const char *title, char *data);
+static void show_page_setup(const char *title, char *data);
+static void show_page_config(const char *title, char *data);
+static void show_page_tools(const char *title, char *data);
+static void show_page_update(const char *title, char *data);
+static void show_page_debug(const char *title, char *data);
+
+http_print_page_block_t *http_print_page_block = NULL;
+static uint8_t http_print_page_block_count = 0;
+
 void set_redirect_header(uint8_t time, const char *uri, char *data){
     sprintf(data, html_header_redirect, time, uri);
 }
@@ -66,6 +76,7 @@ void page_generate_data(char *buf, const char *data)
 
 void page_generate_menu(char *buf)
 {
+    // TODO add callback to add custom menu item from component
     uint8_t i;
     strcpy(buf, "");
     for ( i = 0; i < MENU_ITEM_COUNT; i++) {
@@ -82,15 +93,140 @@ void generate_page(char *page, const char *title, const char *data)
     page_generate_html_end(page);   
 }
 
-void show_page_main(char *data)
+void show_http_page(const char* uri, const char *title, char *data)
 {
-    char *page_data = malloc(PAGE_DEFAULT_BUFFER_SIZE);
-    strcpy(page_data, "Main page");
-    generate_page(data, "Main page", page_data);
-    free(page_data);
+        // TODO передавать http_req в функцию
+        // из http_req брать user_ctx
+        // в нем указаель на функцию отрисовки
+        // тайтл страницы
+    /*
+    for ( uint8_t i = 0; i < PAGE_URI_MAX; i++) 
+    {
+        if ( strcmp( uri, PAGES_URI[i] ) == 0)
+        {
+
+        }
+    }
+    */
+    char *_title = (char *) calloc(1, strlen(title) + strlen(wifi_cfg->hostname) + 3);
+    sprintf(_title, "%s: %s", wifi_cfg->hostname, title);
+    if ( strcmp(uri, PAGES_URI[ PAGE_URI_ROOT ] ) == 0 )
+    {
+        show_page_main(_title, data);
+    }
+    else if ( strcmp(uri, PAGES_URI[ PAGE_URI_SETUP ] ) == 0 )
+    {
+        show_page_setup(_title, data);
+    }
+    /*
+    else if ( strcmp(uri, PAGES_URI[ PAGE_URI_SETUP ] ) == 0 )
+    {
+        show_page_config(data);
+    }
+    */
+    else if ( strcmp( uri, PAGES_URI[ PAGE_URI_TOOLS] ) == 0 )
+    {
+        show_page_tools(_title, data);
+    }
+    else if ( strcmp( uri, PAGES_URI[ PAGE_URI_OTA ] ) == 0 )
+    {
+        show_page_update(_title, data);
+    }
+    else if ( strcmp( uri, PAGES_URI[ PAGE_URI_DEBUG ] ) == 0 )
+    {
+        show_page_debug(_title, data);
+    }
+    else if ( strcmp( uri, PAGES_URI[ PAGE_URI_REBOOT ] ) == 0 )
+    {
+        show_restart_page_data(data);
+    }
+    free( _title );
 }
 
-void show_page_setup(char *data)
+
+void print_page_block(const char *uri, char *data)
+{
+    //ESP_LOGI(TAG, " function %s started", __func__);
+
+    uint8_t (*indexes)[2] = NULL;
+    uint8_t found_cnt = 0;
+    uint8_t i = 0;
+
+    //ESP_LOGI(TAG, "find custom print page blocks for uri %s", uri);
+    //ESP_LOGI(TAG, "found_cnt %d", found_cnt);
+
+    for ( i = 0; i < http_print_page_block_count; i++) 
+    {
+        //ESP_LOGI(TAG, "compare block uri %s with page uri %s", http_print_page_block[i].uri, uri);
+        if (strcmp(http_print_page_block[i].uri, uri) == 0 && http_print_page_block[i].fn_print_block != NULL) 
+        {
+            //ESP_LOGI(TAG, "found block for uri %s with index %d (%d) and func addr %p", 
+            //http_print_page_block[i].uri, 
+            //http_print_page_block[i].index,
+            //i,
+            //http_print_page_block[i].fn_print_block);
+            found_cnt++;
+
+            //ESP_LOGI(TAG, "found_cnt %d", found_cnt);
+            indexes = (uint8_t *) realloc(indexes, found_cnt * 2 * sizeof(uint8_t));
+            indexes[found_cnt-1][0] =i;
+            indexes[found_cnt-1][1] =http_print_page_block[i].index;
+
+            //ESP_LOGI(TAG, "indexes[%d] = %d, %d", found_cnt-1, indexes[found_cnt-1][0], indexes[found_cnt-1][1]);
+        }
+    }  
+
+    // TODO sort indexes
+    if ( http_print_page_block_count > 1 && found_cnt > 1) {
+        for ( i = 0; i < http_print_page_block_count; i++)
+        {
+            for ( uint8_t j = i + 1; j < http_print_page_block_count; j++ )
+            {
+                if ( indexes[i][1] > indexes[j][1] )
+                {
+                    uint8_t t[2];
+                    memcpy(&t, indexes[i], 2*sizeof(uint8_t));
+                    memcpy(indexes[i], indexes[j], 2*sizeof(uint8_t));
+                    memcpy(indexes[j], t, 2*sizeof(uint8_t));
+                }
+            } 
+        }
+    }
+    //for ( i = 0; i < found_cnt; i++) {
+    //    ESP_LOGI(TAG, "indexes[%d] = %d, %d", i, indexes[i][0], indexes[i][1]);
+    //}
+    // print data
+    for ( i = 0; i < found_cnt; i++) 
+    {
+        uint8_t idx = indexes[i][0];
+        //ESP_LOGI(TAG, "print block with index %d (%d) func addr %p", idx, indexes[i][1], http_print_page_block[ idx ].fn_print_block);
+        if (strcmp(http_print_page_block[idx].uri, uri) == 0 && http_print_page_block[idx].fn_print_block != NULL) 
+        {
+            http_print_page_block[ idx ].fn_print_block(data);            
+        }
+
+    }
+
+    free(indexes);
+}
+
+void show_page_main(const char *title, char *data)
+{
+
+    char *page_data = malloc(PAGE_DEFAULT_BUFFER_SIZE);
+    strcpy(page_data, title);
+
+    print_page_block( PAGES_URI[ PAGE_URI_ROOT ], page_data);
+
+    generate_page(data, title, page_data);
+    free(page_data);
+
+    #ifdef CONFIG_CONPONENT_DEBUG
+        print_task_stack_depth(TAG, "main page");    
+    #endif
+}
+
+void show_page_setup(const char *title, char *data)
 {
     char *page_data = malloc(PAGE_DEFAULT_BUFFER_SIZE);
     //strcpy(page_data, "Setup");
@@ -110,47 +246,59 @@ void show_page_setup(char *data)
                        , mqtt_cfg->broker_url         // host
                        , mqtt_cfg->login         // login    
                        , mqtt_cfg->password         // password    
+                       , mqtt_cfg->base_topic         // base topic    
                        , mqtt_cfg->send_interval          // send interval
                        );
     free(mqtt_cfg);
-    
+
     sprintf( page_data + strlen(page_data), html_page_reboot_button_block);
-    generate_page(data, "Setup", page_data);
+    generate_page(data, title, page_data);
     free(page_data);
     
 }
 
-void show_page_config(char *data)
+void show_page_config(const char *title, char *data)
 {
     char *page_data = malloc(PAGE_DEFAULT_BUFFER_SIZE);
 
-    generate_page(data, "Config", page_data);
+    generate_page(data, title, page_data);
     free(page_data);
 }
 
-void show_page_tools(char *data)
+void show_page_tools(const char *title, char *data)
 {
     char *page_data = malloc(PAGE_DEFAULT_BUFFER_SIZE);
     /* зарегистрирровать callback отрисовки на странице */
     /* зарегистрировать callback обработки параметров */
+
+    #ifdef CONFIG_COMPONENT_I2C
     uint8_t sda = 2;
     uint8_t scl = 0;
     sprintf(page_data, html_page_tools_i2c, sda, scl);
-    generate_page(data, "Tools", page_data);
+    #endif
+    
+    print_page_block( PAGES_URI[ PAGE_URI_TOOLS ], page_data);
+
+    generate_page(data, title, page_data);
     free(page_data);
 }
 
-void show_page_update(char *data)
+void show_page_update(const char *title, char *data)
 {
     char *page_data = malloc(PAGE_DEFAULT_BUFFER_SIZE);
     strcpy(page_data, html_page_ota);
-    generate_page(data, "Update with OTA", page_data);
+    generate_page(data, title, page_data);
     free(page_data);
 }
 
-void show_page_debug(char *data)
+void show_page_debug(const char *title, char *data)
 {
-
+    char *page_data = malloc(PAGE_DEFAULT_BUFFER_SIZE);
+    
+    print_page_block( PAGES_URI[ PAGE_URI_DEBUG ], page_data);
+    
+    generate_page(data, title, page_data);
+    free(page_data);    
 }
 
 void show_restart_page_data(char *data)
@@ -163,4 +311,36 @@ void show_restarting_page_data(char *data)
 
 }
 
+esp_err_t register_print_page_block(const char *uri, uint8_t index, func_http_print_page_block fn_cb)
+{
+    ESP_LOGI(TAG, "function %s started", __func__);
 
+    ESP_LOGI(TAG, "printpage block count %d", http_print_page_block_count);
+
+    for ( uint8_t i = 0; i < http_print_page_block_count; i++) 
+    {
+        ESP_LOGI(TAG, "[%d] compare registered uri %s with page uri %s", i, http_print_page_block[i].uri, uri);
+        if (strcmp(http_print_page_block[i].uri, uri) == 0 && http_print_page_block[i].fn_print_block == fn_cb) 
+        {
+            ESP_LOGI(TAG, "[%d] found uri %s, return...", i, http_print_page_block[i].uri);
+            return ESP_FAIL;
+        }
+    }    
+
+    ESP_LOGI(TAG, "register new print page block");
+    
+    http_print_page_block_count++; // увеличим размер массива
+    ESP_LOGI(TAG, "printpage block count %d", http_print_page_block_count);
+
+    http_print_page_block = (http_print_page_block_t *) realloc(http_print_page_block, http_print_page_block_count * sizeof(http_print_page_block_t));
+    strcpy( http_print_page_block[ http_print_page_block_count - 1 ].uri, uri); 
+    http_print_page_block[ http_print_page_block_count - 1 ].index = index; 
+    http_print_page_block[ http_print_page_block_count - 1 ].fn_print_block = fn_cb;
+
+    ESP_LOGI(TAG, "registered printpage block %s\t\t%d\t\t%p", 
+            http_print_page_block[ http_print_page_block_count - 1 ].uri, 
+            http_print_page_block[ http_print_page_block_count - 1 ].index,
+            http_print_page_block[ http_print_page_block_count - 1 ].fn_print_block);
+
+    return ESP_OK;
+}

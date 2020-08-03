@@ -22,7 +22,7 @@
 #include "driver/adc.h"
 #include "nvs.h"
 
-#define FW_VER "1.4.3"
+#define FW_VER CONFIG_FW_VER //"1.4.3"
 
 
 #define IOT_CHECK(tag, a, ret)  if(!(a)) {                                             \
@@ -39,6 +39,7 @@
 #define millis() (unsigned long) (esp_timer_get_time() / 1000ULL)
 #define cur_sec() (uint32_t) (esp_timer_get_time() / 1000ULL / 1000U)
 #define IP_2_STR(a) ip4addr_ntoa(a)
+
 
 #define UPTIME2STR "%d days %02dh %02dm %02ds"
 #define UPTIMESTRLENMAX 20
@@ -121,5 +122,9 @@ uint32_t hex2int(char *hex);
 uint32_t uround(float);
 
 void print_task_stack_depth(const char *TAG, const char *task_name);
+
+#ifdef CONFIG_DEBUG_PRINT_TASK_INFO
+void print_tasks_info();
+#endif
 
 #endif /* __UTILS_H__ */

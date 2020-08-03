@@ -9,19 +9,40 @@ pages:
       setup - auth, wifi type and auth for sta 
 */
 
+
 static const char *TAG = "HTTPH";
 static void process_wifi_param(httpd_req_t *req);
+
 static void process_mqtt_param(httpd_req_t *req);
 
-
+const char *PAGES_URI[PAGE_URI_MAX] = { 
+    "/",                    // PAGE_URI_ROOT
+    "/setup",               // PAGE_URI_SETUP
+    "/debug",               // PAGE_URI_DEBUG
+    "/tools",               // PAGE_URI_TOOLS
+    "/update",              // PAGE_URI_OTA
+    "/reboot",              // PAGE_URI_REBOOT
+    "/main.css",            // PAGE_URI_CSS
+    "/ajax.js",             // PAGE_URI_AJAX
+    "/favicon.ico"         // PAGE_URI_FAVICO
+    };
+    
 esp_err_t main_get_handler(httpd_req_t *req) {
+    
+
     char page[PAGE_MAIN_BUFFER_SIZE];  
     // const char* resp_str = (const char*) req->user_ctx;
     //get_main_page_data(page);
     strncpy(page, "Hello", PAGE_MAIN_BUFFER_SIZE);
-    show_page_main( page );
+    //show_page_main( page );
+    show_http_page( req->uri, "Main", page);
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
     httpd_resp_send(req, page, strlen(page));
+
+    #ifdef CONFIG_COMPONENT_DEBUG
+        print_task_stack_depth(TAG, "httpd task");
+    #endif
+
     return ESP_OK;
 }
 
@@ -36,7 +57,8 @@ esp_err_t setup_get_handler(httpd_req_t *req){
 	}
 	  
   strncpy(page, "Setup", PAGE_DEFAULT_BUFFER_SIZE);
-  show_page_setup( page );
+  //show_page_setup( page );
+  show_http_page( req->uri, "Setup", page);
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
   httpd_resp_send(req, page, strlen(page));
   return ESP_OK;
@@ -55,6 +77,7 @@ void process_wifi_param(httpd_req_t *req)
  	if ( http_get_key_str(req, "hostname", param, sizeof(param)) == ESP_OK ) {
         strcpy(wifi_cfg->hostname, param);
         tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, wifi_cfg->hostname);
+        
         mqtt_set_device_name(wifi_cfg->hostname);
     }
 
@@ -74,6 +97,8 @@ void process_wifi_param(httpd_req_t *req)
 	wifi_cfg->first = 0;
 	wifi_cfg_save(wifi_cfg);
 }
+
+
 
 void process_mqtt_param(httpd_req_t *req)
 {
@@ -105,6 +130,10 @@ void process_mqtt_param(httpd_req_t *req)
         strcpy(mqtt_cfg->password, param);
     }
 
+    if ( http_get_key_str(req, "mqtt_base",  param, sizeof( param )) == ESP_OK ) {
+        url_decode(param, mqtt_cfg->base_topic);
+    }
+
     if ( http_get_key_str(req, "mqtt_sint",  param, sizeof( param )) == ESP_OK ) {
         mqtt_cfg->send_interval = atoi(param);
     }
@@ -114,6 +143,7 @@ void process_mqtt_param(httpd_req_t *req)
 	free(mqtt_cfg);
 }
 
+
 esp_err_t config_get_handler(httpd_req_t *req){
   char page[PAGE_DEFAULT_BUFFER_SIZE];  
 
@@ -121,7 +151,8 @@ esp_err_t config_get_handler(httpd_req_t *req){
 
 	// show page
   	strncpy(page, "Config", PAGE_DEFAULT_BUFFER_SIZE);
-  	show_page_config( page );
+  	//show_page_config( page );
+    show_http_page( req->uri, "Config", page);
   	httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
   	httpd_resp_send(req, page, strlen(page));
   	return ESP_OK;
@@ -130,7 +161,8 @@ esp_err_t config_get_handler(httpd_req_t *req){
 esp_err_t tools_get_handler(httpd_req_t *req){
   char page[PAGE_DEFAULT_BUFFER_SIZE];  
   strncpy(page, "Tools", PAGE_DEFAULT_BUFFER_SIZE);
-  show_page_tools( page );
+  //show_page_tools( page );
+  show_http_page( req->uri, "Tools", page);
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
   httpd_resp_send(req, page, strlen(page));
   return ESP_OK;
@@ -139,7 +171,8 @@ esp_err_t tools_get_handler(httpd_req_t *req){
 esp_err_t update_get_handler(httpd_req_t *req){
   char page[PAGE_DEFAULT_BUFFER_SIZE];  
   strncpy(page, "OTA", PAGE_DEFAULT_BUFFER_SIZE);
-  show_page_update( page );
+  //show_page_update( page );
+  show_http_page( req->uri, "Update with OTA", page);
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
   httpd_resp_send(req, page, strlen(page));
   return ESP_OK;
@@ -167,8 +200,10 @@ esp_err_t update_post_handler(httpd_req_t *req){
         //strcpy(page, "<head><meta http-equiv=\"refresh\" content=\"10; URL=/\" /></head>");
         
 
-        strcpy(page+strlen(page), "OTA upgrade failed...\n");        
-        strcpy(page+strlen(page), err_text);        
+        //strcpy(page+strlen(page), "OTA upgrade failed...\n");        
+        strcat(page, "OTA upgrade failed...\n");        
+        //strcpy(page+strlen(page), err_text);        
+        strcat(page, err_text);        
         httpd_resp_set_status(req, HTTPD_500);
     }
     
@@ -179,7 +214,8 @@ esp_err_t update_post_handler(httpd_req_t *req){
 esp_err_t debug_get_handler(httpd_req_t *req){
   char page[PAGE_DEFAULT_BUFFER_SIZE];  
   strncpy(page, "Debug", PAGE_DEFAULT_BUFFER_SIZE);
-  show_page_debug( page );
+  //show_page_debug( page );
+    show_http_page( req->uri, "Debug", page);
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
   httpd_resp_send(req, page, strlen(page));
   return ESP_OK;
@@ -272,6 +308,7 @@ esp_err_t main_ajax_get_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+#ifdef CONFIG_COMPONENT_I2C_SCANNER
 esp_err_t i2cscan_get_handler(httpd_req_t *req)
 {
 	uint8_t found = 0;
@@ -304,3 +341,7 @@ esp_err_t i2cscan_get_handler(httpd_req_t *req)
      
     return ESP_OK;
 }
+#endif
+
+// TODO show custom page handler from component
+//show_http_page( req->uri, "Tools", page);

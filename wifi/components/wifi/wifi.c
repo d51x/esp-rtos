@@ -18,19 +18,14 @@ TimerHandle_t xWiFiReconnectTimer;
 static void wifi_set_host_name(){
     const char **hostname = calloc(1, TCPIP_HOSTNAME_MAX_SIZE);
     tcpip_adapter_get_hostname(TCPIP_ADAPTER_IF_STA, hostname);
-    //ESP_LOGI(TAG, "netif hostname: %s", *hostname);
-    //ESP_LOGI(TAG, "cfg hostname: %s", wifi_cfg->hostname);
-
-    //ESP_LOGI(TAG, "check hostname");
+    
     if ( strcmp(wifi_cfg->hostname, "") == ESP_OK ) 
     {
         strcpy(wifi_cfg->hostname, *hostname);
-        //ESP_LOGI(TAG, "now wifi_cfg->hostname: %s", wifi_cfg->hostname);
     } else {
-        //ESP_LOGI(TAG, "set new hostname %s", wifi_cfg->hostname);
         if ( tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, (const char *)wifi_cfg->hostname) != ESP_OK )
         {
-            //ESP_LOGE(TAG, "fail to set new hostname %s", wifi_cfg->hostname);
+            ESP_LOGE(TAG, "fail to set new hostname %s", wifi_cfg->hostname);
         }
     }
     wifi_cfg->mode = WIFI_MODE_STA;
@@ -38,12 +33,12 @@ static void wifi_set_host_name(){
 }
 static void wifi_ap_set_ip()
 {
-    //ESP_LOGI(TAG, "******************** %s", __func__);
+    ESP_LOGD(TAG, "function %s started", __func__);
+    
     esp_err_t err = ESP_FAIL;
     if ( ESP_WIFI_AP_IP_ADDR_1 != 0 ) {
-        //tcpip_adapter_stop(TCPIP_ADAPTER_IF_AP);
         err = tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP);
-        //ESP_LOGI(TAG, "tcpip_adapter_dhcps_stop err: %s", esp_err_to_name(err));  
+        ESP_LOGD(TAG, "tcpip_adapter_dhcps_stop err: %s", esp_err_to_name(err));  
 
         tcpip_adapter_ip_info_t ip_info;
         memset(&ip_info, 0, sizeof(ip_info));
@@ -51,21 +46,19 @@ static void wifi_ap_set_ip()
         IP4_ADDR(&ip_info.netmask, 255, 255, 255, 0);
         IP4_ADDR(&ip_info.gw, ESP_WIFI_AP_IP_ADDR_1, ESP_WIFI_AP_IP_ADDR_2, ESP_WIFI_AP_IP_ADDR_3, ESP_WIFI_AP_IP_ADDR_4);
         
-        //uint8_t mac[6];    
-        //esp_wifi_get_mac(ESP_IF_WIFI_AP, mac);
         err = tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &ip_info);
-        //ESP_LOGI(TAG, "tcpip_adapter_set_ip_info err: %s", esp_err_to_name(err));  
-        //tcpip_adapter_start(TCPIP_ADAPTER_IF_AP, mac, &ip_info);      
+        ESP_LOGD(TAG, "tcpip_adapter_set_ip_info err: %s", esp_err_to_name(err));  
+
         err = tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP);
-        //ESP_LOGI(TAG, "tcpip_adapter_dhcps_start err: %s", esp_err_to_name(err));  
+        ESP_LOGD(TAG, "tcpip_adapter_dhcps_start err: %s", esp_err_to_name(err));  
     }
 
         err = tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_AP, ESP_WIFI_AP_SSID);
-        //ESP_LOGI(TAG, "tcpip_adapter_set_hostname err: %s", esp_err_to_name(err));     
+        ESP_LOGD(TAG, "tcpip_adapter_set_hostname err: %s", esp_err_to_name(err));     
 }
 
 static void wifi_connect(){
-    //ESP_LOGI(TAG, "******************** %s", __func__);
+    ESP_LOGD(TAG, "function %s started", __func__);
     wifi_set_host_name();
     esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
     esp_wifi_connect();
@@ -75,20 +68,23 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
 {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) 
     {
-        //ESP_LOGD(TAG, "WIFI_EVENT: STA_START");
+        ESP_LOGD(TAG, "WIFI_EVENT: STA_START");
         wifi_connect();
     } 
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) 
     {
-        //ESP_LOGD(TAG, "WIFI_EVENT: STA_DISCONNECTED");
+        ESP_LOGD(TAG, "WIFI_EVENT: STA_DISCONNECTED");
+        
         reconnect_count++;
-        //ESP_LOGD(TAG, "Reconnects: %d", reconnect_count);
+        ESP_LOGD(TAG, "Reconnects: %d", reconnect_count);
+        
         if (xWiFiReconnectTimer != NULL && xTimerIsTimerActive(xWiFiReconnectTimer) == pdFALSE ) 
         {
-            //ESP_LOGD(TAG, "Reconnect WiFi timer started");
+            ESP_LOGD(TAG, "Reconnect WiFi timer started");
             xTimerStart(xWiFiReconnectTimer, 0);
         }
         xEventGroupClearBits(xWiFiEventGroup, WIFI_CONNECTED_BIT);
+
         //TODO: start timer for 5 sec to trying connect
         //if (retry_num < ESP_MAXIMUM_RETRY) {
 //            wifi_connect();
@@ -101,45 +97,53 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
     } 
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_START) 
     {
-        //ESP_LOGI(TAG, "WIFI EVENT: AP_START");
+        ESP_LOGD(TAG, "WIFI EVENT: AP_START");
         wifi_ap_set_ip();
         
     }
+    /*
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STOP) 
     {
-        //ESP_LOGI(TAG, "WIFI EVENT: AP_STOP");
-    }    
+        //ESP_LOGD(TAG, "WIFI EVENT: AP_STOP");
+    } 
+    */   
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STACONNECTED)
     {
-        //ESP_LOGI(TAG, "WIFI EVENT: AP_STACONNECTED");
+        ESP_LOGD(TAG, "WIFI EVENT: AP_STACONNECTED");
+        
         wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
-        //ESP_LOGI(TAG, "station: "MACSTR" join, AID = %d", MAC2STR(event->mac), event->aid);        
-        // old example: ESP_LOGI(TAG, "station: "MACSTR" join, AID = %d", MAC2STR(event->event_info.sta_connected.mac), event->event_info.sta_connected.aid);
+        
+        ESP_LOGD(TAG, "station: "MACSTR" join, AID = %d", MAC2STR(event->mac), event->aid);        
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STADISCONNECTED)
     {
-        //ESP_LOGI(TAG, "WIFI_EVENT: AP_STADISCONNECTED");
+        ESP_LOGD(TAG, "WIFI_EVENT: AP_STADISCONNECTED");
+        
         wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
-        //ESP_LOGI(TAG, "station: "MACSTR" leave, AID = %d",MAC2STR(event->mac), event->aid);        
-        // old example: ESP_LOGI(TAG, "station:"MACSTR"leave, AID=%d", MAC2STR(event->event_info.sta_disconnected.mac), event->event_in);
+        
+        ESP_LOGD(TAG, "station: "MACSTR" leave, AID = %d",MAC2STR(event->mac), event->aid);        
+        
     }
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) 
     {
-        //ESP_LOGD(TAG, "IP_EVENT: STA_GOT_IP");
+        ESP_LOGD(TAG, "IP_EVENT: STA_GOT_IP");
         if (xWiFiReconnectTimer != NULL && xTimerIsTimerActive(xWiFiReconnectTimer) == pdTRUE ) 
         {
-            //ESP_LOGD(TAG, "Reconnect WiFi timer stoped");
+            ESP_LOGD(TAG, "Reconnect WiFi timer stoped");
             xTimerStop(xWiFiReconnectTimer, 0);
         }
 
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         ESP_LOGD(TAG, "got ip: %s", ip4addr_ntoa(&event->ip_info.ip));
+
         retry_num = 0;
         xEventGroupSetBits(xWiFiEventGroup, WIFI_CONNECTED_BIT);
     }
 }
 void wifi_init()
 {
+    ESP_LOGD(TAG, "function %s started", __func__);
+
     wifi_cfg = calloc(1, sizeof(wifi_cfg_t));
     wifi_cfg_load(wifi_cfg);
 
@@ -178,13 +182,9 @@ void wifi_init()
 
 void wifi_deinit()
 {
+    ESP_LOGD(TAG, "function %s started", __func__);
     free(wifi_cfg);
 }
-
-
-
-
-
 
 
 void vReconnectWiFiCallback(TimerHandle_t xTimer){
@@ -194,6 +194,8 @@ void vReconnectWiFiCallback(TimerHandle_t xTimer){
 }
 
 void wifi_init_sta(void) {
+
+    ESP_LOGD(TAG, "function %s started", __func__);
 
     wifi_config_t wifi_config = {
         .sta = {
@@ -211,6 +213,7 @@ void wifi_init_sta(void) {
     esp_wifi_set_storage(WIFI_STORAGE_RAM);
     esp_wifi_set_mode(WIFI_MODE_STA);
     esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config);
+
     esp_wifi_start();    
 
     xWiFiReconnectTimer = xTimerCreate( "xWiFiReconnectTimer", WIFI_RECONNECT_DELAY / portTICK_RATE_MS, pdTRUE, NULL, &vReconnectWiFiCallback );
@@ -232,6 +235,9 @@ void wifi_init_sta(void) {
 }
 
 void wifi_init_ap(void) {
+
+    ESP_LOGD(TAG, "function %s started", __func__);
+    
     wifi_config_t ap_config = {
         .ap = {
             .ssid_hidden = 0,
@@ -256,7 +262,22 @@ void wifi_init_ap(void) {
     //ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP) );
     esp_wifi_set_mode(WIFI_MODE_AP);
     esp_wifi_set_config(ESP_IF_WIFI_AP, &ap_config);
+    
     ESP_ERROR_CHECK(esp_wifi_start() );   
+}
+
+char *wifi_get_mac()
+{
+    //static char mac[6];
+    char *mac = calloc(1,6);
+    if ( wifi_cfg->mode == WIFI_MODE_STA ) {
+        esp_read_mac((uint8_t *)mac, ESP_MAC_WIFI_STA);
+    }
+    else
+    {
+        esp_read_mac( (uint8_t *)mac, ESP_MAC_WIFI_SOFTAP);
+    }
+    return mac;
 }
 
 int8_t wifi_get_rssi(){
@@ -273,7 +294,6 @@ bool isWiFiConnected() {
 }
 
 void wifi_cfg_load(wifi_cfg_t *cfg){
-    ESP_LOGI(TAG, __func__ );
 
     uint8_t val = 0;
     if ( nvs_param_u8_load("wifi", "first", &val) == ESP_OK ) {

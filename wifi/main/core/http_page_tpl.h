@@ -1,4 +1,6 @@
 
+#pragma once
+
 #ifndef __HTTP_PAGE_TPL_H__
 #define __HTTP_PAGE_TPL_H__
 
@@ -82,17 +84,19 @@ const char *html_page_setup_mqtt = "<div class='group rnd'>"
                                         "<p><label class='lf'>Hostname: </label><input size='20' name='mqtt_host' class='edit rh' value='%s' /></p>"
                                         "<p><label class='lf'>Login: </label><input size='20' name='mqtt_login' class='edit rh' value='%s' /></p>"
                                         "<p><label class='lf'>Password: </label><input size='20' name='mqtt_passw' class='edit rh' value='%s' /></p>"
+                                        "<p><label class='lf'>Base topic (/): </label><input size='20' name='mqtt_base' class='edit rh' value='%s' /></p>"
                                         "<p><label class='lf'>Send interval: </label><input size='20' name='mqtt_sint' class='edit rh' value='%d' /></p>"
                                         "<p><input type='hidden' name='st' value='2'></p>"
                                         "<p class='lf2'><input type='submit' value='Сохранить' class='button norm rht'></p>"
                                     "</form>"
                                     "</div>";
 
+
 const char *html_page_reboot_button_block = "<div class='group rnd'><div class='lf2'>"
                                             "<button id='reboot' class='button off rht' onclick='reboot()'>Перезагрузить</button>"
                                             "<div id='rbt'>Rebooting... Please, wait!</div>"
                                             "</div></div>";     
-
+#ifdef CONFIG_COMPONENT_I2C
 const char *html_page_tools_i2c = "<div class='group rnd'>"
                                     "<h4 class='brd-btm'>I2C Settings:</h4>"
                                     "<form method='GET'>"
@@ -104,7 +108,11 @@ const char *html_page_tools_i2c = "<div class='group rnd'>"
                                       
                                       "</div>"
                                     "</form>"
+                                    #ifdef CONFIG_COMPONENT_I2C_SCANNER
                                     "<button id='i2cscan' class='button off rht' onclick='i2cscan()'>Сканировать</button>"
                                     "<div id='i2cres'></div>"
+                                    #endif
                                   "</div>";                                                                                                            
+#endif
+
 #endif 

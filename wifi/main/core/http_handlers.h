@@ -1,5 +1,9 @@
-#ifndef __HTTP_HANDLERS_H__
-#define __HTTP_HANDLERS_H__
+#pragma once
+
+//#ifndef __HTTP_HANDLERS_H__
+//#define __HTTP_HANDLERS_H__
+
+
 
 #include "esp_http_client.h"
 #include "utils.h"
@@ -8,9 +12,13 @@
 
 #include "ota.h"
 #include "wifi.h"
+
 #include "mqtt_cl.h"
-#include "driver/i2c.h"
+
+#ifdef CONFIG_COMPONENT_I2C
 #include "i2c_bus.h"
+#endif
+
 /*
 pages:
 
@@ -26,6 +34,22 @@ typedef enum {
     HTML_PAGE_CFG_OTA
     
 } html_page_cfg_num_t;
+
+enum {
+    PAGE_URI_ROOT = 0,
+    PAGE_URI_SETUP,
+    PAGE_URI_DEBUG,
+    PAGE_URI_TOOLS,
+    PAGE_URI_OTA,
+    PAGE_URI_REBOOT,
+    PAGE_URI_CSS,
+    PAGE_URI_AJAX,
+    PAGE_URI_FAVICO,
+    PAGE_URI_MAX
+} pages_uri_indext;
+
+extern const char *PAGES_URI[PAGE_URI_MAX];
+
 
     //extern const unsigned char device_png_start[] asm("_binary_device_png_start");
     //extern const unsigned char device_png_end[]   asm("_binary_device_png_end");
@@ -58,8 +82,9 @@ esp_err_t reboot_get_handler(httpd_req_t *req);
 esp_err_t favicon_get_handler(httpd_req_t *req);
 esp_err_t icons_get_handler(httpd_req_t *req);
 
+#ifdef CONFIG_COMPONENT_I2C_SCANNER
 esp_err_t i2cscan_get_handler(httpd_req_t *req);
-
+#endif
 
 /*
 esp_err_t icon_device_get_handler(httpd_req_t *req);
@@ -73,12 +98,13 @@ esp_err_t icon_wifi_get_handler(httpd_req_t *req);
 esp_err_t main_css_get_handler(httpd_req_t *req);
 esp_err_t main_ajax_get_handler(httpd_req_t *req);
 
+
 /*
 httpd_uri_t uri_handlers[] = {
     { .uri      = "/",
       .method   = HTTP_GET,
       .handler  = main_get_handler,
-      .user_ctx = "Main page",
+      .user_ctx = "Main page",          // указатель на функцию отрисовки страницы + тайтл страницы
     },   
     { .uri      = "/setup",
       .method   = HTTP_GET,
@@ -115,4 +141,4 @@ httpd_uri_t uri_handlers[] = {
 */
 
 
-#endif /* __HTTP_HANDLERS_H__ */
+//#endif /* __HTTP_HANDLERS_H__ */

@@ -51,6 +51,7 @@ void wifi_init_sta(void);
 void wifi_init_ap(void);
 
 int8_t wifi_get_rssi();
+char *wifi_get_mac();
 
 bool isWiFiConnected();
 
