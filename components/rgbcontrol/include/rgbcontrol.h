@@ -24,6 +24,10 @@
 
 #define RGB_URI "/colors"
 
+#define MQTT_TOPIC_EFFECT_NAME "effect/name"
+#define MQTT_TOPIC_EFFECT_ID "effect/id"
+#define MQTT_TOPIC_COLOR_INT "color/int"
+
 typedef void *rgbcontrol_handle_t;      // rgbcontrol object
 typedef struct rgbcontrol rgbcontrol_t;
 
@@ -43,7 +47,6 @@ typedef void (* rgbcontrol_inc_saturation_f)(int8_t step);
 typedef void (* rgbcontrol_dec_saturation_f)(int8_t step);
 typedef void (* rgbcontrol_set_effects_f)(void *effects);
 typedef void (* rgbcontrol_html_data_f)(char *data);
-typedef void (*func_mqtt_send_cb)(const char *topic, const char *payload);
 
 struct rgbcontrol {
 	color_hsv_t hsv;
@@ -74,7 +77,6 @@ struct rgbcontrol {
     rgbcontrol_dec_saturation_f     dec_saturation;
     
     rgbcontrol_set_effects_f     set_effects;
-    func_mqtt_send_cb mqtt_send;
 
     rgbcontrol_html_data_f print_html_data;
     // callback for parse get request
@@ -85,7 +87,7 @@ struct rgbcontrol {
 // здесь укажем только внешние функции
 // создать объект rgbcontrol
 rgbcontrol_t* rgbcontrol_init(ledcontrol_t *ledc, ledcontrol_channel_t *red, ledcontrol_channel_t *green, ledcontrol_channel_t *blue);
-void rgbcontrol_set_mqtt_send_cb(func_mqtt_send_cb mqtt_send);
+
 /*
 
 At first, create led_controller object

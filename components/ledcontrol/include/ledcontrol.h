@@ -22,6 +22,9 @@
 
 #define LEDC_URI "/ledc"
 
+#define MQTT_TOPIC_LEDC_CHANNEL "ledc"
+
+
 typedef enum {
 	TBL_NONE = 0,
 	TBL_LOG,
@@ -86,7 +89,7 @@ typedef void (* ledcontrol_all_fade_f)(uint16_t, uint16_t, uint16_t);
 typedef void (* ledcontrol_all_fade_to_off_f)(uint16_t, uint16_t);
 typedef void (* ledcontrol_all_fade_to_on_f)(uint16_t, uint16_t);
 typedef void (* ledcontrol_html_data_f)(char *data);		
-
+typedef void (*func_mqtt_send_cb)(const char *topic, const char *payload);
 		
 struct ledcontrol_channel {
 		uint8_t pin;
@@ -127,14 +130,15 @@ struct ledcontrol {
     ledcontrol_html_data_f print_html_data;
     // callback for parse get request
     char uri[20];
-    httpd_uri_func http_get_handler; //	
+    httpd_uri_func http_get_handler; //
+	func_mqtt_send_cb mqtt_send;	
 };
 
 
 // здесь укажем только внешние функции
 // создать объект ledcontrol, потом надо создать каналы, потом зарегистрировать каналы, потом ledcontrol_init для инициализации pwm
 ledcontrol_handle_t* ledcontrol_create(uint32_t freq_hz, uint8_t channel_cnt);
-
+void ledcontrol_set_mqtt_send_cb(func_mqtt_send_cb mqtt_send);
 // создать канал, сначала надо создать каналы
 //esp_err_t ledcontrol_register_channel(ledcontrol_channel_t ledc_ch);
 

@@ -46,6 +46,16 @@ void  int_to_rgb(uint32_t color32, volatile color_rgb_t *rgb) {
     rgb->b = color32 & 0xff;
 }
 
+void  rgbi_to_int(uint8_t r, uint8_t g, uint8_t b, uint32_t *color32){
+   *color32 = r;
+   *color32 = (*color32 << 8) + g;
+   *color32 = (*color32 << 8) + b;
+}
+
+void rgb_to_int(const color_rgb_t *rgb, uint32_t *color32){
+   rgbi_to_int(rgb->r, rgb->g, rgb->b, color32);
+}
+
 void  hex_to_rgb(const char *color, volatile color_rgb_t *rgb) {
    uint32_t color32 = hex2int(color);
     rgb->r = (color32 >> 16) & 0xff;
