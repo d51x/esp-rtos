@@ -1,7 +1,10 @@
+#pragma once
+
 #ifndef _I2C_BUS_H_
 #define _I2C_BUS_H_
 #include "driver/i2c.h"
 #include "nvsparam.h"
+#include "freertos/semphr.h"
 
 //#ifdef __cplusplus
 //extern "C"
@@ -20,6 +23,8 @@
 #define I2C_SCL_DEFAULT 0
 
 typedef void* i2c_bus_handle_t;
+
+SemaphoreHandle_t xSemaphoreI2C;
 
 /**
  * @brief Create and init I2C bus and return a I2C bus handle

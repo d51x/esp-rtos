@@ -105,6 +105,10 @@ esp_err_t i2c_bus_cmd_begin(i2c_bus_handle_t bus, i2c_cmd_handle_t cmd, portBASE
 i2c_bus_handle_t i2c_bus_init()
 {
     if ( m_i2c_bus_handle ) return m_i2c_bus_handle; // уже инициализировано
+    
+    if ( xSemaphoreI2C != NULL ) vSemaphoreDelete( xSemaphoreI2C );
+    xSemaphoreI2C = xSemaphoreCreateMutex();
+
     i2c_config_t conf;
     i2c_load_cfg( &conf );
 
@@ -124,26 +128,28 @@ i2c_bus_handle_t i2c_bus_init()
 
 uint8_t i2c_bus_scan(i2c_bus_handle_t bus, uint8_t* devices)
 {
+    
+    if( xSemaphoreI2C == NULL ) return 0;
     uint8_t devices_found = 0;
-    for (uint8_t address = 1; address < 127; address++) {
-        if ( i2c_device_available(address) == ESP_OK )
-        {
-            devices[devices_found] = address;
-			devices_found++;            
-        }
 
-        /*
-        i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-        i2c_master_start(cmd);
-        i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, true);
-        i2c_master_stop(cmd);
-		if(i2c_master_cmd_begin(I2C_NUM_0, cmd, 1000 / portTICK_RATE_MS) == ESP_OK) {
-            devices[devices_found] = address;
-			devices_found++;
-		}   
-        i2c_cmd_link_delete(cmd); 
-        */
+    if( xSemaphoreTake( xSemaphoreI2C, ( TickType_t ) 10 ) == pdTRUE )
+    {
+        
+        for (uint8_t address = 1; address < 127; address++) {
+            if ( i2c_device_available(address) == ESP_OK )
+            {
+                devices[devices_found] = address;
+                devices_found++;            
+            }
+        }
+        xSemaphoreGive( xSemaphoreI2C );
+        
     }
+    else
+    {
+        ESP_LOGE(TAG, "%s: semaphore locked!", __func__ );
+    }
+    
     return devices_found;
 }
 

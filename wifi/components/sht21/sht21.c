@@ -41,6 +41,16 @@ static const char* TAG = "SHT21";
 #define SHT21_CMD_SOFT_RESET 0xFE
 #define SHT21_READ_ERROR 65535
 
+#define SHT21_PERIODIC_TASK_PRIORITY 13
+#define SHT21_PERIODIC_TASK_STACK_DEPTH 1024
+
+static volatile sht21_t sht21_data;
+TaskHandle_t xHandle = NULL;
+uint8_t is_initialized = 0;
+
+static void sht21_mqtt_send();
+
+
 static esp_err_t sht21_reset()
 {
     // Wire.begin / Wire.beginTransmission
@@ -56,6 +66,8 @@ static esp_err_t sht21_reset()
     */
     return i2c_send_command(SHT21_ADDR, SHT21_CMD_SOFT_RESET);
 }
+
+
 
 static uint8_t sht21_check_crc(uint16_t data)
 {
@@ -80,43 +92,72 @@ esp_err_t sht21_init()
     if ( sht21_i2c_bus_handle == NULL ) return err;
 
     err = sht21_available();
+    is_initialized = ( err == ESP_OK );
     return err;
 }
 
 static uint16_t sht21_read_raw_data(uint8_t command) 
 {
-    esp_err_t err = i2c_send_command(SHT21_ADDR, command);
-    if ( err == ESP_FAIL ) return SHT21_READ_ERROR;
+    if ( xSemaphoreI2C == NULL ) return SHT21_READ_ERROR;
 
-    vTaskDelay( 100 / portTICK_RATE_MS);
+    ESP_LOGI(TAG, "%s xSemaphoreI2C %p", __func__, xSemaphoreI2C);
 
-    uint8_t data[3];
-    err = i2c_read_data(SHT21_ADDR, &data, 3);
-    if ( err == ESP_FAIL ) return SHT21_READ_ERROR;
-    
-    uint16_t res = (data[0] << 8);
-    res += data[1];
+    if( xSemaphoreTake( xSemaphoreI2C, ( TickType_t ) 10 ) == pdTRUE )
+    {
+        esp_err_t err = i2c_send_command(SHT21_ADDR, command);
+        if ( err == ESP_FAIL ) goto error;
 
-    //ESP_LOGI(TAG, "Cmd: 0x%2X\tdata0: 0x%02X\t data1: 0x%02X\t data2: 0x%02X\t", command, data[0], data[1], data[2]);
-    // check crc
-    uint8_t crc = sht21_check_crc( res );
-    if (  crc != data[2] ) return SHT21_READ_ERROR;
+        vTaskDelay( 100 / portTICK_RATE_MS);
 
-    return res;
+        uint8_t data[3];
+        err = i2c_read_data(SHT21_ADDR, &data, 3);
+        if ( err == ESP_FAIL ) goto error;
+        
+        uint16_t res = (data[0] << 8);
+        res += data[1];
+
+        //ESP_LOGI(TAG, "Cmd: 0x%2X\tdata0: 0x%02X\t data1: 0x%02X\t data2: 0x%02X\t", command, data[0], data[1], data[2]);
+        // check crc
+        uint8_t crc = sht21_check_crc( res );
+        if (  crc != data[2] ) goto error;
+
+        xSemaphoreGive( xSemaphoreI2C );
+
+        return res;
+
+        error:
+            xSemaphoreGive( xSemaphoreI2C );
+            return SHT21_READ_ERROR; 
+
+    } else {
+        ESP_LOGI(TAG, "sht21_read error. xSemaphoreI2C blocked!!!");
+        return SHT21_READ_ERROR; 
+    }
+
 }
 
 float sht21_get_temp()
+{
+    return sht21_data.temp;
+}
+
+float sht21_get_hum()
+{
+    return sht21_data.hum;
+}
+
+float sht21_read_temp()
 {
     float res = 255.0f;
 
     uint16_t raw_data = sht21_read_raw_data(SHT21_CMD_TRIGGER_TEMP_MEASURE_NO_HOLD);
     if ( raw_data == SHT21_READ_ERROR ) return res;
-
     res = (0.002681 * (float) raw_data - 46.85);
+
     return res;
 }
 
-float sht21_get_hum()
+float sht21_read_hum()
 {
     float res = 0.0f;
 
@@ -130,4 +171,60 @@ float sht21_get_hum()
     else if (res > 100) res = 100.0f;
 
     return res;
+}
+
+static void sht21_periodic_task(void *arg)
+{
+    uint32_t delay = (uint32_t)arg;
+
+    sht21_mqtt_send();
+
+    while (1) {
+        //ESP_LOGI(TAG, "%s is_initialized %d", __func__, is_initialized);
+        if ( !is_initialized ) 
+        {
+            sht21_init();
+            vTaskDelay( 5000 / portTICK_RATE_MS);
+            continue;
+        } 
+
+        float t;
+        t = sht21_read_temp();
+        if ( t < 255 ) sht21_data.temp = t;
+        
+        sht21_data.hum = sht21_read_hum();
+        vTaskDelay(delay * 1000 / portTICK_RATE_MS);
+    }
+
+    vTaskDelete( NULL );
+}
+
+void sht21_start(uint32_t delay)
+{
+    xTaskCreate(sht21_periodic_task, "sht21_task", SHT21_PERIODIC_TASK_STACK_DEPTH, delay, SHT21_PERIODIC_TASK_PRIORITY, &xHandle);
+}
+
+void sht21_stop()
+{
+     if( xHandle != NULL )
+     {
+         vTaskDelete( xHandle );
+     }
+}
+
+static void sht21_mqtt_send_temp(char *payload)
+{
+    sprintf(payload, "%0.2f", sht21_get_temp());
+}
+
+static void sht21_mqtt_send_hum(char *payload)
+{
+    sprintf(payload, "%0.2f", sht21_get_hum());
+}
+
+// периодическая отправка по mqtt через callback
+void sht21_mqtt_send()
+{
+    mqtt_add_periodic_publish_callback( "sht21/temp", sht21_mqtt_send_temp );
+    mqtt_add_periodic_publish_callback( "sht21/hum", sht21_mqtt_send_hum );
 }

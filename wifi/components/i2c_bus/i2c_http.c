@@ -19,10 +19,6 @@ const char *html_page_tools_i2c = "<div class='group rnd'>"
                                     #endif
                                   "</div>";      
 
-void i2c_print_options2(char *data)
-{
-    strcpy(data+strlen(data), "<br>i2c print options 2");
-}
 
 void i2c_print_options(char *data)
 {
@@ -32,42 +28,35 @@ void i2c_print_options(char *data)
     free(cfg);
 }
 
-void i2c_print_options3(char *data)
-{
-    strcpy(data+strlen(data), "<br>i2c print options3");
-}
-
-
+/*
 void i2c_register_http_menu()
 {
-    register_http_page_menu( "/i2c", "I2C");
-    register_http_page_menu( "/mcp23017", "MCP23017");
-    register_http_page_menu( "/pcf8574", "PCF8574");
-    register_http_page_menu( "/pcf8583", "PCF8583");
+    //register_http_page_menu( "/i2c", "I2C");
 }
+*/
 
 void i2c_register_http_print_data() 
 {
-
     register_print_page_block( PAGES_URI[ PAGE_URI_TOOLS], 3, i2c_print_options, i2c_http_process_params );
-    register_print_page_block( PAGES_URI[ PAGE_URI_ROOT], 1, i2c_print_options2, NULL );
-    register_print_page_block( PAGES_URI[ PAGE_URI_ROOT], 2, i2c_print_options3, NULL );
 }
+
 
 void i2c_register_http_handler(httpd_handle_t _server)
 {
-    ESP_LOGI(TAG, "function %s started", __func__);
+    //ESP_LOGI(TAG, "function %s started", __func__);
     #ifdef CONFIG_COMPONENT_I2C_SCANNER
     ESP_LOGI(TAG, "CONFIG_COMPONENT_I2C_SCANNER available");
     add_uri_get_handler( _server, "/i2cscan", i2cscan_get_handler, NULL); 
     #endif    
-    user_ctx_t *ctx = (user_ctx_t *) calloc(1, sizeof(user_ctx_t));
-    strncpy(ctx->title, "i2c page", 20);
-    ctx->show = true;    
-    add_uri_get_handler( _server, "/i2c", i2c_get_handler, ctx); 
+    
+    //user_ctx_t *ctx = (user_ctx_t *) calloc(1, sizeof(user_ctx_t));
+    //strncpy(ctx->title, "i2c page", 20);
+    //ctx->show = true;    
+    //add_uri_get_handler( _server, "/i2c", i2c_get_handler, ctx); 
     //add_uri_get_handler( _server, "/i2c", i2c_get_handler, NULL); 
-    free(ctx);
+    //free(ctx);
 }
+
 
 void i2c_http_process_params(httpd_req_t *req)
 {
@@ -102,6 +91,7 @@ void i2c_http_process_params(httpd_req_t *req)
     } 
 }
 
+/*
 esp_err_t i2c_get_handler(httpd_req_t *req)
 {
     ESP_LOGI(TAG, "function %s started...", __func__ );
@@ -123,6 +113,7 @@ esp_err_t i2c_get_handler(httpd_req_t *req)
      
     return ESP_OK;
 }
+*/
 
 #ifdef CONFIG_COMPONENT_I2C_SCANNER
 esp_err_t i2cscan_get_handler(httpd_req_t *req)
