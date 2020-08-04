@@ -32,6 +32,8 @@
 #include "utils.h"
 #include "i2c_http.h"
 
+#include "sht21.h"
+
 httpd_handle_t http_server = NULL;
 
 extern void sntp_start();
