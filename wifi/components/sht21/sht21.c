@@ -11,6 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+
+
 #include <stdio.h>
 #include "esp_log.h"
 #include "driver/i2c.h"
@@ -18,7 +21,7 @@
 #include "sht21.h"
 
 
-
+#ifdef CONFIG_SENSOR_SHT21
 
 
 static i2c_bus_handle_t sht21_i2c_bus_handle = NULL;
@@ -84,23 +87,26 @@ esp_err_t sht21_available()
     return i2c_device_available(SHT21_ADDR);
 }
 
+
+
 esp_err_t sht21_init()
 {
     esp_err_t err = ESP_FAIL;
+
     sht21_i2c_bus_handle = i2c_bus_init();
     
     if ( sht21_i2c_bus_handle == NULL ) return err;
 
     err = sht21_available();
     is_initialized = ( err == ESP_OK );
+
     return err;
 }
+
 
 static uint16_t sht21_read_raw_data(uint8_t command) 
 {
     if ( xSemaphoreI2C == NULL ) return SHT21_READ_ERROR;
-
-    ESP_LOGI(TAG, "%s xSemaphoreI2C %p", __func__, xSemaphoreI2C);
 
     if( xSemaphoreTake( xSemaphoreI2C, ( TickType_t ) 10 ) == pdTRUE )
     {
@@ -130,7 +136,7 @@ static uint16_t sht21_read_raw_data(uint8_t command)
             return SHT21_READ_ERROR; 
 
     } else {
-        ESP_LOGI(TAG, "sht21_read error. xSemaphoreI2C blocked!!!");
+        //ESP_LOGI(TAG, "sht21_read error. xSemaphoreI2C blocked!!!");
         return SHT21_READ_ERROR; 
     }
 
@@ -199,10 +205,15 @@ static void sht21_periodic_task(void *arg)
     vTaskDelete( NULL );
 }
 
+
+
 void sht21_start(uint32_t delay)
 {
+    
     xTaskCreate(sht21_periodic_task, "sht21_task", SHT21_PERIODIC_TASK_STACK_DEPTH, delay, SHT21_PERIODIC_TASK_PRIORITY, &xHandle);
+    
 }
+
 
 void sht21_stop()
 {
@@ -228,3 +239,4 @@ void sht21_mqtt_send()
     mqtt_add_periodic_publish_callback( "sht21/temp", sht21_mqtt_send_temp );
     mqtt_add_periodic_publish_callback( "sht21/hum", sht21_mqtt_send_hum );
 }
+#endif

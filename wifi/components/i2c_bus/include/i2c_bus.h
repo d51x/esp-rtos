@@ -6,10 +6,7 @@
 #include "nvsparam.h"
 #include "freertos/semphr.h"
 
-//#ifdef __cplusplus
-//extern "C"
-//{
-//#endif
+#ifdef CONFIG_COMPONENT_I2C
 
 #define WRITE_BIT                           I2C_MASTER_WRITE /*!< I2C master write */
 #define READ_BIT                            I2C_MASTER_READ  /*!< I2C master read */
@@ -74,5 +71,6 @@ void i2c_save_cfg(const i2c_config_t *cfg);
 esp_err_t i2c_device_available(uint8_t addr);
 esp_err_t i2c_send_command(uint8_t addr, uint8_t cmd);
 esp_err_t i2c_read_data(uint8_t addr, uint8_t *data, size_t sz);
-#endif
+#endif //#ifdef CONFIG_COMPONENT_I2C
 
+#endif

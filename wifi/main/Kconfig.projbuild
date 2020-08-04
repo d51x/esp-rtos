@@ -119,5 +119,14 @@ menu "Project config"
                 Enable I2C scanner
 
     endmenu
+    
+    menu "Sensors"
+        config SENSOR_SHT21
+            bool "SHT21 sensor"
+            default n
+            depends on COMPONENT_I2C
+            help 
+                Enable SHT21 sensor
+    endmenu
 
 endmenu

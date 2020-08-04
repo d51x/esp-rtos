@@ -30,10 +30,15 @@
 #include "esp_log.h"
 
 #include "utils.h"
-#include "i2c_http.h"
 
+#ifdef CONFIG_COMPONENT_I2C
+#include "i2c_http.h"
+#endif
+
+#ifdef CONFIG_SENSOR_SHT21
 #include "sht21.h"
 #include "sht21_http.h"
+#endif
 
 httpd_handle_t http_server = NULL;
 

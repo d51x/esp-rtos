@@ -35,9 +35,10 @@ void app_main(void)
     
     webserver_init(&http_server);
 
-    
+    #ifdef CONFIG_COMPONENT_I2C
     i2c_register_http_handler(http_server);
     i2c_register_http_print_data();
+    #endif
     
         mqtt_init();
         mqtt_set_device_name(wifi_cfg->hostname);
@@ -48,10 +49,11 @@ void app_main(void)
         mqtt_add_receive_callback("recv1", test_recv1);
         mqtt_add_receive_callback("recv2", test_recv2);
 
+    #ifdef CONFIG_SENSOR_SHT21
     sht21_init();
     sht21_start( 5 );
     sht21_register_http_print_data();
-    
+    #endif
 
     while (true) {
         

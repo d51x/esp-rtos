@@ -10,6 +10,7 @@
 #include "httpd.h"
 #include "i2c_bus.h"
 
+#ifdef CONFIG_COMPONENT_I2C
 extern const char *html_page_tools_i2c;      
 
                                                                                                                  
@@ -24,5 +25,6 @@ esp_err_t i2cscan_get_handler(httpd_req_t *req);
 
 //esp_err_t i2c_get_handler(httpd_req_t *req);
 
+#endif //#ifdef CONFIG_COMPONENT_I2C
 
 #endif

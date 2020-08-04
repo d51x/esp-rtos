@@ -16,6 +16,7 @@
 #include "driver/i2c.h"
 #include "i2c_bus.h"
 
+#ifdef CONFIG_COMPONENT_I2C
 
 #define PARAM_I2C "i2c"
 #define PARAM_I2C_SDA "sda"
@@ -145,10 +146,10 @@ uint8_t i2c_bus_scan(i2c_bus_handle_t bus, uint8_t* devices)
         xSemaphoreGive( xSemaphoreI2C );
         
     }
-    else
-    {
-        ESP_LOGE(TAG, "%s: semaphore locked!", __func__ );
-    }
+    //else
+    //{
+        //ESP_LOGE(TAG, "%s: semaphore locked!", __func__ );
+    //}
     
     return devices_found;
 }
@@ -199,3 +200,5 @@ esp_err_t i2c_read_data(uint8_t addr, uint8_t *data, size_t sz)
 
     return err;
 }
+
+#endif //#ifdef CONFIG_COMPONENT_I2C

@@ -1,3 +1,6 @@
+
+
+
 #pragma once
 
 #ifndef _SHT21_H_
@@ -9,6 +12,7 @@
 
 #include "mqtt_cl.h"
 
+#ifdef CONFIG_SENSOR_SHT21
 #define SHT21_ADDR 0x40
 
 
@@ -18,14 +22,19 @@ typedef struct sht21 {
     float hum;
 } sht21_t;
 
+
+
 esp_err_t sht21_init();
+void sht21_start(uint32_t delay); // seconds
+
+
+void sht21_stop();
 esp_err_t sht21_available();
 
 
 
 // periodic task
-void sht21_start(uint32_t delay); // seconds
-void sht21_stop();
+
 
 // читает данные напрямую
 float sht21_read_temp();
@@ -35,4 +44,5 @@ float sht21_read_hum();
 float sht21_get_temp();
 float sht21_get_hum();
 
+#endif //CONFIG_SENSOR_SHT21
 #endif

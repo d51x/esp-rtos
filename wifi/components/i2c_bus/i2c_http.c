@@ -1,5 +1,8 @@
 #include "i2c_http.h"
 
+
+#ifdef CONFIG_COMPONENT_I2C
+
 static const char *TAG = "I2C";
 
 const char *html_page_tools_i2c = "<div class='group rnd'>"
@@ -45,7 +48,6 @@ void i2c_register_http_handler(httpd_handle_t _server)
 {
     //ESP_LOGI(TAG, "function %s started", __func__);
     #ifdef CONFIG_COMPONENT_I2C_SCANNER
-    ESP_LOGI(TAG, "CONFIG_COMPONENT_I2C_SCANNER available");
     add_uri_get_handler( _server, "/i2cscan", i2cscan_get_handler, NULL); 
     #endif    
     
@@ -60,12 +62,10 @@ void i2c_register_http_handler(httpd_handle_t _server)
 
 void i2c_http_process_params(httpd_req_t *req)
 {
-    ESP_LOGI(TAG, "function %s started...", __func__ );
 
    // check params
 	if ( http_get_has_params(req) == ESP_OK) 
 	{
-        ESP_LOGI( TAG, "Has params");
         char param[100];
         if ( http_get_key_str(req, "st", param, sizeof(param)) == ESP_OK ) {
             if ( strcmp(param, "i2c") != 0 ) {
@@ -133,9 +133,9 @@ esp_err_t i2cscan_get_handler(httpd_req_t *req)
     }
 
     for ( uint8_t i = 0; i<count;i++) {
-            ESP_LOGI(TAG, "-> found device %02d with address 0x%02x", 
-                    i+1, 
-                    devices[i]);
+            //ESP_LOGI(TAG, "-> found device %02d with address 0x%02x", 
+            //        i+1, 
+            //        devices[i]);
         sprintf(page + strlen(page), "%d: 0x%02x<br>", i+1, devices[i]);
     }
 
@@ -149,3 +149,5 @@ esp_err_t i2cscan_get_handler(httpd_req_t *req)
     return ESP_OK;
 }
 #endif
+
+#endif //#ifdef CONFIG_COMPONENT_I2C
