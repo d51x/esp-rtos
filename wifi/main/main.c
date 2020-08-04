@@ -38,8 +38,7 @@ void app_main(void)
     
     i2c_register_http_handler(http_server);
     i2c_register_http_print_data();
-    i2c_register_http_menu();
-
+    
         mqtt_init();
         mqtt_set_device_name(wifi_cfg->hostname);
 
@@ -49,18 +48,17 @@ void app_main(void)
         mqtt_add_receive_callback("recv1", test_recv1);
         mqtt_add_receive_callback("recv2", test_recv2);
 
-    esp_err_t sht21 = sht21_init();
+    sht21_init();
+    sht21_start( 5 );
+    sht21_register_http_print_data();
+    
 
     while (true) {
         
-        if ( sht21 == ESP_OK )
-        {
-            ESP_LOGI(TAG, "SHT21 Temperature: %0.2fC", (float) sht21_get_temp());
-            ESP_LOGI(TAG, "SHT21 Humidity: %0.2f%%", (float) sht21_get_hum());
-        } else {
-            ESP_LOGI(TAG, "Try to initialize SHT21");
-            sht21 = sht21_init();
-        }
+        
+            //ESP_LOGI(TAG, "SHT21 Temperature: %0.2fC", (float) sht21_get_temp());
+            //ESP_LOGI(TAG, "SHT21 Humidity: %0.2f%%", (float) sht21_get_hum());
+    
 
         #ifdef CONFIG_DEBUG_PRINT_TASK_INFO
             print_tasks_info();

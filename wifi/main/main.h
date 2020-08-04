@@ -33,6 +33,7 @@
 #include "i2c_http.h"
 
 #include "sht21.h"
+#include "sht21_http.h"
 
 httpd_handle_t http_server = NULL;
 
