@@ -66,7 +66,7 @@ void i2c_register_http_handler(httpd_handle_t _server)
     ctx->show = true;    
     add_uri_get_handler( _server, "/i2c", i2c_get_handler, ctx); 
     //add_uri_get_handler( _server, "/i2c", i2c_get_handler, NULL); 
-    //free(ctx);
+    free(ctx);
 }
 
 void i2c_http_process_params(httpd_req_t *req)
