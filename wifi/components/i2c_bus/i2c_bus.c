@@ -35,6 +35,7 @@ static const char* TAG = "i2c_bus";
 #define ESP_INTR_FLG_DEFAULT  (0)
 #define ESP_I2C_MASTER_BUF_LEN  (0)
 
+static i2c_bus_handle_t *m_i2c_bus_handle = NULL;
 
 void i2c_load_cfg(i2c_config_t *cfg)
 {
@@ -55,13 +56,15 @@ void i2c_save_cfg(const i2c_config_t *cfg)
 
 i2c_bus_handle_t i2c_bus_create(i2c_port_t port, i2c_config_t* conf)
 {
+    
     I2C_BUS_CHECK(port < I2C_NUM_MAX, "I2C port error", NULL);
     I2C_BUS_CHECK(conf != NULL, "Pointer error", NULL);
+
     i2c_bus_t* bus = (i2c_bus_t*) calloc(1, sizeof(i2c_bus_t));
     bus->i2c_conf = *conf;
     bus->i2c_port = port;
 
-esp_err_t ret   = ESP_FAIL;
+    esp_err_t ret   = ESP_FAIL;
     //ret = i2c_driver_install(bus->i2c_port, bus->i2c_conf.mode, ESP_I2C_MASTER_BUF_LEN, ESP_I2C_MASTER_BUF_LEN, ESP_INTR_FLG_DEFAULT);
     ret = i2c_driver_install(bus->i2c_port, bus->i2c_conf.mode);
     if(ret != ESP_OK) {
@@ -101,25 +104,36 @@ esp_err_t i2c_bus_cmd_begin(i2c_bus_handle_t bus, i2c_cmd_handle_t cmd, portBASE
 
 i2c_bus_handle_t i2c_bus_init()
 {
+    if ( m_i2c_bus_handle ) return m_i2c_bus_handle; // уже инициализировано
     i2c_config_t conf;
+    i2c_load_cfg( &conf );
+
     conf.mode = I2C_MODE_MASTER;
-    conf.scl_io_num = 0;
-    conf.sda_io_num = 2;
+    //conf.scl_io_num = 0;
+    //conf.sda_io_num = 2;
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
     //conf.master.clk_speed = clk_hz;
     conf.clk_stretch_tick = 300;
 
-    i2c_bus_handle_t m = i2c_bus_create(I2C_NUM_0, &conf);
+    //i2c_bus_handle_t m = i2c_bus_create(I2C_NUM_0, &conf);
+    m_i2c_bus_handle = i2c_bus_create(I2C_NUM_0, &conf);
 
-    return m;
+    return m_i2c_bus_handle;
 }
 
 uint8_t i2c_bus_scan(i2c_bus_handle_t bus, uint8_t* devices)
 {
     uint8_t devices_found = 0;
     for (uint8_t address = 1; address < 127; address++) {
-       i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+        if ( i2c_device_available(address) == ESP_OK )
+        {
+            devices[devices_found] = address;
+			devices_found++;            
+        }
+
+        /*
+        i2c_cmd_handle_t cmd = i2c_cmd_link_create();
         i2c_master_start(cmd);
         i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, true);
         i2c_master_stop(cmd);
@@ -128,7 +142,54 @@ uint8_t i2c_bus_scan(i2c_bus_handle_t bus, uint8_t* devices)
 			devices_found++;
 		}   
         i2c_cmd_link_delete(cmd); 
+        */
     }
     return devices_found;
 }
 
+esp_err_t i2c_device_available(uint8_t addr)
+{
+    i2c_cmd_handle_t cmd_link = i2c_cmd_link_create();
+    ESP_ERROR_CHECK( i2c_master_start(cmd_link) );
+    ESP_ERROR_CHECK( i2c_master_write_byte(cmd_link, (addr << 1) | WRITE_BIT, ACK_CHECK_EN) );
+    ESP_ERROR_CHECK( i2c_master_stop(cmd_link) );
+	esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmd_link, 1000 / portTICK_RATE_MS);
+    i2c_cmd_link_delete(cmd_link); 
+    return err;
+}
+
+esp_err_t i2c_send_command(uint8_t addr, uint8_t command)
+{
+    // Wire.begin / Wire.beginTransmission
+    i2c_cmd_handle_t cmd_link = i2c_cmd_link_create();
+    ESP_ERROR_CHECK( i2c_master_start(cmd_link) );
+    ESP_ERROR_CHECK( i2c_master_write_byte(cmd_link, (addr << 1) | WRITE_BIT, ACK_CHECK_EN));
+
+    ESP_ERROR_CHECK( i2c_master_write_byte(cmd_link, command, ACK_CHECK_EN) );
+    ESP_ERROR_CHECK( i2c_master_stop(cmd_link)); 
+    esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmd_link, /*0 ?*/ 1000 / portTICK_RATE_MS) ;
+    i2c_cmd_link_delete(cmd_link); 
+    return err;
+}
+
+esp_err_t i2c_read_data(uint8_t addr, uint8_t *data, size_t sz)
+{
+    // Wire.begin / Wire.beginTransmission
+    i2c_cmd_handle_t cmd_link = i2c_cmd_link_create();
+    ESP_ERROR_CHECK( i2c_master_start(cmd_link) );
+    ESP_ERROR_CHECK( i2c_master_write_byte(cmd_link, (addr << 1) | READ_BIT, ACK_CHECK_EN) ); 
+
+    //if ( err == ESP_FAIL ) return err;
+
+    // read data
+    for ( uint8_t i = 0; i < sz; i++ )
+    {
+        ESP_ERROR_CHECK( i2c_master_read_byte(cmd_link, &data[i], ( i < sz-1 ) ? ACK_VAL : NACK_VAL) );
+    }
+
+    ESP_ERROR_CHECK( i2c_master_stop(cmd_link) );
+    esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmd_link, 1000 / portTICK_RATE_MS) ;
+    i2c_cmd_link_delete(cmd_link); 
+
+    return err;
+}
