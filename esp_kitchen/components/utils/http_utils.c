@@ -102,3 +102,15 @@ esp_err_t http_get_key_uint8(httpd_req_t *req, const char *param_name, uint8_t *
     return (error == 0) ? ESP_OK : ESP_FAIL;
 }
 
+char *http_uri_clean(httpd_req_t *req)
+{
+    char *p;
+    if ( http_get_has_params(req) == ESP_OK) 
+	{
+        p = cut_str_from_str( req->uri, "?");
+    } else {
+        p = (char *) calloc(1, strlen( req->uri));
+        strcpy(p, req->uri);
+    }
+    return p;  
+}

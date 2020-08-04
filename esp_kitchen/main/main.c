@@ -135,7 +135,16 @@ void app_main(void){
     init_ir_receiver();
 
     tmr_adc = xTimerCreate("tmr_adc", 1000 / portTICK_PERIOD_MS, pdTRUE, 0, adc_cb);	
-    xTimerStart(tmr_adc, 0);		
+    xTimerStart(tmr_adc, 0);
+
+    while (true) {
+        
+        #ifdef CONFIG_DEBUG_PRINT_TASK_INFO
+            print_tasks_info();
+        #endif
+
+        vTaskDelay(2000/ portTICK_RATE_MS);
+    }    		
 }
 
 
