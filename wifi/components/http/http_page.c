@@ -254,7 +254,7 @@ void show_page_main(const char *title, char *data)
 {
 
     char *page_data = malloc(PAGE_DEFAULT_BUFFER_SIZE);
-    strcpy(page_data, title);
+    strcpy(page_data, "");
 
     print_page_block( PAGES_URI[ PAGE_URI_ROOT ], page_data);
 
