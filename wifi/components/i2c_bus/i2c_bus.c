@@ -133,7 +133,7 @@ uint8_t i2c_bus_scan(i2c_bus_handle_t bus, uint8_t* devices)
     if( xSemaphoreI2C == NULL ) return 0;
     uint8_t devices_found = 0;
 
-    if( xSemaphoreTake( xSemaphoreI2C, ( TickType_t ) 10 ) == pdTRUE )
+    if( xSemaphoreTake( xSemaphoreI2C, I2C_SEMAPHORE_WAIT ) == pdTRUE )
     {
         
         for (uint8_t address = 1; address < 127; address++) {

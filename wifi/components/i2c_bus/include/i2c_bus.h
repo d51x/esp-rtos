@@ -16,6 +16,9 @@
 #define NACK_VAL                            0x1              /*!< I2C nack value */
 #define LAST_NACK_VAL                       0x2              /*!< I2C last_nack value */
 
+#define I2C_SEMAPHORE_WAIT_TIME_MS             100
+#define I2C_SEMAPHORE_WAIT  (I2C_SEMAPHORE_WAIT_TIME_MS /  portTICK_RATE_MS)
+
 #define I2C_SDA_DEFAULT 2
 #define I2C_SCL_DEFAULT 0
 
