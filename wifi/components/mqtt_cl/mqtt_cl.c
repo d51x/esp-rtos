@@ -211,7 +211,7 @@ void mqtt_start()
 
         esp_mqtt_client_start(mqtt_client); 
         esp_log_level_set("*", ESP_LOG_NONE);
-        esp_log_level_set("MQTT_CLIENT", ESP_LOG_VERBOSE);
+        esp_log_level_set("MQTT_CLIENT", ESP_LOG_NONE);
         //esp_log_level_set("TRANSPORT_TCP", ESP_LOG_VERBOSE);
         //esp_log_level_set("TRANSPORT_SSL", ESP_LOG_VERBOSE);
         //esp_log_level_set("TRANSPORT", ESP_LOG_VERBOSE);
