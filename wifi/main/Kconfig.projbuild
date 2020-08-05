@@ -125,6 +125,13 @@ menu "Project config"
             help
                 Enable I2C scanner
 
+        config COMPONENT_PCF8574
+            bool "PCF8574"
+            default y
+            depends on COMPONENT_I2C
+            help
+                Enable PCF8574
+
     endmenu
     
     menu "Sensors"

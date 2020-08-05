@@ -42,6 +42,10 @@
 #include "sht21_http.h"
 #endif
 
+#ifdef CONFIG_COMPONENT_PCF8574
+#include "pcf8574.h"
+#endif
+
 httpd_handle_t http_server = NULL;
 
 extern void sntp_start();
