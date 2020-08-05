@@ -87,7 +87,14 @@ menu "Project config"
             int "Task priority"
             default 12
             help
-                MQTT Task priority (default 12)                
+                MQTT Task priority (default 12)  
+
+         config MQTT_SETTINGS_ON_AIR
+            bool "MQTT apply setting ON AIR"
+            default y
+            help
+                Apply MQTT settings ON AIR on setup web page, when settings was changed
+
     endmenu    
 
     menu "I2C Component"        

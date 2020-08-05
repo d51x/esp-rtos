@@ -48,13 +48,19 @@ void page_initialize_menu()
 
 void page_generate_html_start(char *buf, const char *title)
 {
+    //ESP_LOGI(TAG, "****** %s", __func__ );
     sprintf(buf, html_page_start, title);
 }
 
 void page_generate_html_end(char *_buf)
 {
+    //ESP_LOGI(TAG, "****** %s", __func__ );
+
     char * buf = malloc(25);
     get_localtime(buf);
+
+    //ESP_LOGI(TAG, "html_page_end: \n %s", html_page_end);
+
     sprintf(_buf + strlen(_buf), html_page_end, buf, FW_VER);
     free(buf);
 }
@@ -66,17 +72,22 @@ void page_generate_html_end(char *_buf)
 
 void page_generate_top_header(char *buf)
 {
+    //ESP_LOGI(TAG, "****** %s", __func__ );
     char * uptime = malloc(20);
     get_uptime(uptime);
 
     char *menu = malloc((strlen(html_page_menu_item) + 10 + 10)* menu_items_count + 1);
     page_show_menu(menu);
 
+    //ESP_LOGI(TAG, "html_page_top_header: \n %s", html_page_top_header);
+
     sprintf(buf + strlen(buf), html_page_top_header
                 , wifi_cfg->hostname  // hostname
                 , wifi_get_rssi()       // rssi
                 , menu
                 );
+
+    //ESP_LOGI(TAG, "html_page_devinfo: \n %s", html_page_devinfo);
 
     sprintf(buf + strlen(buf), html_page_devinfo
                                 , esp_get_free_heap_size()
@@ -88,8 +99,14 @@ void page_generate_top_header(char *buf)
 
 void page_generate_data(char *buf, const char *data)
 {
+    //ESP_LOGI(TAG, "****** %s", __func__ );
+
+    //ESP_LOGI(TAG, "html_page_content_start: \n %s", html_page_content_start);
+
     sprintf(buf + strlen(buf), html_page_content_start);
     sprintf(buf + strlen(buf), data);
+
+    //ESP_LOGI(TAG, "html_page_content_end: \n %s", html_page_content_end);
     sprintf(buf + strlen(buf), html_page_content_end);
 }
 
@@ -109,6 +126,8 @@ void page_show_menu(char *buf)
 
 void generate_page(char *page, const char *title, const char *data) 
 {   
+    //ESP_LOGI(TAG, "****** %s", __func__ );
+
     page_generate_html_start(page, title);
     page_generate_top_header(page);
     page_generate_data(page, data);
@@ -117,6 +136,7 @@ void generate_page(char *page, const char *title, const char *data)
 
 void show_http_page(httpd_req_t *req, char *data)
 {
+    //ESP_LOGI(TAG, "****** %s", __func__ );
         // TODO передавать http_req в функцию
         // из http_req брать user_ctx
         // в нем указаель на функцию отрисовки
@@ -178,6 +198,8 @@ void show_http_page(httpd_req_t *req, char *data)
 
 void print_page_block(const char *uri, char *data)
 {
+    //ESP_LOGI(TAG, "****** %s", __func__ );
+
     //ESP_LOGI(TAG, " function %s started", __func__);
 
     uint8_t (*indexes)[2] = NULL;
@@ -244,6 +266,8 @@ void print_page_block(const char *uri, char *data)
 
 void show_custom_page(const char *title, char *data)
 {
+    //ESP_LOGI(TAG, "****** %s", __func__ );
+
     char *page_data = malloc(PAGE_DEFAULT_BUFFER_SIZE);
     strcpy(page_data, title);
     generate_page(data, title, page_data);
@@ -252,6 +276,8 @@ void show_custom_page(const char *title, char *data)
 
 void show_page_main(const char *title, char *data)
 {
+
+    //ESP_LOGI(TAG, "****** %s", __func__ );
 
     char *page_data = malloc(PAGE_DEFAULT_BUFFER_SIZE);
     strcpy(page_data, "");
@@ -268,8 +294,12 @@ void show_page_main(const char *title, char *data)
 
 void show_page_setup(const char *title, char *data)
 {
+    //ESP_LOGI(TAG, "****** %s", __func__ );
+
     char *page_data = malloc(PAGE_DEFAULT_BUFFER_SIZE);
     //strcpy(page_data, "Setup");
+
+    //ESP_LOGI(TAG, "html_page_setup_wifi: \n %s", html_page_setup_wifi);
 
     sprintf(page_data, html_page_setup_wifi 
                        , wifi_cfg->hostname         // hostname
@@ -279,6 +309,8 @@ void show_page_setup(const char *title, char *data)
                        , (wifi_cfg->mode == WIFI_MODE_AP)  ? "checked" : ""         // ap checked
                        );
 
+    print_page_block( PAGES_URI[ PAGE_URI_SETUP ], page_data);
+/*
     mqtt_config_t *mqtt_cfg = malloc(sizeof(mqtt_config_t));
     mqtt_get_cfg(mqtt_cfg);
     sprintf(page_data + strlen(page_data), html_page_setup_mqtt 
@@ -290,6 +322,7 @@ void show_page_setup(const char *title, char *data)
                        , mqtt_cfg->send_interval          // send interval
                        );
     free(mqtt_cfg);
+*/
 
     sprintf( page_data + strlen(page_data), html_page_reboot_button_block);
     generate_page(data, title, page_data);
@@ -299,6 +332,8 @@ void show_page_setup(const char *title, char *data)
 
 void show_page_config(const char *title, char *data)
 {
+    //ESP_LOGI(TAG, "****** %s", __func__ );
+
     char *page_data = malloc(PAGE_DEFAULT_BUFFER_SIZE);
 
     generate_page(data, title, page_data);
@@ -307,6 +342,8 @@ void show_page_config(const char *title, char *data)
 
 void show_page_tools(const char *title, char *data)
 {
+    //ESP_LOGI(TAG, "****** %s", __func__ );
+
     char *page_data = malloc(PAGE_DEFAULT_BUFFER_SIZE);
     /* зарегистрирровать callback отрисовки на странице */
     /* зарегистрировать callback обработки параметров */
@@ -319,6 +356,8 @@ void show_page_tools(const char *title, char *data)
     
     print_page_block( PAGES_URI[ PAGE_URI_TOOLS ], page_data);
 
+    //ESP_LOGI(TAG, "html_page_reboot_button_block: \n %s", html_page_reboot_button_block);
+
     sprintf( page_data + strlen(page_data), html_page_reboot_button_block);
     
     generate_page(data, title, page_data);
@@ -327,7 +366,12 @@ void show_page_tools(const char *title, char *data)
 
 void show_page_update(const char *title, char *data)
 {
+    //ESP_LOGI(TAG, "****** %s", __func__ );
+
     char *page_data = malloc(PAGE_DEFAULT_BUFFER_SIZE);
+
+    //ESP_LOGI(TAG, "html_page_ota: \n %s", html_page_ota);
+
     strcpy(page_data, html_page_ota);
     generate_page(data, title, page_data);
     free(page_data);
@@ -335,6 +379,8 @@ void show_page_update(const char *title, char *data)
 
 void show_page_debug(const char *title, char *data)
 {
+    //ESP_LOGI(TAG, "****** %s", __func__ );
+
     char *page_data = malloc(PAGE_DEFAULT_BUFFER_SIZE);
     strcpy(page_data, "");
     print_page_block( PAGES_URI[ PAGE_URI_DEBUG ], page_data);

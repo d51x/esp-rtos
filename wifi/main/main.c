@@ -39,15 +39,17 @@ void app_main(void)
     i2c_register_http_handler(http_server);
     i2c_register_http_print_data();
     #endif
-    
+
         mqtt_init();
-        mqtt_set_device_name(wifi_cfg->hostname);
+        
 
         mqtt_add_periodic_publish_callback( "test1", test1);
         mqtt_add_periodic_publish_callback( "test2", test2);
 
         mqtt_add_receive_callback("recv1", test_recv1);
         mqtt_add_receive_callback("recv2", test_recv2);
+
+        mqtt_register_http_print_data();
 
     #ifdef CONFIG_SENSOR_SHT21
     sht21_init();

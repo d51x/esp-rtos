@@ -1,6 +1,7 @@
 
 #include "http_handlers.h"
 #include "http_page.h"
+#include "httpd.h"
 
 /*
 pages:
@@ -91,8 +92,13 @@ esp_err_t setup_get_handler(httpd_req_t *req){
 	if ( http_get_has_params(req) == ESP_OK) 
 	{
 		process_wifi_param(req);
-		process_mqtt_param(req);
+		//process_mqtt_param(req);
         process_params(req);
+
+        char *path = http_uri_clean( req );
+        make_redirect(req, 0, path);
+        free( path );
+        return ESP_OK;
 	}
 	  
   strncpy(page, HTTP_STR_SETUP, PAGE_DEFAULT_BUFFER_SIZE);
@@ -141,45 +147,7 @@ void process_wifi_param(httpd_req_t *req)
 
 void process_mqtt_param(httpd_req_t *req)
 {
-	char param[100];
-	mqtt_config_t *mqtt_cfg = malloc(sizeof(mqtt_config_t));
-	// TODO: check for empty hostname and ssid
-	if ( http_get_key_str(req, "st", param, sizeof(param)) == ESP_OK ) {
-		if ( atoi(param) != HTML_PAGE_CFG_MQTT ) {
-			return;	
-		}
-	}
 
-    if ( http_get_key_str(req, "mqtt_en", param, sizeof(param)) == ESP_OK ) {
-        mqtt_cfg->enabled = 1;
-    } else {
-        mqtt_cfg->enabled = 0;
-    }
-
-    if ( http_get_key_str(req, "mqtt_host", param, sizeof(param)) == ESP_OK ) {
-        url_decode(param, mqtt_cfg->broker_url);
-    }
-
-
-    if ( http_get_key_str(req, "mqtt_login",  param, sizeof( param )) == ESP_OK ) {
-        strcpy(mqtt_cfg->login, param);
-    } 
-
-    if ( http_get_key_str(req, "mqtt_passw",  param, sizeof( param )) == ESP_OK ) {
-        strcpy(mqtt_cfg->password, param);
-    }
-
-    if ( http_get_key_str(req, "mqtt_base",  param, sizeof( param )) == ESP_OK ) {
-        url_decode(param, mqtt_cfg->base_topic);
-    }
-
-    if ( http_get_key_str(req, "mqtt_sint",  param, sizeof( param )) == ESP_OK ) {
-        mqtt_cfg->send_interval = atoi(param);
-    }
-
-	
-	mqtt_save_cfg(mqtt_cfg);
-	free(mqtt_cfg);
 }
 
 

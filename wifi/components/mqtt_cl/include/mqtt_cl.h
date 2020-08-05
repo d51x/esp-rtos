@@ -60,7 +60,10 @@ typedef struct {
 #define MQTT_RECV_CB 5
 
 void mqtt_init(); /*const char *broker_url, uint16_t send_interval*/
-void mqtt_deinit();
+void mqtt_start();
+void mqtt_stop();
+void mqtt_restart_task();
+
 void mqtt_load_cfg(mqtt_config_t *cfg);
 void mqtt_get_cfg(mqtt_config_t *cfg);
 void mqtt_save_cfg(const mqtt_config_t *cfg);

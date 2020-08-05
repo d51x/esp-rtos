@@ -84,13 +84,29 @@ void mqtt_save_cfg(const mqtt_config_t *cfg)
     memcpy(&_mqtt_cfg, cfg, sizeof(mqtt_config_t));
 }
 
+static void mqtt_start_publish_task()
+{
+    if ( xHanldePublishAll == NULL ) {
+        xTaskCreate(mqtt_publish_all_task, "mqtt_publish_all_task", 2048, NULL, CONFIG_MQTT_TASK_PRIORITY, &xHanldePublishAll);
+    }   
+}
+
+static void mqtt_stop_publish_task()
+{
+    if ( xHanldePublishAll ) {
+        vTaskDelete(xHanldePublishAll);
+        xHanldePublishAll = NULL;
+    }
+}
+
 esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
 {
     
     esp_mqtt_client_handle_t client = event->client;
 //    int msg_id;
     // your_context_t *context = event->context;
-    switch (event->event_id) {
+    switch (event->event_id) 
+    {
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
             mqtt_state = 1;
@@ -101,21 +117,13 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             // mqtt_online_task
             // mqtt_keep_alive_task
             // mqtt_received_task
-            if ( xHanldePublishAll == NULL ) {
-                xTaskCreate(mqtt_publish_all_task, "mqtt_publish_all_task", 2048, NULL, CONFIG_MQTT_TASK_PRIORITY, &xHanldePublishAll);
-            }
+            mqtt_start_publish_task();
             break;
         case MQTT_EVENT_DISCONNECTED:
-
-                mqtt_state = 0;
                 ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
+                mqtt_state = 0;
+                mqtt_stop_publish_task();                
                 // TODO: save status mqtt and counters
-                if ( xHanldePublishAll ) {
-                    vTaskDelete(xHanldePublishAll);
-                    xHanldePublishAll = NULL;
-                }
-                //mqtt_deinit();
-                //mqtt_init();
             break;
 
         case MQTT_EVENT_SUBSCRIBED:
@@ -155,72 +163,78 @@ static char * mqtt_client_id()
 
 void mqtt_init()
 {
-
     //load data from nvs
     mqtt_load_cfg(&_mqtt_cfg);
 
-   if ( !_mqtt_cfg.enabled ) {
-        return;
-    }
+   if ( !_mqtt_cfg.enabled ) return;
 
     memset(mqtt_send, 0, MQTT_SEND_CB*sizeof(mqtt_send_t));
     memset(mqtt_recv, 0, MQTT_RECV_CB*sizeof(mqtt_recv_t));
 
+    mqtt_start();
+}
+
+void mqtt_start()
+{   
     EventBits_t bits = xEventGroupWaitBits(xWiFiEventGroup, WIFI_CONNECTED_BIT | WIFI_FAIL_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
-    if (bits & WIFI_CONNECTED_BIT) {
+    if (bits & WIFI_CONNECTED_BIT) 
+    {
         ESP_LOGI(TAG, "Wifi connected, initialize mqtt...");
         if ( mqtt_client == NULL) 
-            {
-                char *client_id = calloc(1, 10);
-                client_id = mqtt_client_id();
-                ESP_LOGI(TAG, "client id: %s", client_id);
-                esp_mqtt_client_config_t mqtt_cfg = {
-                    .event_handle = mqtt_event_handler,
-                    .disable_auto_reconnect = false,
-                    .task_prio = CONFIG_MQTT_TASK_PRIORITY,
-                    .keepalive = CONFIG_MQTT_KEEPALIVE_TIMEOUT,
-                    //.username = "wwww",          
-                };
-                
-                //const char *client_id;                  /*!< default client id is ``ESP32_%CHIPID%`` where %CHIPID% are last 3 bytes of MAC address in hex format */
-        //const char *lwt_topic;                  /*!< LWT (Last Will and Testament) message topic (NULL by default) */
-            //const char *lwt_msg;                    /*!< LWT message (NULL by default) */    
-            //    void *user_context;                     /*!< pass user context to this option, then can receive that context in ``event->user_context`` */
+        {
+            char *client_id = calloc(1, 10);
+            client_id = mqtt_client_id();
+            ESP_LOGI(TAG, "client id: %s", client_id);
+            esp_mqtt_client_config_t mqtt_cfg = {
+                .event_handle = mqtt_event_handler,
+                .disable_auto_reconnect = false,
+                .task_prio = CONFIG_MQTT_TASK_PRIORITY,
+                .keepalive = CONFIG_MQTT_KEEPALIVE_TIMEOUT,
+                //.username = "wwww",          
+            };
+            
+            //const char *client_id;                  /*!< default client id is ``ESP32_%CHIPID%`` where %CHIPID% are last 3 bytes of MAC address in hex format */
+    //const char *lwt_topic;                  /*!< LWT (Last Will and Testament) message topic (NULL by default) */
+        //const char *lwt_msg;                    /*!< LWT message (NULL by default) */    
+        //    void *user_context;                     /*!< pass user context to this option, then can receive that context in ``event->user_context`` */
 
-                mqtt_cfg.uri = strdup(_mqtt_cfg.broker_url);
-                mqtt_cfg.username = strdup( _mqtt_cfg.login);
-                mqtt_cfg.password = strdup( _mqtt_cfg.password);
-                mqtt_cfg.client_id = strdup( client_id );
-                free(client_id);
+            mqtt_cfg.uri = strdup(_mqtt_cfg.broker_url);
+            mqtt_cfg.username = strdup( _mqtt_cfg.login);
+            mqtt_cfg.password = strdup( _mqtt_cfg.password);
+            mqtt_cfg.client_id = strdup( client_id );
+            free(client_id);
 
-                ESP_LOGI(TAG, "Mqtt client_id: %s", mqtt_cfg.client_id);
+            ESP_LOGI(TAG, "Mqtt client_id: %s", mqtt_cfg.client_id);
 
-                mqtt_client = esp_mqtt_client_init(&mqtt_cfg);
-            }
+            mqtt_client = esp_mqtt_client_init(&mqtt_cfg);
+        }
 
-            esp_mqtt_client_start(mqtt_client); 
-            esp_log_level_set("*", ESP_LOG_NONE);
-            //esp_log_level_set("MQTT_CLIENT", ESP_LOG_INFO);
-            //esp_log_level_set("TRANSPORT_TCP", ESP_LOG_VERBOSE);
-            //esp_log_level_set("TRANSPORT_SSL", ESP_LOG_VERBOSE);
-            //esp_log_level_set("TRANSPORT", ESP_LOG_VERBOSE);
-            //esp_log_level_set("OUTBOX", ESP_LOG_VERBOSE);
-    }  
+        esp_mqtt_client_start(mqtt_client); 
+        esp_log_level_set("*", ESP_LOG_NONE);
+        esp_log_level_set("MQTT_CLIENT", ESP_LOG_VERBOSE);
+        //esp_log_level_set("TRANSPORT_TCP", ESP_LOG_VERBOSE);
+        //esp_log_level_set("TRANSPORT_SSL", ESP_LOG_VERBOSE);
+        //esp_log_level_set("TRANSPORT", ESP_LOG_VERBOSE);
+        //esp_log_level_set("OUTBOX", ESP_LOG_VERBOSE);
+
+        mqtt_set_device_name(wifi_cfg->hostname);
+    }      
+
 }
 
-void mqtt_deinit()
+void mqtt_stop()
 {
-    // stop 
+    
     ESP_LOGI(TAG, "MQTT: Disconnecting");
-    mqtt_error_count = 0;
-    esp_mqtt_client_stop(mqtt_client); 
+    if ( !mqtt_state ) return;
+    mqtt_state = 0;
+    // TODO: save status mqtt and counters
+    mqtt_stop_publish_task();
 
-    if ( mqtt_client != NULL ) 
-    {
-        esp_mqtt_client_destroy(mqtt_client);
-    }
-    ESP_LOGI(TAG, "MQTT: Disconnected");
+    mqtt_error_count = 0;
+    esp_mqtt_client_stop(mqtt_client);
 }
+
 
 static void process_data(esp_mqtt_event_handle_t event)
 {
@@ -380,4 +394,25 @@ static void mqtt_publish_custom_registered_topics()
             mqtt_publish_generic( mqtt_send[i].topic, payload); 
         }
     }
+}
+
+static void mqtt_restart_task_cb(void *arg)
+{
+        // reconfigure mqtt with new config
+        #ifdef CONFIG_MQTT_SETTINGS_ON_AIR
+        mqtt_stop();
+        
+        if ( _mqtt_cfg.enabled ) {
+            vTaskDelay( 5000 / portTICK_RATE_MS );
+            mqtt_start();
+        }
+        #endif    
+
+        vTaskDelete( NULL );
+
+}
+
+void mqtt_restart_task()
+{
+    xTaskCreate(mqtt_restart_task_cb, "mqtt_restart_task_cb", 1024, NULL, CONFIG_MQTT_TASK_PRIORITY, NULL);
 }
