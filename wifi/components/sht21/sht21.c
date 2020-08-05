@@ -108,7 +108,7 @@ static uint16_t sht21_read_raw_data(uint8_t command)
 {
     if ( xSemaphoreI2C == NULL ) return SHT21_READ_ERROR;
 
-    if( xSemaphoreTake( xSemaphoreI2C, I2C_SEMAPHORE_WAIT0 ) == pdTRUE )
+    if( xSemaphoreTake( xSemaphoreI2C, I2C_SEMAPHORE_WAIT ) == pdTRUE )
     {
         esp_err_t err = i2c_send_command(SHT21_ADDR, command);
         if ( err == ESP_FAIL ) goto error;
