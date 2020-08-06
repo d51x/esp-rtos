@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
@@ -34,6 +36,11 @@
 
 
 
+#define B(bit_no)         (1 << (bit_no))
+#define BIT_CLEAR(reg, bit_no)   (reg) &= ~B(bit_no)
+#define BIT_SET(reg, bit_no)   (reg) |= B(bit_no)
+#define BIT_CHECK(reg, bit_no)   ( (reg) & B(bit_no) )
+#define BIT_TRIGGER(reg, bit_no)   (reg) ^= B(bit_no)
 
 #define micros() (unsigned long) (esp_timer_get_time())
 #define millis() (unsigned long) (esp_timer_get_time() / 1000ULL)
@@ -52,6 +59,21 @@
 #define MIN(x,y)   ((x) < (y))?(x):(y)
 #define MAX(x,y)   ((x) > (y))?(x):(y)
 
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c" 
+#define BYTE_TO_BINARY(byte)  \
+  (byte & 0x80 ? '1' : '0'), \
+  (byte & 0x40 ? '1' : '0'), \
+  (byte & 0x20 ? '1' : '0'), \
+  (byte & 0x10 ? '1' : '0'), \
+  (byte & 0x08 ? '1' : '0'), \
+  (byte & 0x04 ? '1' : '0'), \
+  (byte & 0x02 ? '1' : '0'), \
+  (byte & 0x01 ? '1' : '0') 
+
+  // printf("Leading text "BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(byte));
+  // For multi-byte types
+  //  printf("m: "BYTE_TO_BINARY_PATTERN" "BYTE_TO_BINARY_PATTERN"\n",
+  //              BYTE_TO_BINARY(m>>8), BYTE_TO_BINARY(m));
 /*
 typedef enum {
     STR2INT_SUCCESS,        // 0

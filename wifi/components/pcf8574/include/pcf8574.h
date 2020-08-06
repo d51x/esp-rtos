@@ -12,6 +12,7 @@
 #include "i2c_bus.h"
 #include "freertos/task.h"
 
+#include "utils.h"
 
 #ifdef CONFIG_COMPONENT_PCF8574
 #define PCF8574_ADDR_DEFAULT 0x20
