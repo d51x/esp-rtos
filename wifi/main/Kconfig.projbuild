@@ -132,6 +132,13 @@ menu "Project config"
             help
                 Enable PCF8574
 
+        config COMPONENT_LCD2004
+            bool "LCD2004"
+            default y
+            depends on COMPONENT_I2C
+            help
+                Enable LCD2004
+
     endmenu
     
     menu "Sensors"

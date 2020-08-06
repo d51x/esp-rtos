@@ -29,27 +29,27 @@ void app_main(void)
 	ESP_LOGI(TAG, "SDK: %s", esp_get_idf_version());
 	
     
-    wifi_init();
+    //wifi_init();
 
-    sntp_start();
+    //sntp_start();
     
-    webserver_init(&http_server);
+    //webserver_init(&http_server);
 
     #ifdef CONFIG_COMPONENT_I2C
     i2c_register_http_handler(http_server);
     i2c_register_http_print_data();
     #endif
 
-        mqtt_init();
+       // mqtt_init();
         
 
-        mqtt_add_periodic_publish_callback( "test1", test1);
-        mqtt_add_periodic_publish_callback( "test2", test2);
+        //mqtt_add_periodic_publish_callback( "test1", test1);
+        //mqtt_add_periodic_publish_callback( "test2", test2);
 
-        mqtt_add_receive_callback("recv1", test_recv1);
-        mqtt_add_receive_callback("recv2", test_recv2);
+        //mqtt_add_receive_callback("recv1", test_recv1);
+        //mqtt_add_receive_callback("recv2", test_recv2);
 
-        mqtt_register_http_print_data();
+        //mqtt_register_http_print_data();
 
     #ifdef CONFIG_SENSOR_SHT21
     sht21_init();
@@ -65,12 +65,18 @@ void app_main(void)
     pcf8574_test_task(pcf8574_h);
     #endif
 
+    #ifdef CONFIG_COMPONENT_LCD2004
+    lcd2004_test_task();
+    //lcd2004_init(LCD2004_ADDR_DEFAULT, 20, 4);
+    //ets_delay_us(100000);
+    #endif
+
     while (true) {
         
         
             //ESP_LOGI(TAG, "SHT21 Temperature: %0.2fC", (float) sht21_get_temp());
             //ESP_LOGI(TAG, "SHT21 Humidity: %0.2f%%", (float) sht21_get_hum());
-
+            
         #ifdef CONFIG_DEBUG_PRINT_TASK_INFO
             print_tasks_info();
         #endif

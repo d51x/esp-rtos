@@ -46,6 +46,10 @@
 #include "pcf8574.h"
 #endif
 
+    #ifdef CONFIG_COMPONENT_LCD2004
+    #include "lcd2004.h"
+    #endif
+    
 httpd_handle_t http_server = NULL;
 
 extern void sntp_start();
