@@ -63,6 +63,8 @@
 #define LCD_8BITMODE 0x10
 #define LCD_4BITMODE 0x00
 
+#define LCD_LINE_LENGTH 20
+
 typedef enum lcd2004_cmd_state {
     LCD2004_CMD_STATE_OFF,
     LCD2004_CMD_STATE_ON

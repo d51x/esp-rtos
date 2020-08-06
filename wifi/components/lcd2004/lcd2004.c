@@ -221,8 +221,8 @@ void lcd2004_set_cursor_position(uint8_t col, uint8_t row)
    
     uint8_t val = LCD_CMD_DDRAM_ADDR_SET | (col-1) | pos;
 
-    ESP_LOGI(TAG, "%s(%02d, %d) \t --> \t 0x%02X (DDRAM: 0x%02X \t line: 0x%02X \t pos: 0x%02X \t total: 0x%02X)", __func__, col, row, 
-                                                        val, LCD_CMD_DDRAM_ADDR_SET, pos, col-1, pos + col-1);
+    //ESP_LOGI(TAG, "%s(%02d, %d) \t --> \t 0x%02X (DDRAM: 0x%02X \t line: 0x%02X \t pos: 0x%02X \t total: 0x%02X)", __func__, col, row, 
+    //                                                    val, LCD_CMD_DDRAM_ADDR_SET, pos, col-1, pos + col-1);
   lcd2004_send_command ( val );   
 }
 
@@ -259,6 +259,24 @@ void lcd2004_home()
     i2c_master_wait(2000); 
 }
 
+void lcd2004_print(uint8_t line, const char *str)
+{
+    ESP_LOGI(TAG, "%d", strlen(str));
+    ESP_LOGI(TAG, "%s", str);
+
+    uint8_t len = strlen(str);
+    char *s = (char *) calloc( LCD_LINE_LENGTH + 1, sizeof(char*));
+    memcpy(s, str, LCD_LINE_LENGTH);
+    memset(s+len, 0x20, LCD_LINE_LENGTH-len);
+    ESP_LOGI(TAG, "s = '%s'", s);
+    //strncpy(s, str, 20);
+
+    lcd2004_set_cursor_position( 1, line);
+    lcd2004_print_string( s );
+    //lcd2004_print_string( str );
+    free(s);
+    
+}
 
 void lcd2004_test_task_cb(void *arg)
 {
@@ -309,30 +327,86 @@ void lcd2004_test_task_cb(void *arg)
         lcd2004_print_string( "++==(())**&&==--**-=");
         vTaskDelay(  2000 / portTICK_RATE_MS ); 
 
-        lcd2004_clear();
-        
-        lcd2004_set_cursor_position( 1, 2);
-        lcd2004_print_string( "ABCDEFGHIKLMNOPRSTQU");
+       
+
+        //
+        lcd2004_print(2, "Hello!");
         vTaskDelay(  2000 / portTICK_RATE_MS ); 
 
-        lcd2004_set_cursor_position( 1, 3);
-        lcd2004_print_string( "VWXYZ01234567890+=-*");
+        lcd2004_print(2, " Hello!");
         vTaskDelay(  2000 / portTICK_RATE_MS ); 
 
-        lcd2004_set_cursor_position( 1, 4);
-        lcd2004_print_string( "    ****    ****====");
+        lcd2004_print(2, "  Hello!");
         vTaskDelay(  2000 / portTICK_RATE_MS ); 
-        
+
+        lcd2004_print(2, "   Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS ); 
+
+        lcd2004_print(2, "    Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS ); 
+
+        lcd2004_print(2, "   Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS ); 
+
+        lcd2004_print(2, "  Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS ); 
+
+        lcd2004_print(2, " Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS ); 
+
+        lcd2004_print(2, " Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS ); 
+
+        lcd2004_print(2, "Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS ); 
+
+        lcd2004_print(2, "10          Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS ); 
+
+        lcd2004_print(2, "11           Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS ); 
+
+        lcd2004_print(2, "12            Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS ); 
+
+        lcd2004_print(2, "13             Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS ); 
+
+        lcd2004_print(2, "14            Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS ); 
+
+        lcd2004_print(2, "15             Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS ); 
+
+        lcd2004_print(2, "16              Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS ); 
+
+        lcd2004_print(2, "17               Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS ); 
+
+        lcd2004_print(2, "18                Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS );         
+
+        lcd2004_print(2, "19                 Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS );         
+
+        lcd2004_print(2, "20                  Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS );         
+
+        lcd2004_print(2, "21                   Hello!");
+        vTaskDelay(  2000 / portTICK_RATE_MS );         
+
+        // сдвинуть
         lcd2004_clear();
         lcd2004_set_cursor_position( 5, 3);
         lcd2004_print_string( "****");
         vTaskDelay(  2000 / portTICK_RATE_MS ); 
 
-        lcd2004_set_cursor_position( 12, 3);
-        lcd2004_print_string( "****");
+        lcd2004_set_cursor_position( 13, 3);
+        lcd2004_print_string( "****");                  // не пропечатно
         vTaskDelay(  2000 / portTICK_RATE_MS ); 
 
-        lcd2004_set_cursor_position( 16, 3);
+        lcd2004_set_cursor_position( 17, 3);
         lcd2004_print_string( "****");                  // не пропечатно
         vTaskDelay(  2000 / portTICK_RATE_MS ); 
 
@@ -340,11 +414,11 @@ void lcd2004_test_task_cb(void *arg)
         lcd2004_print_string( "****");
         vTaskDelay(  2000 / portTICK_RATE_MS ); 
 
-        lcd2004_set_cursor_position( 11, 4);
+        lcd2004_set_cursor_position( 13, 4);
         lcd2004_print_string( "****");                  // не пропечатно
         vTaskDelay(  2000 / portTICK_RATE_MS ); 
 
-        lcd2004_set_cursor_position( 15, 4);
+        lcd2004_set_cursor_position( 17, 4);
         lcd2004_print_string( "****");                  // не пропечатно
         vTaskDelay(  2000 / portTICK_RATE_MS ); 
 
