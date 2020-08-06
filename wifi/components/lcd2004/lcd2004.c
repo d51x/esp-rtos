@@ -200,7 +200,7 @@ void lcd2004_cursor_show(uint8_t val)
     lcd2004_send_command( LCD_CMD_CONTROL | lcd2004.control_flag);
 }
 
-void lcd2004_cursor_bink(uint8_t val)
+void lcd2004_cursor_blink(uint8_t val)
 {
     if ( val )
         lcd2004.control_flag |= LCD_CMD_BLINK_CURSOR_ON;
@@ -247,6 +247,13 @@ void lcd2004_print_string(char *str)
 
 }
 
+
+void lcd2004_print_string_at_pos(uint8_t col, uint8_t row, char *str)
+{
+    lcd2004_set_cursor_position( col, row );
+    lcd2004_print_string(str);
+}
+
 void lcd2004_clear()
 {
     lcd2004_send_command( LCD_CMD_CLEAR );//уберем мусор LCD2004_CMD_CLEAR
@@ -276,6 +283,61 @@ void lcd2004_print(uint8_t line, const char *str)
     //lcd2004_print_string( str );
     free(s);
     
+}
+
+void lcd2004_progress(uint8_t line, uint8_t val, uint8_t blink)
+{
+    /*
+    lcd2004_set_cursor_position( 17, line);
+    char v[4];
+    sprintf(v, "%3d%%", val);
+    lcd2004_print_string( v );
+
+    uint8_t progress = ( val ) * 15 / 100;
+    
+
+    char *s = (char *) calloc( 15 + 1, sizeof(char*));
+    memset(s, 0x20, 15);
+    memset(s, 0xFF, progress);
+    lcd2004_set_cursor_position( 1, line);
+    lcd2004_print_string( s );
+    
+    if ( blink )
+    {
+        lcd2004_set_cursor_position( progress+1, line);
+        lcd2004_cursor_blink( progress < 15 );
+    }
+
+    free(s);
+    */
+    char *s = (char *) calloc( 10 + 1, sizeof(char*));
+    sprintf(s, "%3d%%", val);
+    lcd2004_progress_text(line, s, val, blink);
+}
+
+void lcd2004_progress_text(uint8_t line, const char *str, uint8_t val, uint8_t blink)
+{
+    uint8_t len = strlen(str) ;
+    lcd2004_set_cursor_position( 20 - len + 1, line);
+    lcd2004_print_string( str );
+
+    uint8_t progress_len = 20 - len;
+    uint8_t progress = ( val ) * progress_len / 100;
+    
+
+    char *s = (char *) calloc( progress_len + 1, sizeof(char*));
+    memset(s, 0x20, progress_len);
+    memset(s, 0xFF, progress);
+    lcd2004_set_cursor_position( 1, line);
+    lcd2004_print_string( s );
+    
+    if ( blink )
+    {
+        lcd2004_set_cursor_position( progress+1, line);
+        lcd2004_cursor_blink( progress < progress_len );
+    }
+
+    free(s);
 }
 
 void lcd2004_test_task_cb(void *arg)
@@ -311,127 +373,18 @@ void lcd2004_test_task_cb(void *arg)
 
         lcd2004_clear();
         
-        lcd2004_set_cursor_position( 1, 1);
-        lcd2004_print_string( "01234567899876543210");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
 
-        lcd2004_set_cursor_position( 1, 2);
-        lcd2004_print_string( "--------------------");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
 
-        lcd2004_set_cursor_position( 1, 3);
-        lcd2004_print_string( "09876543211234567890");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_set_cursor_position( 1, 4);
-        lcd2004_print_string( "++==(())**&&==--**-=");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-       
-
-        //
-        lcd2004_print(2, "Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, " Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, "  Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, "   Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, "    Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, "   Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, "  Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, " Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, " Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, "Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, "10          Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, "11           Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, "12            Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, "13             Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, "14            Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, "15             Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, "16              Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, "17               Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_print(2, "18                Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS );         
-
-        lcd2004_print(2, "19                 Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS );         
-
-        lcd2004_print(2, "20                  Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS );         
-
-        lcd2004_print(2, "21                   Hello!");
-        vTaskDelay(  2000 / portTICK_RATE_MS );         
-
-        // сдвинуть
-        lcd2004_clear();
-        lcd2004_set_cursor_position( 5, 3);
-        lcd2004_print_string( "****");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_set_cursor_position( 13, 3);
-        lcd2004_print_string( "****");                  // не пропечатно
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_set_cursor_position( 17, 3);
-        lcd2004_print_string( "****");                  // не пропечатно
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_set_cursor_position( 5, 4);
-        lcd2004_print_string( "****");
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_set_cursor_position( 13, 4);
-        lcd2004_print_string( "****");                  // не пропечатно
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        lcd2004_set_cursor_position( 17, 4);
-        lcd2004_print_string( "****");                  // не пропечатно
-        vTaskDelay(  2000 / portTICK_RATE_MS ); 
-
-        for ( uint8_t row = 1; row <= 4; row++)
+        for ( uint8_t i = 1; i <= 100; i++)
         {
-            for ( uint8_t col = 1; col <= 20; col++)    
-            {
-                lcd2004_set_cursor_position(col, row);
-                lcd2004_print_string( "X");
+                lcd2004_progress(1, i, 1 /* blink */ );
+
+                char s[10];
+                sprintf(s, "%3d%%", i);
+                lcd2004_progress_text(2, s, i, 1);
                 vTaskDelay(  2000 / portTICK_RATE_MS ); 
-            }
         }
-                
+               vTaskDelay(  10000 / portTICK_RATE_MS );   
     }
 
     vTaskDelete( NULL );

@@ -109,13 +109,15 @@ void lcd2004_backlight(lcd2004_backlight_t state);
 lcd2004_backlight_t lcd2004_backlight_state();
 
 void lcd2004_cursor_show(uint8_t val);
-void lcd2004_cursor_bink(uint8_t val);
+void lcd2004_cursor_blink(uint8_t val);
 
 void lcd2004_set_cursor_position(uint8_t col, uint8_t row);
 void lcd2004_print_string(char *str);
+void lcd2004_print_string_at_pos(uint8_t col, uint8_t row, char *str);
 
 void lcd2004_print(uint8_t line, const char *str);
-
+void lcd2004_progress(uint8_t line, uint8_t val, uint8_t blink);
+void lcd2004_progress_text(uint8_t line, const char *str, uint8_t val, uint8_t blink);
 
 
 void lcd2004_test_task();
