@@ -125,63 +125,30 @@ void lcd2004_init(uint8_t addr, uint8_t cols, uint8_t rows)
 
     lcd2004_send_half_byte( 0x02, RS_MODE_CMD ); 
 
-                // 0x28 = 0x20                   0x08        0x00     
-    //lcd2004_send_command( LCD_CMD_FUNCTION_SET | LCD_2LINE | LCD2004_FONT_5X8);
     lcd2004_send_command( LCD_CMD_FUNCTION_SET | LCD_2LINE | lcd2004.font_size);
-    //lcd2004_send_byte(0x28,0);//режим 4 бит, 2 линии (для нашего большого дисплея это 4 линии, шрифт 5х8
-                                // LCD2004_CMD_FUNCTION_SET |                                   | LCD2004_FONT_5X8
-                                    //0x20                                                                 0           
-    // LCD_DISPLAYCONTROL  0x08
-    
-    // display()   display_on()
-    //lcd2004_send_byte(0x08,0);//дисплей пока выключаем LCD2004_CMD_CONTROL
-    //lcd2004_send_byte( LCD_CMD_CONTROL, RS_MODE_CMD);//дисплей пока выключаем LCD2004_CMD_CONTROL
-    lcd2004_send_command( LCD_CMD_CONTROL);//дисплей пока выключаем LCD2004_CMD_CONTROL и никакие флаги контроля курсора не выставлены
+
+    lcd2004_send_command( LCD_CMD_CONTROL);
     i2c_master_wait( 1000 );
 
-    // clear()
-    //lcd2004_send_byte(0x01,0);//уберем мусор LCD2004_CMD_CLEAR
-    //lcd2004_send_byte( LCD_CMD_CLEAR, RS_MODE_CMD);//уберем мусор LCD2004_CMD_CLEAR
-    lcd2004_send_command( LCD_CMD_CLEAR );//уберем мусор LCD2004_CMD_CLEAR
+    lcd2004_send_command( LCD_CMD_CLEAR );
     i2c_master_wait( 2000 );
 
     lcd2004.mode = LCD_CMD_ENTRY_LEFT | LCD_CMD_ENTRY_SHIFT_OFF;
-    //lcd2004_send_byte(0x06,0);// пишем вправо   LCD2004_CMD_ENTRY_MODE (0x04) | LCD2004_CMD_ENTRY_LEFT (0x02)
-    //lcd2004_send_byte( LCD_CMD_ENTRY_MODE_SET | lcd2004.mode, RS_MODE_CMD);// пишем вправо   LCD2004_CMD_ENTRY_MODE (0x04) | LCD2004_CMD_ENTRY_LEFT (0x02)
-    lcd2004_send_command( LCD_CMD_ENTRY_MODE_SET | lcd2004.mode);// пишем вправо   LCD2004_CMD_ENTRY_MODE (0x04) | LCD2004_CMD_ENTRY_LEFT (0x02)
     i2c_master_wait(1000);    
 
-    //                     0x04                 0x00                           0x00
     lcd2004.control_flag = LCD_CMD_DISPLAY_ON | LCD_CMD_UNDERLINE_CURSOR_OFF | LCD_CMD_BLINK_CURSOR_OFF;
-    //  0x0C 0x08             0x04
-    // LCD_CMD_CONTROL | lcd2004.control_flag
+    lcd2004_send_command( LCD_CMD_CONTROL | lcd2004.control_flag); 
 
-    //lcd2004_send_byte(0x0C,0);//дисплей включаем (D=1), курсоры никакие не нужны
-    //lcd2004_send_byte( LCD_CMD_CONTROL | lcd2004.control_flag, RS_MODE_CMD);//дисплей включаем (D=1), курсоры никакие не нужны
-    lcd2004_send_command( LCD_CMD_CONTROL | lcd2004.control_flag);//дисплей включаем (D=1), курсоры никакие не нужны
-    
-    //lcd2004_send_byte(0x02,0);//курсор на место
-    //lcd2004_send_byte( LCD_CMD_RETURN_HOME, RS_MODE_CMD);//курсор на место
     lcd2004_home();
-
     lcd2004_clear();
 
-    //lcd2004_send_byte(0X80,0);//SET POS LINE 0
-    //lcd2004_send_byte( LCD_CMD_DDRAM_ADDR_SET, RS_MODE_CMD);//SET POS LINE 0
-    lcd2004_send_command( LCD_CMD_DDRAM_ADDR_SET);//SET POS LINE 0
+    lcd2004_send_command( LCD_CMD_DDRAM_ADDR_SET);
     i2c_master_wait(2000);
-
-    //lcd2004_bl_set();//подсветка
-    //lcd2004.backlight = LCD2004_BACKLIGHT_ON;
-    //lcd2004_send_byte( LCD_CMD_CONTROL | lcd2004.control_flag, RS_MODE_CMD);//дисплей включаем (D=1), курсоры никакие не нужны
-    //lcd2004_send_command( LCD_CMD_CONTROL | lcd2004.control_flag);
-       
 }
 
 void lcd2004_backlight(lcd2004_backlight_t state)
 {
     lcd2004.backlight = state;
-    //lcd2004_send_byte( LCD_CMD_CONTROL | lcd2004.control_flag, RS_MODE_CMD);
     lcd2004_send_command( LCD_CMD_CONTROL | lcd2004.control_flag);
 }
 
@@ -268,51 +235,23 @@ void lcd2004_home()
 
 void lcd2004_print(uint8_t line, const char *str)
 {
-    ESP_LOGI(TAG, "%d", strlen(str));
-    ESP_LOGI(TAG, "%s", str);
-
     uint8_t len = strlen(str);
     char *s = (char *) calloc( LCD_LINE_LENGTH + 1, sizeof(char*));
     memcpy(s, str, LCD_LINE_LENGTH);
     memset(s+len, 0x20, LCD_LINE_LENGTH-len);
-    ESP_LOGI(TAG, "s = '%s'", s);
-    //strncpy(s, str, 20);
 
     lcd2004_set_cursor_position( 1, line);
     lcd2004_print_string( s );
-    //lcd2004_print_string( str );
     free(s);
     
 }
 
 void lcd2004_progress(uint8_t line, uint8_t val, uint8_t blink)
 {
-    /*
-    lcd2004_set_cursor_position( 17, line);
-    char v[4];
-    sprintf(v, "%3d%%", val);
-    lcd2004_print_string( v );
-
-    uint8_t progress = ( val ) * 15 / 100;
-    
-
-    char *s = (char *) calloc( 15 + 1, sizeof(char*));
-    memset(s, 0x20, 15);
-    memset(s, 0xFF, progress);
-    lcd2004_set_cursor_position( 1, line);
-    lcd2004_print_string( s );
-    
-    if ( blink )
-    {
-        lcd2004_set_cursor_position( progress+1, line);
-        lcd2004_cursor_blink( progress < 15 );
-    }
-
-    free(s);
-    */
     char *s = (char *) calloc( 10 + 1, sizeof(char*));
     sprintf(s, "%3d%%", val);
     lcd2004_progress_text(line, s, val, blink);
+    free(s);
 }
 
 void lcd2004_progress_text(uint8_t line, const char *str, uint8_t val, uint8_t blink)
@@ -352,36 +291,11 @@ void lcd2004_test_task_cb(void *arg)
     while (1)
     {
 
-        lcd2004_backlight( 1 );
-        vTaskDelay(  2000 / portTICK_RATE_MS );
-
         lcd2004_clear();
-
-        lcd2004_home();
-
-        lcd2004_set_cursor_position( 4, 2);
-
-        lcd2004_print_string( "Hello !!!");
-        vTaskDelay(  5000 / portTICK_RATE_MS );
-
-        lcd2004_backlight( 0 );
-        vTaskDelay(  5000 / portTICK_RATE_MS );
-
-        lcd2004_backlight( 1 );
-
-        
-
-        lcd2004_clear();
-        
-
 
         for ( uint8_t i = 1; i <= 100; i++)
         {
                 lcd2004_progress(1, i, 1 /* blink */ );
-
-                char s[10];
-                sprintf(s, "%3d%%", i);
-                lcd2004_progress_text(2, s, i, 1);
                 vTaskDelay(  2000 / portTICK_RATE_MS ); 
         }
                vTaskDelay(  10000 / portTICK_RATE_MS );   
