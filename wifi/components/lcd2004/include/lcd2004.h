@@ -15,7 +15,8 @@
 #include "utils.h"
 
 #ifdef CONFIG_COMPONENT_LCD2004
-#define LCD2004_ADDR_DEFAULT 0x3F
+//#define LCD2004_ADDR_DEFAULT 0x3F
+#define LCD2004_ADDR_DEFAULT CONFIG_COMPONENT_LCD2004_ADDR
 
 #define RS ( 1 << 0 ) // 0x01
 #define RW ( 1 << 1 ) // 0x02
@@ -114,8 +115,11 @@ typedef enum lcd2004_line_addr {
 } lcd2004_line_addr_t;
 
 
+void lcd2004_load_cfg(lcd2004_conf_t *cfg);
+void lcd2004_get_cfg(lcd2004_conf_t *cfg);
+void lcd2004_save_cfg(const lcd2004_conf_t *cfg);
 
-void lcd2004_init(uint8_t addr, uint8_t cols, uint8_t rows);
+void lcd2004_init();
 void lcd2004_clear();
 void lcd2004_home();
 

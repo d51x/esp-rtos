@@ -113,5 +113,43 @@ function i2cscan() {
 	
 }
 
-
-
+// id: id элемента, который нажали
+// id2: id элемента, который надо изменять
+// v:  подстановка результата запроса в innerHTML, 0 - не подставлять, 1 - добавлять к data-text, 2 - вставлять во внутрь data-text (перемемнная {0} )
+// st: менять состояние кнопки, 1 - менять, 0 - не менять
+function btnclick(id, id2, v, st) {
+	var btn = document.getElementById( id );
+	var uri = btn.getAttribute("data-uri");
+	var value = btn.getAttribute("data-val");
+	
+	console.log('params: id = %s, id2 = %s, v = %d, st = %d', id, id2, v, st);
+	
+	ajax_request(uri + value, function(res) {
+		
+		if ( st == 1 ) {
+			var vnew = 0;
+			var resp = res.responseText
+			if ( resp == "OFF" ) vnew = 0;
+			else if ( resp == 0 ) vnew = 0;
+			else if ( resp == "ON" ) vnew = 1;
+			else if ( resp == 1 ) vnew = 1;
+			else vnew = 0;			
+			var cls = btn.getAttribute("data-class");
+			var snew = vnew > 0 ? " on" : " off";
+			btn.setAttribute("class", cls + snew);
+			btn.setAttribute("data-val", 1 - vnew); 
+			
+			console.log('resp = %s, vnew = %d, !vnew = %d', resp, vnew, 1 - vnew);
+		}
+		var elem = document.getElementById( id2 )
+		if ( v == 1 ) {
+			elem.innerHTML = btn.getAttribute("data-text") + res.responseText;	
+		} else if ( v == 2 ) {
+			var rs = btn.getAttribute("data-text");
+			elem.innerHTML = rs.replace("{0}", res.responseText );	
+		} else {
+			elem.innerHTML = btn.getAttribute("data-text");	
+		}
+		
+	});
+}

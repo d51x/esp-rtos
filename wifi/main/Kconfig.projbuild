@@ -139,6 +139,13 @@ menu "Project config"
             help
                 Enable LCD2004
 
+        config COMPONENT_LCD2004_ADDR
+            hex "LCD address (HEX) on I2C"
+            default 0x3F
+            depends on COMPONENT_LCD2004
+            help
+                LCD address in HEX on I2C
+
         config COMPONENT_LCD2004_HTTP
             bool "LCD2004 web control"
             default y

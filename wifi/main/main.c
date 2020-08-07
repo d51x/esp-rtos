@@ -29,7 +29,8 @@ void app_main(void)
 	ESP_LOGI(TAG, "SDK: %s", esp_get_idf_version());
 	
     #ifdef CONFIG_COMPONENT_LCD2004
-    lcd2004_init(LCD2004_ADDR_DEFAULT, 20, 4);
+    //lcd2004_init(LCD2004_ADDR_DEFAULT, 20, 4);
+    lcd2004_init();
     lcd2004_test_task();
     
     #endif

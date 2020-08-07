@@ -27,6 +27,11 @@
 
 static const char* TAG = "LCD";
 
+#define PARAM_LCD "lcd"
+#define PARAM_LCD_ADDR "addr"
+#define PARAM_LCD_STATE "st"
+#define PARAM_LCD_BL "bl"       // backlight
+
 static lcd2004_conf_t lcd2004;
 
 const uint8_t lcd_char_degree[8] =      // кодируем символ градуса
@@ -50,7 +55,7 @@ static esp_err_t lcd2004_i2c_write_byte(uint8_t val);
 static void lcd2004_send_half_byte(uint8_t nibble, uint8_t mode);
 static void lcd2004_send_byte(uint8_t cmd, uint8_t mode);
 
-void lcd2004_init(uint8_t addr, uint8_t cols, uint8_t rows);
+void lcd2004_init();
 void lcd2004_set_cursor();
 void lcd2004_set_text();
 void lcd2004_set_backlight();
@@ -122,16 +127,57 @@ static void lcd2004_send_command(uint8_t cmd)
 }
 
 
-void lcd2004_init(uint8_t addr, uint8_t cols, uint8_t rows)
+void lcd2004_load_cfg(lcd2004_conf_t *cfg)
 {
-    lcd2004.addr = addr;
-    lcd2004.cols = cols;
-    lcd2004.rows = rows;
+    if ( nvs_param_u8_load(PARAM_LCD, PARAM_LCD_ADDR, &cfg->addr) != ESP_OK ) {
+        cfg->addr = LCD2004_ADDR_DEFAULT;
+    }
+
+    if ( nvs_param_u8_load(PARAM_LCD, PARAM_LCD_STATE, &cfg->state) != ESP_OK ) {
+        cfg->state = LCD2004_STATE_ON;
+    }
+
+    if ( nvs_param_u8_load(PARAM_LCD, PARAM_LCD_BL, &cfg->backlight) != ESP_OK ) {
+        cfg->backlight = LCD2004_BACKLIGHT_ON;
+    }
+        ESP_LOGI(TAG, "loaded addr 0x%02X", cfg->addr);
+        ESP_LOGI(TAG, "loaded state %d", cfg->state);
+        ESP_LOGI(TAG, "loaded backlight %d", cfg->backlight);    
+}
+
+void lcd2004_save_cfg(const lcd2004_conf_t *cfg)
+{
+        ESP_LOGI(TAG, "save addr 0x%02X", cfg->addr);
+        ESP_LOGI(TAG, "save state %d", cfg->state);
+        ESP_LOGI(TAG, "save backlight %d", cfg->backlight);
+
+    nvs_param_u8_save(PARAM_LCD, PARAM_LCD_ADDR, cfg->addr);
+    nvs_param_u8_save(PARAM_LCD, PARAM_LCD_STATE, cfg->state);
+    nvs_param_u8_save(PARAM_LCD, PARAM_LCD_BL, cfg->backlight);
+}
+
+void lcd2004_get_cfg(lcd2004_conf_t *cfg)
+{
+    memcpy(cfg, &lcd2004, sizeof(lcd2004_conf_t));
+}
+//void lcd2004_init(uint8_t addr, uint8_t cols, uint8_t rows)
+void lcd2004_init()
+{
+    
+    lcd2004_load_cfg(&lcd2004);
+
+    ESP_LOGI(TAG, "ADD 0x%02X", lcd2004.addr);
+    ESP_LOGI(TAG, "state %d", lcd2004.state);
+    ESP_LOGI(TAG, "backlight %d", lcd2004.backlight);
+
+    //lcd2004.addr = addr;
+    lcd2004.cols = 20; //cols;
+    lcd2004.rows = 4; //rows;
     lcd2004.control_flag = 0;
     lcd2004.font_size = LCD2004_FONT_5X8;
-    lcd2004.backlight = LCD2004_BACKLIGHT_ON;
+    //lcd2004.backlight = LCD2004_BACKLIGHT_ON;   // loaded from nvs
     lcd2004.mode = 0;
-    lcd2004.state = LCD2004_STATE_OFF;
+    //lcd2004.state = LCD2004_STATE_OFF;            // loaded from nvs
 
     if ( xSemaphoreLCD2004 != NULL ) vSemaphoreDelete( xSemaphoreLCD2004 );
     xSemaphoreLCD2004 = xSemaphoreCreateMutex();
@@ -167,17 +213,31 @@ void lcd2004_init(uint8_t addr, uint8_t cols, uint8_t rows)
     lcd2004.mode = LCD_CMD_ENTRY_LEFT | LCD_CMD_ENTRY_SHIFT_OFF;
     i2c_master_wait(1000);    
 
-    lcd2004.control_flag = LCD_CMD_DISPLAY_ON | LCD_CMD_UNDERLINE_CURSOR_OFF | LCD_CMD_BLINK_CURSOR_OFF;
+     lcd2004.control_flag |= LCD_CMD_DISPLAY_OFF | LCD_CMD_UNDERLINE_CURSOR_OFF | LCD_CMD_BLINK_CURSOR_OFF;
+
+    if ( lcd2004.state == LCD2004_STATE_ON )
+    {
+        lcd2004.control_flag |= LCD_CMD_DISPLAY_ON;
+    } 
+    else 
+    {
+        lcd2004.control_flag = LCD_CMD_DISPLAY_OFF ;
+    }   
+
+        //lcd2004.control_flag = LCD_CMD_DISPLAY_ON | LCD_CMD_UNDERLINE_CURSOR_OFF | LCD_CMD_BLINK_CURSOR_OFF;
     lcd2004_send_command( LCD_CMD_CONTROL | lcd2004.control_flag); 
-    lcd2004.state = LCD2004_STATE_ON;
+
+    //lcd2004.state = LCD2004_STATE_ON;
 
     xSemaphoreGive( xSemaphoreLCD2004 );
 
     lcd2004_home();
     lcd2004_clear();
 
-    lcd2004_send_command( LCD_CMD_DDRAM_ADDR_SET);
-    i2c_master_wait(2000);
+    lcd2004_backlight(lcd2004.backlight);
+
+    //lcd2004_send_command( LCD_CMD_DDRAM_ADDR_SET);
+    //i2c_master_wait(2000);
 }
 
 void lcd2004_backlight(lcd2004_backlight_t state)
