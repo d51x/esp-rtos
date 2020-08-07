@@ -11,7 +11,7 @@
 #include "nvsparam.h"
 #include "i2c_bus.h"
 #include "freertos/task.h"
-
+#include "freertos/semphr.h"
 #include "utils.h"
 
 #ifdef CONFIG_COMPONENT_LCD2004
@@ -64,6 +64,14 @@
 #define LCD_4BITMODE 0x00
 
 #define LCD_LINE_LENGTH 20
+
+#define LCD_I2C_SEMAPHORE_WAIT_TIME_MS             200
+#define LCD_I2C_SEMAPHORE_WAIT  (I2C_SEMAPHORE_WAIT_TIME_MS /  portTICK_RATE_MS)
+#define LCD_I2C_SEND_RETRY_COUNT 30
+
+extern const uint8_t lcd_char_degree[8];
+
+SemaphoreHandle_t xSemaphoreLCD2004;
 
 typedef enum lcd2004_cmd_state {
     LCD2004_CMD_STATE_OFF,

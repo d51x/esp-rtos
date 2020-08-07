@@ -29,7 +29,16 @@ static const char* TAG = "LCD";
 
 static lcd2004_conf_t lcd2004;
 
-
+const uint8_t lcd_char_degree[8] =      // кодируем символ градуса
+{
+  0b00111,
+  0b00101,
+  0b00111,
+  0b00000,
+  0b00000,
+  0b00000,
+  0b00000,
+}; 
 
 static esp_err_t lcd2004_i2c_write_byte(uint8_t val);
 
@@ -49,8 +58,17 @@ static const uint8_t line_addr[] = { LCD2004_LINE_1, LCD2004_LINE_2, LCD2004_LIN
 
 static esp_err_t lcd2004_i2c_write_byte(uint8_t val)
 {
+    static uint8_t retry = 0;
     if ( xSemaphoreI2C == NULL ) return ESP_FAIL;
-    if( xSemaphoreTake( xSemaphoreI2C, I2C_SEMAPHORE_WAIT ) == pdFALSE ) return ESP_FAIL;
+retr:
+    if ( xSemaphoreTake( xSemaphoreI2C, LCD_I2C_SEMAPHORE_WAIT ) == pdFALSE ) {
+        ESP_LOGE(TAG, "%s Semaphore taken error. Retry %d", __func__, retry);
+        if ( retry > LCD_I2C_SEND_RETRY_COUNT ) return ESP_FAIL;
+        retry++;
+        goto retr;
+        //return ESP_FAIL;
+    }
+    retry = 0;
     esp_err_t err = i2c_send_command(lcd2004.addr, val);
     xSemaphoreGive( xSemaphoreI2C );
     return err;
@@ -80,11 +98,13 @@ static void lcd2004_send_i2c(uint8_t nibble, uint8_t mode, uint8_t enable)
 
 static void lcd2004_send_half_byte(uint8_t nibble, uint8_t mode)
 {  
+    // EN = 1, 
     lcd2004_send_i2c( nibble, mode, 1);
-    i2c_master_wait(10);
+    i2c_master_wait(1);
 
+    // EN = 0
     lcd2004_send_i2c( nibble, mode, 0);
-    i2c_master_wait(40);  // >37us
+    i2c_master_wait(1);  // >37us
 }
 
 static void lcd2004_send_byte(uint8_t cmd, uint8_t mode)
@@ -109,7 +129,14 @@ void lcd2004_init(uint8_t addr, uint8_t cols, uint8_t rows)
     lcd2004.backlight = LCD2004_BACKLIGHT_ON;
     lcd2004.mode = 0;
 
+    if ( xSemaphoreLCD2004 != NULL ) vSemaphoreDelete( xSemaphoreLCD2004 );
+    xSemaphoreLCD2004 = xSemaphoreCreateMutex();
+
     lcd2004.i2c_bus_handle = i2c_bus_init();
+
+
+    if ( xSemaphoreLCD2004 == NULL ) return;
+    if( xSemaphoreTake( xSemaphoreLCD2004, I2C_SEMAPHORE_WAIT ) == pdFALSE ) return;
 
     lcd2004_i2c_write_byte( 0x00 );
     vTaskDelay( 500 / portTICK_RATE_MS);
@@ -138,6 +165,8 @@ void lcd2004_init(uint8_t addr, uint8_t cols, uint8_t rows)
 
     lcd2004.control_flag = LCD_CMD_DISPLAY_ON | LCD_CMD_UNDERLINE_CURSOR_OFF | LCD_CMD_BLINK_CURSOR_OFF;
     lcd2004_send_command( LCD_CMD_CONTROL | lcd2004.control_flag); 
+
+    xSemaphoreGive( xSemaphoreLCD2004 );
 
     lcd2004_home();
     lcd2004_clear();
@@ -224,13 +253,11 @@ void lcd2004_print_string_at_pos(uint8_t col, uint8_t row, char *str)
 void lcd2004_clear()
 {
     lcd2004_send_command( LCD_CMD_CLEAR );//уберем мусор LCD2004_CMD_CLEAR
-    i2c_master_wait( 2000 );
 }
 
 void lcd2004_home()
 {
     lcd2004_send_command( LCD_CMD_RETURN_HOME);//курсор на место
-    i2c_master_wait(2000); 
 }
 
 void lcd2004_print(uint8_t line, const char *str)
@@ -282,23 +309,21 @@ void lcd2004_progress_text(uint8_t line, const char *str, uint8_t val, uint8_t b
 void lcd2004_test_task_cb(void *arg)
 {
 
-    ESP_LOGI(TAG, "init LCD");
-    lcd2004_init(LCD2004_ADDR_DEFAULT, 20, 4);
-    ets_delay_us(100000);
-
-
-
     while (1)
     {
 
-        lcd2004_clear();
-
         for ( uint8_t i = 1; i <= 100; i++)
         {
-                lcd2004_progress(1, i, 1 /* blink */ );
-                vTaskDelay(  2000 / portTICK_RATE_MS ); 
+            if ( xSemaphoreLCD2004 != NULL && xSemaphoreTake( xSemaphoreLCD2004, I2C_SEMAPHORE_WAIT ) == pdTRUE ) 
+            {
+                lcd2004_progress(4, i, 0);
+                xSemaphoreGive( xSemaphoreLCD2004 );
+            }
+            
+            vTaskDelay(  2000 / portTICK_RATE_MS ); 
         }
-               vTaskDelay(  10000 / portTICK_RATE_MS );   
+        
+        vTaskDelay(  10000 / portTICK_RATE_MS );   
     }
 
     vTaskDelete( NULL );

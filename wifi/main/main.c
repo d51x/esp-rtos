@@ -29,12 +29,14 @@ void app_main(void)
 	ESP_LOGI(TAG, "SDK: %s", esp_get_idf_version());
 	
     #ifdef CONFIG_COMPONENT_LCD2004
+    lcd2004_init(LCD2004_ADDR_DEFAULT, 20, 4);
     lcd2004_test_task();
-    //lcd2004_init(LCD2004_ADDR_DEFAULT, 20, 4);
-    //ets_delay_us(100000);
+    
     #endif
 
     wifi_init();
+
+
 
     sntp_start();
     
@@ -82,7 +84,36 @@ void app_main(void)
             print_tasks_info();
         #endif
 
-        vTaskDelay(2000/ portTICK_RATE_MS);
+        #if CONFIG_SENSOR_SHT21 && CONFIG_COMPONENT_LCD2004
+
+            char s[20];
+            //char *s = (char *) calloc( 20 + 1, sizeof(char*));
+            //memset(s, 0, 20 + 1);
+
+            if ( xSemaphoreLCD2004 != NULL && xSemaphoreTake( xSemaphoreLCD2004, I2C_SEMAPHORE_WAIT ) == pdTRUE ) 
+            {
+                sprintf(s, "Tmp: %2.1f Hum: %2.1f", sht21_get_temp(), sht21_get_hum());
+                lcd2004_print(1, s );
+
+                //lcd2004_set_cursor_position( 1, 1);
+                //lcd2004_print_string( s );
+
+                //memset(s, 0, 20 + 1);
+                sprintf(s, "Freemem: %5d", esp_get_free_heap_size());
+                lcd2004_print(2, s );
+
+                //memset(s, 0, 20 + 1);
+                get_uptime(s);
+                lcd2004_print(3, s );
+                //lcd2004_set_cursor_position( 1, 2);
+                //lcd2004_print_string( s );
+                //free(s);
+                
+                xSemaphoreGive( xSemaphoreLCD2004 );
+            }           
+        #endif
+
+        vTaskDelay(1000/ portTICK_RATE_MS);
     }
 
 	
