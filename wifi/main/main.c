@@ -47,6 +47,10 @@ void app_main(void)
     i2c_register_http_print_data();
     #endif
 
+    #ifdef CONFIG_COMPONENT_LCD2004_HTTP
+    lcd2004_register_http_print_data();
+    lcd2004_register_http_handler(http_server);
+    #endif
         mqtt_init();
         
 

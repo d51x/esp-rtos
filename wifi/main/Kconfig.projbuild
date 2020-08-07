@@ -139,6 +139,13 @@ menu "Project config"
             help
                 Enable LCD2004
 
+        config COMPONENT_LCD2004_HTTP
+            bool "LCD2004 web control"
+            default y
+            depends on   COMPONENT_LCD2004
+            help
+                Options and control block on Tools page, control LCD2004 via http (on/off backlight)
+
     endmenu
     
     menu "Sensors"

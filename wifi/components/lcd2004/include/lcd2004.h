@@ -88,6 +88,11 @@ typedef enum lcd2004_backlight {
     LCD2004_BACKLIGHT_ON
 } lcd2004_backlight_t;
 
+typedef enum lcd2004_state {
+    LCD2004_STATE_OFF,
+    LCD2004_STATE_ON
+} lcd2004_state_t;
+
 typedef struct lcd2004_conf {
     uint8_t addr;
     uint8_t cols;
@@ -95,6 +100,7 @@ typedef struct lcd2004_conf {
     uint8_t control_flag;
     uint8_t mode;
     uint8_t cursor_pos;
+    lcd2004_state_t state;
     lcd2004_font_size_t font_size;
     lcd2004_backlight_t backlight;
     i2c_bus_handle_t i2c_bus_handle;
@@ -112,6 +118,9 @@ typedef enum lcd2004_line_addr {
 void lcd2004_init(uint8_t addr, uint8_t cols, uint8_t rows);
 void lcd2004_clear();
 void lcd2004_home();
+
+void lcd2004_set_state(lcd2004_state_t state);
+lcd2004_state_t lcd2004_state();
 
 void lcd2004_backlight(lcd2004_backlight_t state);
 lcd2004_backlight_t lcd2004_backlight_state();

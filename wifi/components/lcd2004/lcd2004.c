@@ -90,6 +90,7 @@ static void lcd2004_send_i2c(uint8_t nibble, uint8_t mode, uint8_t enable)
         i2c_data &= ~EN;
 
     if ( lcd2004.backlight == LCD2004_BACKLIGHT_ON ) 
+    //if ( lcd2004.state == LCD2004_STATE_ON ) 
         i2c_data |= BL;
     else
         i2c_data &= ~BL;    
@@ -130,6 +131,7 @@ void lcd2004_init(uint8_t addr, uint8_t cols, uint8_t rows)
     lcd2004.font_size = LCD2004_FONT_5X8;
     lcd2004.backlight = LCD2004_BACKLIGHT_ON;
     lcd2004.mode = 0;
+    lcd2004.state = LCD2004_STATE_OFF;
 
     if ( xSemaphoreLCD2004 != NULL ) vSemaphoreDelete( xSemaphoreLCD2004 );
     xSemaphoreLCD2004 = xSemaphoreCreateMutex();
@@ -167,6 +169,7 @@ void lcd2004_init(uint8_t addr, uint8_t cols, uint8_t rows)
 
     lcd2004.control_flag = LCD_CMD_DISPLAY_ON | LCD_CMD_UNDERLINE_CURSOR_OFF | LCD_CMD_BLINK_CURSOR_OFF;
     lcd2004_send_command( LCD_CMD_CONTROL | lcd2004.control_flag); 
+    lcd2004.state = LCD2004_STATE_ON;
 
     xSemaphoreGive( xSemaphoreLCD2004 );
 
@@ -179,7 +182,9 @@ void lcd2004_init(uint8_t addr, uint8_t cols, uint8_t rows)
 
 void lcd2004_backlight(lcd2004_backlight_t state)
 {
+    ESP_LOGI(TAG, "%s", __func__ );
     lcd2004.backlight = state;
+
     lcd2004_send_command( LCD_CMD_CONTROL | lcd2004.control_flag);
 }
 
@@ -187,6 +192,30 @@ lcd2004_backlight_t lcd2004_backlight_state()
 {
     return lcd2004.backlight;
 }
+
+void lcd2004_set_state(lcd2004_state_t state)
+{
+    ESP_LOGI(TAG, "%s", __func__ );
+    lcd2004.state = state;
+    if ( state == LCD2004_STATE_ON )
+    {
+        lcd2004.backlight = LCD2004_BACKLIGHT_ON;
+        lcd2004.control_flag |= LCD_CMD_DISPLAY_ON | LCD_CMD_UNDERLINE_CURSOR_OFF | LCD_CMD_BLINK_CURSOR_OFF;
+    } 
+    else 
+    {
+        lcd2004.backlight = LCD2004_BACKLIGHT_OFF;
+        lcd2004.control_flag = LCD_CMD_DISPLAY_OFF ;
+    }    
+    lcd2004_send_command( LCD_CMD_CONTROL | lcd2004.control_flag);
+}
+
+lcd2004_state_t lcd2004_state()
+{
+    return lcd2004.state;
+}
+
+
 
 void lcd2004_cursor_show(uint8_t val)
 {

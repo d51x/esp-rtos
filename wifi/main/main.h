@@ -50,6 +50,10 @@
     #include "lcd2004.h"
     #endif
     
+    #ifdef CONFIG_COMPONENT_LCD2004_HTTP
+    #include "lcd2004_http.h"
+    #endif
+
 httpd_handle_t http_server = NULL;
 
 extern void sntp_start();
