@@ -64,7 +64,7 @@ const char *html_page_devinfo = DIV_S_ CSS_ID "dev-info" HQ CSS_CLASS "rnd brd-b
 
 
 const char *html_page_ota = P_S "Выбрать Firmware" P_E // "<p>Выбрать Firmware</p>"
-                            FORM_S_  FORM_ENCTYPE FORM_METHOD FORM_ACTION "'/update' accept='.bin'" FORM_S_Q_E  //     "<form enctype='multipart/form-data' method='post' action='/update' accept='.bin'>"
+                            FORM_S_  FORM_ENCTYPE FORM_POST FORM_ACTION "'/update' accept='.bin'" FORM_S_Q_E  //     "<form enctype='multipart/form-data' method='post' action='/update' accept='.bin'>"
                                         P_S INPUT_S_ INPUT_TYPE "file" HQ INPUT_NAME "file" HQ CSS_CLASS "button norm rh" INPUT_SS_E P_E //"<p><input type='file' name='file' class='button norm rh' /></p>"
                                         P_S DIV_S_ CSS_CLASS "lf2" DIV_S_Q_E INPUT_S_ INPUT_TYPE "submit" HQ INPUT_VALUE "Загрузить" HQ CSS_CLASS "button norm rht" INPUT_SS_E P_E //"<p><div class='lf2'><input type='submit' value='Загрузить' class='button norm rht' /></p>"
                                     FORM_E; //"</form>";
