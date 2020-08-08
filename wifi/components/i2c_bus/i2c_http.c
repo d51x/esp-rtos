@@ -5,7 +5,7 @@
 
 static const char *TAG = "I2C";
 
-const char *html_page_tools_i2c = "<div class='group rnd'>"
+const char *html_page_tools_i2c ICACHE_RODATA_ATTR = "<div class='group rnd'>"
                                     "<h4 class='brd-btm'>I2C Settings:</h4>"
                                     "<form method='GET'>"
                                       "<div class='lf3'><p><label class='lf'>SDA: </label><input size='20' name='sda' class='edit rh' value='%d' /></p>"

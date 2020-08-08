@@ -3,11 +3,13 @@
 #include "sht21_http.h"
 
 #ifdef CONFIG_SENSOR_SHT21
-const char *html_block_sht21 = "<div class='group rnd'>"
-                                    "<h4 class='brd-btm'>SHT21 sensor:</h4>"
-                                      "<p><label class='lf'>Temperature: </label><label>%0.2f°C</label></p>"
-                                      "<p><label class='lf'>Humidity: </label><label>%0.2f%%%%</label></p>"
-                                  "</div>";      
+
+const char *html_block_sht21 ICACHE_RODATA_ATTR = 
+    "<div class='group rnd'>"
+        "<h4 class='brd-btm'>SHT21 sensor:</h4>"
+        "<p><label class='lf'>Temperature: </label><label>%0.2f°C</label></p>"
+        "<p><label class='lf'>Humidity: </label><label>%0.2f%%%%</label></p>"
+    "</div>";      
 
 static void sht21_print_data(char *data)
 {

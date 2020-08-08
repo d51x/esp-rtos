@@ -56,8 +56,8 @@
 
 #define MAP_255_TO_100(x) (x * 100 / 255 )
 #define MAP_100_TO_255(x) (x * 255 / 100 )
-#define MIN(x,y)   ((x) < (y))?(x):(y)
-#define MAX(x,y)   ((x) > (y))?(x):(y)
+#define GET_MIN(x, y)   ( ( x < y ) ? x : y )
+#define GET_MAX(x, y)   ( ( x > y ) ? x : y )
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c" 
 #define BYTE_TO_BINARY(byte)  \

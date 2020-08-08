@@ -9,7 +9,7 @@
 #define URI_PARAM_MQTT_TOPIC_BASE       "mqtt_base"
 #define URI_PARAM_MQTT_SEND_INTERVAL    "mqtt_sint"
 
-const char *html_page_config_mqtt = "<div class='group rnd'>"
+const char *html_page_config_mqtt ICACHE_RODATA_ATTR = "<div class='group rnd'>"
                                     "<h4 class='brd-btm'>MQTT Settings:</h4>"
                                     "<form method='GET'>"
                                         "<p><label class='lf'>Enabled: </label><input type='checkbox' name='"URI_PARAM_MQTT_EN"' %s /></p>"
