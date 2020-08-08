@@ -37,6 +37,7 @@ typedef struct {
     const char uri[HTTPD_MAX_URI_LEN + 1];
     uint8_t index;
     func_http_print_page_block fn_print_block;
+    char name[20];
     httpd_uri_func process_cb;
 } http_print_page_block_t;
 
@@ -83,7 +84,7 @@ void set_redirect_header(uint8_t time, const char *uri, char *data);
 // uri - на какой странице выводить
 // index - очередность вывода
 // fn_cb - функция коллбека для формирования буфера
-esp_err_t register_print_page_block(const char *uri, uint8_t index, func_http_print_page_block fn_cb, httpd_uri_func fn_cb2);
+esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t index, func_http_print_page_block fn_cb, httpd_uri_func fn_cb2);
 
 
 esp_err_t register_http_page_menu(const char *uri, const char *name);

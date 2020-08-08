@@ -167,12 +167,34 @@ esp_err_t i2c_device_available(uint8_t addr)
 
 esp_err_t i2c_send_command(uint8_t addr, uint8_t command)
 {
+    
+    return i2c_write_data( addr, &command, 1);
+    
     // Wire.begin / Wire.beginTransmission
+    //i2c_cmd_handle_t cmd_link = i2c_cmd_link_create();
+    //ESP_ERROR_CHECK( i2c_master_start(cmd_link) );
+    //ESP_ERROR_CHECK( i2c_master_write_byte(cmd_link, (addr << 1) | WRITE_BIT, ACK_CHECK_EN));
+    
+    // write command 
+    //ESP_ERROR_CHECK( i2c_master_write_byte(cmd_link, command, ACK_CHECK_EN) );
+    //ESP_ERROR_CHECK( i2c_master_stop(cmd_link)); 
+    //esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmd_link, /*0 ?*/ 1000 / portTICK_RATE_MS) ;
+    //i2c_cmd_link_delete(cmd_link); 
+   // return err;
+}
+
+esp_err_t i2c_write_data(uint8_t addr, uint8_t *data, size_t sz)
+{
     i2c_cmd_handle_t cmd_link = i2c_cmd_link_create();
     ESP_ERROR_CHECK( i2c_master_start(cmd_link) );
     ESP_ERROR_CHECK( i2c_master_write_byte(cmd_link, (addr << 1) | WRITE_BIT, ACK_CHECK_EN));
 
-    ESP_ERROR_CHECK( i2c_master_write_byte(cmd_link, command, ACK_CHECK_EN) );
+    // write data
+    for ( uint8_t i = 0; i < sz; i++ )
+    {
+        ESP_ERROR_CHECK( i2c_master_write_byte(cmd_link, data[i], ACK_CHECK_EN) );
+    }
+
     ESP_ERROR_CHECK( i2c_master_stop(cmd_link)); 
     esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmd_link, /*0 ?*/ 1000 / portTICK_RATE_MS) ;
     i2c_cmd_link_delete(cmd_link); 
@@ -200,5 +222,6 @@ esp_err_t i2c_read_data(uint8_t addr, uint8_t *data, size_t sz)
 
     return err;
 }
+
 
 #endif //#ifdef CONFIG_COMPONENT_I2C

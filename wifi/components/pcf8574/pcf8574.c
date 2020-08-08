@@ -48,6 +48,9 @@ pcf8574_handle_t pcf8574_create(uint8_t addr)
 esp_err_t pcf8574_delete(pcf8574_handle_t pcf8574_h)
 {
     ESP_LOGI(TAG, __func__);
+    pcf8574_t* device = (pcf8574_t*) pcf8574_h;
+    device->i2c_bus_handle = NULL;
+    free(device);
     return ESP_OK;
 }
 

@@ -54,6 +54,10 @@
     #include "lcd2004_http.h"
     #endif
 
+#ifdef CONFIG_COMPONENT_MCP23017
+    #include "mcp23017.h"
+#endif
+
 httpd_handle_t http_server = NULL;
 
 extern void sntp_start();

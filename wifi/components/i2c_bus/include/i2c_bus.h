@@ -75,6 +75,7 @@ void i2c_save_cfg(const i2c_config_t *cfg);
 
 esp_err_t i2c_device_available(uint8_t addr);
 esp_err_t i2c_send_command(uint8_t addr, uint8_t cmd);
+esp_err_t i2c_write_data(uint8_t addr, uint8_t *data, size_t sz);
 esp_err_t i2c_read_data(uint8_t addr, uint8_t *data, size_t sz);
 #endif //#ifdef CONFIG_COMPONENT_I2C
 

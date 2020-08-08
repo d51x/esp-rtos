@@ -198,7 +198,7 @@ void show_http_page(httpd_req_t *req, char *data)
 
 void print_page_block(const char *uri, char *data)
 {
-    //ESP_LOGI(TAG, "****** %s", __func__ );
+    // ESP_LOGI(TAG, "****** %s", __func__ );
 
     //ESP_LOGI(TAG, " function %s started", __func__);
 
@@ -206,35 +206,48 @@ void print_page_block(const char *uri, char *data)
     uint8_t found_cnt = 0;
     uint8_t i = 0;
 
-    //ESP_LOGI(TAG, "find custom print page blocks for uri %s", uri);
-    //ESP_LOGI(TAG, "found_cnt %d", found_cnt);
+    // ESP_LOGI(TAG, "find custom print page blocks for uri %s", uri);
+    // ESP_LOGI(TAG, "found_cnt %d", found_cnt);
 
     for ( i = 0; i < http_print_page_block_count; i++) 
     {
-        //ESP_LOGI(TAG, "compare block uri %s with page uri %s", http_print_page_block[i].uri, uri);
+        // ESP_LOGI(TAG, "compare block (%s) uri %s with page uri %s", http_print_page_block[i].name, http_print_page_block[i].uri, uri);
         if (strcmp(http_print_page_block[i].uri, uri) == 0 && http_print_page_block[i].fn_print_block != NULL) 
         {
-            //ESP_LOGI(TAG, "found block for uri %s with index %d (%d) and func addr %p", 
-            //http_print_page_block[i].uri, 
-            //http_print_page_block[i].index,
-            //i,
-            //http_print_page_block[i].fn_print_block);
+            // ESP_LOGI(TAG, "found block %s for uri %s with index %d (%d) and func addr %p", 
+            // http_print_page_block[i].name, 
+            // http_print_page_block[i].uri, 
+            // http_print_page_block[i].index,
+            // i,
+            // http_print_page_block[i].fn_print_block);
+            
             found_cnt++;
 
-            //ESP_LOGI(TAG, "found_cnt %d", found_cnt);
+            // ESP_LOGI(TAG, "found_cnt %d", found_cnt);
             indexes = (uint8_t *) realloc(indexes, found_cnt * 2 * sizeof(uint8_t));
             indexes[found_cnt-1][0] =i;
             indexes[found_cnt-1][1] =http_print_page_block[i].index;
 
-            //ESP_LOGI(TAG, "indexes[%d] = %d, %d", found_cnt-1, indexes[found_cnt-1][0], indexes[found_cnt-1][1]);
+            // ESP_LOGI(TAG, "indexes[%d] = %d, %d", found_cnt-1, indexes[found_cnt-1][0], indexes[found_cnt-1][1]);
         }
     }  
 
-    // TODO sort indexes
+    // ESP_LOGI(TAG, "Prepare to sort");
+    // for ( uint8_t i = 0; i < http_print_page_block_count; i++)
+    // {
+    //         ESP_LOGI(TAG, "%02d: \tblock name = %s \t uri = %s \t priority %d"
+    //         , i
+    //         , http_print_page_block[i].name
+    //         , http_print_page_block[i].uri
+    //         , http_print_page_block[i].index
+    //         );        
+    // } 
+
+    //ESP_LOGI(TAG, "Sort blocks"); 
     if ( http_print_page_block_count > 1 && found_cnt > 1) {
-        for ( i = 0; i < http_print_page_block_count; i++)
+        for ( i = 0; i < found_cnt; i++)
         {
-            for ( uint8_t j = i + 1; j < http_print_page_block_count; j++ )
+            for ( uint8_t j = i + 1; j < found_cnt; j++ )
             {
                 if ( indexes[i][1] > indexes[j][1] )
                 {
@@ -249,11 +262,13 @@ void print_page_block(const char *uri, char *data)
     //for ( i = 0; i < found_cnt; i++) {
     //    ESP_LOGI(TAG, "indexes[%d] = %d, %d", i, indexes[i][0], indexes[i][1]);
     //}
+
     // print data
+    //ESP_LOGI(TAG, "Print blocks");
     for ( i = 0; i < found_cnt; i++) 
     {
         uint8_t idx = indexes[i][0];
-        //ESP_LOGI(TAG, "print block with index %d (%d) func addr %p", idx, indexes[i][1], http_print_page_block[ idx ].fn_print_block);
+        //ESP_LOGI(TAG, "print block (%s) with index %d (%d) func addr %p", http_print_page_block[idx].name, idx, indexes[i][1], http_print_page_block[ idx ].fn_print_block);
         if (strcmp(http_print_page_block[idx].uri, uri) == 0 && http_print_page_block[idx].fn_print_block != NULL) 
         {
             http_print_page_block[ idx ].fn_print_block(data);            
@@ -399,7 +414,7 @@ void show_restarting_page_data(char *data)
 
 }
 
-esp_err_t register_print_page_block(const char *uri, uint8_t index, func_http_print_page_block fn_print_block, httpd_uri_func fn_cb)
+esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t index, func_http_print_page_block fn_print_block, httpd_uri_func fn_cb)
 {
     //ESP_LOGI(TAG, "function %s started", __func__);
 
@@ -408,9 +423,11 @@ esp_err_t register_print_page_block(const char *uri, uint8_t index, func_http_pr
     for ( uint8_t i = 0; i < http_print_page_block_count; i++) 
     {
         //ESP_LOGI(TAG, "[%d] compare registered uri %s with page uri %s", i, http_print_page_block[i].uri, uri);
-        if (strcmp(http_print_page_block[i].uri, uri) == 0 && http_print_page_block[i].fn_print_block == fn_print_block) 
+        if (strcmp(http_print_page_block[i].name, name) == 0 && 
+            strcmp(http_print_page_block[i].uri, uri) == 0 && 
+            http_print_page_block[i].fn_print_block == fn_print_block) 
         {
-            //ESP_LOGI(TAG, "[%d] found uri %s, return...", i, http_print_page_block[i].uri);
+            //ESP_LOGI(TAG, "[%d] found (%s) uri %s, return...", i, http_print_page_block[i].name, http_print_page_block[i].uri);
             return ESP_FAIL;
         }
     }    
@@ -422,6 +439,7 @@ esp_err_t register_print_page_block(const char *uri, uint8_t index, func_http_pr
 
     http_print_page_block = (http_print_page_block_t *) realloc(http_print_page_block, http_print_page_block_count * sizeof(http_print_page_block_t));
     strcpy( http_print_page_block[ http_print_page_block_count - 1 ].uri, uri); 
+    strcpy( http_print_page_block[ http_print_page_block_count - 1 ].name, name); 
     http_print_page_block[ http_print_page_block_count - 1 ].index = index; 
     http_print_page_block[ http_print_page_block_count - 1 ].fn_print_block = fn_print_block;
     http_print_page_block[ http_print_page_block_count - 1 ].process_cb = fn_cb;

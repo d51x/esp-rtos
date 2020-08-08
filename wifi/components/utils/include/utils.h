@@ -117,7 +117,7 @@ m_wifi_info_t wifi_info;
 
 uint8_t str_to_int(int *out, char *s, int base);
 uint8_t str_to_long(long *out, char *s, int base);
-uint8_t str_to_uint(uint *out, char *s, int base);
+uint8_t str_to_uint16(uint16_t *out, char *s, int base);
 uint8_t str_to_uint8(uint8_t *out, char *s, int base);
 
 uint16_t get_adc();

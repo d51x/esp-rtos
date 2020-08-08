@@ -43,7 +43,7 @@ static void mqtt_print_options(char *data)
 
 void mqtt_register_http_print_data() 
 {
-    register_print_page_block( PAGES_URI[ PAGE_URI_SETUP ], 2, mqtt_print_options, mqtt_http_process_params );
+    register_print_page_block( "mqtt_options", PAGES_URI[ PAGE_URI_SETUP ], 2, mqtt_print_options, mqtt_http_process_params );
 }
 
 void mqtt_http_process_params(httpd_req_t *req)

@@ -64,8 +64,9 @@ esp_err_t my_function_get_handler(httpd_req_t *req)
 void add_uri_post_handler(httpd_handle_t _server, const char *uri, httpd_uri_func func);
 
 3. Вывод блока информации на любой странице
-esp_err_t register_print_page_block(const char *uri, uint8_t index, func_http_print_page_block fn_print_block, httpd_uri_func process_cb)
+esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t index, func_http_print_page_block fn_print_block, httpd_uri_func process_cb)
 
+name - имя блока
 uri - на какой странице нужно вывести блок текста/данных/форму
 index - приоритет отображения блока, 0,1,2 и т.д.
         чем меньше число, тем выше выводятся данные

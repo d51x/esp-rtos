@@ -20,7 +20,7 @@ static void sht21_print_data(char *data)
 void sht21_register_http_print_data() 
 {
     
-    register_print_page_block( PAGES_URI[ PAGE_URI_ROOT], 3, sht21_print_data, NULL );
+    register_print_page_block( "sht21_data", PAGES_URI[ PAGE_URI_ROOT], 3, sht21_print_data, NULL );
     
 }
 #endif

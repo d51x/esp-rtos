@@ -40,7 +40,7 @@ void i2c_register_http_menu()
 
 void i2c_register_http_print_data() 
 {
-    register_print_page_block( PAGES_URI[ PAGE_URI_TOOLS], 3, i2c_print_options, i2c_http_process_params );
+    register_print_page_block( "i2c_options", PAGES_URI[ PAGE_URI_TOOLS], 3, i2c_print_options, i2c_http_process_params );
 }
 
 

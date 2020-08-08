@@ -216,7 +216,7 @@ uint8_t str_to_int(int *out, char *s, int base) {
     return 0;
 }
 
-uint8_t str_to_uint(uint *out, char *s, int base) {
+uint8_t str_to_uint16(uint16_t *out, char *s, int base) {
     char *end;
     //if (s[0] == '\0' || isspace(s[0]))
     //    return STR2INT_INCONVERTIBLE;

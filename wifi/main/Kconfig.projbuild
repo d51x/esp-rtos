@@ -153,6 +153,20 @@ menu "Project config"
             help
                 Options and control block on Tools page, control LCD2004 via http (on/off backlight)
 
+        config COMPONENT_MCP23017
+            bool "MCP23017"
+            default y
+            depends on COMPONENT_I2C
+            help
+                Enable MCP23017
+
+        config COMPONENT_MCP23017_HTTP
+            bool "MCP23017 web control"
+            default n
+            depends on COMPONENT_MCP23017
+            help
+                Enable MCP23017 web control
+
     endmenu
     
     menu "Sensors"

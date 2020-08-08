@@ -69,7 +69,7 @@ esp_err_t http_get_key_uint16(httpd_req_t *req, const char *param_name, uint16_t
             /* Get value of expected key from query string */
             if (httpd_query_key_value(buf, param_name, param, sizeof(param)) == ESP_OK) {
                 ESP_LOGD(TAG, "Found URL query parameter => %s=%s", param_name, param);
-                error = str_to_uint(value, param, 10);
+                error = str_to_uint16(value, param, 10);
                 ESP_LOGD(TAG, "%s = %d", param_name, *value);
             }              
         }        
