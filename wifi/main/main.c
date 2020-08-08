@@ -35,6 +35,13 @@ void app_main(void)
     
     #endif
 
+    #ifdef CONFIG_COMPONENT_MCP23017
+    ESP_LOGI(TAG, "CONFIG_COMPONENT_MCP23017 AVAILABLE");
+    mcp23017_handle_t mcp23017_h = mcp23017_create(0x20 /*MCP23017_ADDR_DEFAULT*/ );
+
+    mcp23017_test_task(mcp23017_h);
+    #endif
+    
     wifi_init();
 
 
@@ -77,12 +84,7 @@ void app_main(void)
     pcf8574_test_task(pcf8574_h);
     #endif    
     
-    #ifdef CONFIG_COMPONENT_MCP23017
-    ESP_LOGI(TAG, "CONFIG_COMPONENT_MCP23017 AVAILABLE");
-    mcp23017_handle_t mcp23017_h = mcp23017_create(0x20 /*MCP23017_ADDR_DEFAULT*/ );
 
-    //mcp23017_test_task(mcp23017_h);
-    #endif
 
 
 

@@ -160,12 +160,45 @@ menu "Project config"
             help
                 Enable MCP23017
 
+        config MCP23017_GPIO_INPUTS
+            hex "MCP23017 GPIO INPUTS"
+            default 0xFF00
+            depends on COMPONENT_MCP23017
+            help
+                Set pins as INPUT (default 0xFF00 - PORTB), other pins (PORTA) as OUTPUTS. 
+                0x00 - all optputs, 0xFF - all inputs, 
+                bits sequence 15 14 13 .... 2 1 0
+                1 - input
+                0 - output
+
+        config COMPONENT_MCP23017_ISR
+            bool "MCP23017 interrupts"
+            default n
+            depends on COMPONENT_MCP23017
+            help
+                Enable MCP23017 interrupts
+
+        config MCP23017_ISR_INTA_GPIO
+            int "GPIO for INTA"
+            default 4
+            depends on COMPONENT_MCP23017_ISR
+            help
+                Set GPIO for INTA. 255 - disable
+
+        config MCP23017_ISR_INTB_GPIO
+            int "GPIO for INTB"
+            default 5
+            depends on COMPONENT_MCP23017_ISR
+            help
+                Set GPIO for INTB, 255 - disable
+
         config COMPONENT_MCP23017_HTTP
             bool "MCP23017 web control"
             default n
             depends on COMPONENT_MCP23017
             help
                 Enable MCP23017 web control
+
 
     endmenu
     
