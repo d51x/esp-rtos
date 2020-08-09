@@ -48,12 +48,14 @@ typedef struct mcp23017 {
 	mcp23017_status_t status;
         i2c_bus_handle_t i2c_bus_handle;
         // interrupts
+        #ifdef CONFIG_MCP23017_ISR
         uint8_t int_a_pin; // esp pin for INTA
         uint8_t int_b_pin; // esp pin for INTB
         TaskHandle_t task;
-        interrupt_cb task_cb;
+        interrupt_cb isr_cb;
         QueueHandle_t taskq;
 	QueueHandle_t argq;
+        #endif
 } mcp23017_t;
 
 
@@ -81,8 +83,6 @@ esp_err_t mcp23017_write_io(mcp23017_handle_t dev_h, uint16_t value);
 esp_err_t mcp23017_read_io(mcp23017_handle_t dev_h, uint16_t *data);
 
 //void mcp23017_isr_handler_add(mcp23017_handle_t dev_h, uint8_t pin, gpio_int_type_t intr_type, interrupt_cb cb);
-
-void mcp23017_test_task(mcp23017_handle_t dev_h);
 
 #endif // COMPONENT
 #endif

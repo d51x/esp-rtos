@@ -1,7 +1,7 @@
 
 
 #include "mcp23017.h"
-
+//
 #ifdef CONFIG_COMPONENT_MCP23017
 
 
@@ -50,8 +50,27 @@
 
 static const char* TAG = "MCP23017";
 
+#ifdef CONFIG_MCP23017_ISR
+static void IRAM_ATTR mcp23027_isr_handler(void *arg) {
+    portBASE_TYPE HPTaskAwoken = pdFALSE;
+    BaseType_t xHigherPriorityTaskWoken;
 
-static void task_cb(void *arg) {
+    mcp23017_handle_t dev_h = (mcp23017_handle_t)arg;
+    mcp23017_t *dev = (mcp23017_t *) dev_h;
+
+    uint16_t data[2];
+    mcp23017_read(dev_h, MCP23017_REG_INTFA, 4, &data );
+
+    if (dev->taskq != NULL ) {
+            xQueueOverwriteFromISR(dev->taskq, &data, &xHigherPriorityTaskWoken);
+    }
+
+    portEND_SWITCHING_ISR( HPTaskAwoken == pdTRUE );
+}
+#endif
+
+#ifdef CONFIG_MCP23017_ISR
+static void mcp23017_isr_cb(void *arg) {
 
 	mcp23017_handle_t *dev_h = (mcp23017_handle_t *) arg;
     mcp23017_t * dev = (mcp23017_t *)dev_h;
@@ -71,6 +90,7 @@ static void task_cb(void *arg) {
 	}
 	vTaskDelete(NULL);
 }
+#endif
 
 mcp23017_handle_t mcp23017_create(uint8_t addr)
 {
@@ -79,30 +99,34 @@ mcp23017_handle_t mcp23017_create(uint8_t addr)
     // TODO: load from nvs and use config in menuconfig
     mcp23017->status = MCP23017_DISABLED;
     mcp23017->addr = addr;
-    mcp23017->pins_direction = 0;
+    mcp23017->pins_direction = MCP23017_GPIO_INPUTS_DEFAULT;
     mcp23017->pins_invert = 0;
+
+    #ifdef CONFIG_MCP23017_ISR
+	mcp23017->pins_interrupt = MCP23017_GPIO_INPUTS_DEFAULT;
+	mcp23017->pins_def_val = MCP23017_GPIO_INPUTS_DEFAULT;
+    #else
 	mcp23017->pins_interrupt = 0;
 	mcp23017->pins_def_val = 0;
+    #endif
+
     mcp23017->pins_condition = 0;
     mcp23017->pins_saved = 0;
     mcp23017->pins_values = 0;
 
     // interrupts
+    #ifdef CONFIG_MCP23017_ISR
  	mcp23017->taskq = NULL;
     mcp23017->task = NULL;
-    mcp23017->task_cb = task_cb;
+    mcp23017->isr_cb = mcp23017_isr_cb;
     mcp23017->int_a_pin = MCP23017_INTB_GPIO_DEFAULT;
     mcp23017->int_b_pin = MCP23017_INTA_GPIO_DEFAULT;
-
+    #endif
 
     mcp23017_handle_t dev_h = (mcp23017_handle_t) mcp23017;
     mcp23017_enable( dev_h );
 
-    mcp23017_set_directions( dev_h, mcp23017->pins_direction);
-    mcp23017_set_inversions(dev_h, mcp23017->pins_invert);
-    mcp23017_set_interrupts( dev_h, mcp23017->pins_interrupt );
-    mcp23017_set_defaults( dev_h, mcp23017->pins_def_val);
-    mcp23017_set_conditions( dev_h, mcp23017->pins_condition);
+
 
     return dev_h;
 }
@@ -119,20 +143,57 @@ esp_err_t mcp23017_delete(mcp23017_handle_t dev_h)
 
 esp_err_t mcp23017_enable(mcp23017_handle_t dev_h)
 {
-    mcp23017_t * mcp23017 = (mcp23017_t *)dev_h;
+    mcp23017_t * dev = (mcp23017_t *)dev_h;
     
-    mcp23017->i2c_bus_handle = i2c_bus_init();
+    dev->i2c_bus_handle = i2c_bus_init();
     
-    if ( mcp23017->i2c_bus_handle == NULL ) return ESP_FAIL;
+    if ( dev->i2c_bus_handle == NULL ) return ESP_FAIL;
 
+    mcp23017_set_directions( dev_h, dev->pins_direction);
+    mcp23017_set_inversions(dev_h, dev->pins_invert);
+    mcp23017_set_interrupts( dev_h, dev->pins_interrupt );
+    mcp23017_set_defaults( dev_h, dev->pins_def_val);
+    mcp23017_set_conditions( dev_h, dev->pins_condition);
+    
+    #ifdef CONFIG_MCP23017_ISR
+    if ( dev->int_a_pin < 255 || dev->int_b_pin < 255 )
+    {
 
-		if ( !mcp23017->task ) 
-			xTaskCreate( mcp23017->task_cb, "mcp23017_isr_tsk", 1024, dev_h, 10, &mcp23017->task);
+    
+		if ( !dev->task ) 
+			xTaskCreate( dev->isr_cb, "mcp23017_isr", 1024, dev_h, 10, &dev->task);
 
-		if ( !mcp23017->taskq ) 
-			mcp23017->taskq = xQueueCreate(1, sizeof(uint16_t) * 2);
+		if ( !dev->taskq ) 
+			dev->taskq = xQueueCreate(1, sizeof(uint16_t) * 2);
 
-    mcp23017->status = MCP23017_ENABLED;
+        // configure interrupts 
+        gpio_config_t gpio_conf;
+        gpio_conf.intr_type = GPIO_INTR_NEGEDGE; //GPIO_INTR_NEGEDGE; //GPIO_INTR_POSEDGE; // GPIO_INTR_ANYEDGE;           
+        gpio_conf.mode = GPIO_MODE_INPUT;
+        gpio_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+        gpio_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+
+        if ( dev->int_a_pin < 255 && dev->int_b_pin < 255 )
+            gpio_conf.pin_bit_mask = ((1ULL << dev->int_a_pin) | (1ULL << dev->int_b_pin));
+        else if ( dev->int_a_pin < 255 )    
+            gpio_conf.pin_bit_mask = (1ULL << dev->int_a_pin);
+        else if ( dev->int_b_pin < 255 )    
+            gpio_conf.pin_bit_mask = (1ULL << dev->int_b_pin);
+
+        gpio_config(&gpio_conf);    
+        gpio_install_isr_service(0);
+        
+        if ( dev->int_a_pin < 255 ) 
+            gpio_isr_handler_add( dev->int_a_pin, mcp23027_isr_handler, dev_h);    
+        
+        if ( dev->int_b_pin < 255 ) 
+            gpio_isr_handler_add( dev->int_b_pin, mcp23027_isr_handler, dev_h);   
+    } else {
+        ESP_LOGE(TAG, "No gpio isr installed for mcp23017");
+    }
+    #endif
+
+    dev->status = MCP23017_ENABLED;
     return ESP_OK;
 }
 
@@ -358,68 +419,4 @@ error:
     return err;   
 }
 
-static void IRAM_ATTR mcp23027_isr_handler(void *arg) {
-    portBASE_TYPE HPTaskAwoken = pdFALSE;
-    BaseType_t xHigherPriorityTaskWoken;
-
-    mcp23017_handle_t dev_h = (mcp23017_handle_t)arg;
-    mcp23017_t *dev = (mcp23017_t *) dev_h;
-
-    uint16_t data[2];
-    mcp23017_read(dev_h, MCP23017_REG_INTFA, 4, &data );
-
-    if (dev->taskq != NULL ) {
-            xQueueOverwriteFromISR(dev->taskq, &data, &xHigherPriorityTaskWoken);
-    }
-
-    portEND_SWITCHING_ISR( HPTaskAwoken == pdTRUE );
-}
-
-void mcp23017_test_task_cb(void *arg)
-{
-    mcp23017_handle_t dev_h = (mcp23017_handle_t)arg;
-    mcp23017_t *dev = (mcp23017_t *) dev_h;
-
-        uint16_t data = 0;
- 
-        data = MCP23017_GPIO_INPUTS_DEFAULT;
-        mcp23017_set_defaults(dev_h, data);
-
-        data = MCP23017_GPIO_INPUTS_DEFAULT;
-        mcp23017_set_interrupts(dev_h, data);
-
-        data = MCP23017_GPIO_INPUTS_DEFAULT;
-        mcp23017_set_directions(dev_h, data);
-
-        data = 0; //!!!!!!!!!
-        mcp23017_set_conditions(dev_h, data);  
-
-
-        
-
-
-        // configure interrupts 
-        gpio_config_t gpio_conf;
-        gpio_conf.intr_type = GPIO_INTR_NEGEDGE; //GPIO_INTR_NEGEDGE; //GPIO_INTR_POSEDGE; // GPIO_INTR_ANYEDGE;           
-        gpio_conf.mode = GPIO_MODE_INPUT;
-        gpio_conf.pin_bit_mask = ((1ULL << dev->int_a_pin) | (1ULL << dev->int_b_pin));
-        gpio_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-        gpio_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-        gpio_config(&gpio_conf);    
-        gpio_install_isr_service(0);
-        gpio_isr_handler_add( dev->int_a_pin, mcp23027_isr_handler, dev_h);    
-        gpio_isr_handler_add( dev->int_b_pin, mcp23027_isr_handler, dev_h);    
-    while ( 1 ) 
-    {
-
-        vTaskDelay( 1000 / portTICK_RATE_MS );
-    }        
-}
-
-void mcp23017_test_task(mcp23017_handle_t dev_h)
-{
-    ESP_LOGI(TAG, __func__);
-    ESP_LOGI(TAG, "mcp23017_h is %p", dev_h);
-    xTaskCreate(mcp23017_test_task_cb, "mcp23017_test", 2048, dev_h, 15, NULL);
-}
 #endif
