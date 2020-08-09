@@ -97,7 +97,7 @@ static void mcp23017_isr_cb(void *arg) {
                                 {
                                     ESP_LOGI(TAG, "Callback for pin %d found", i);
                                     // check pin state
-                                    uint8_t state = BIT_CHECK( data[0], i) != 0;
+                                    uint8_t state = BIT_CHECK( data[1], i) != 0;
                                     ESP_LOGI(TAG, "pin %d state was %d", i, state);
 
                                     // //GPIO_INTR_NEGEDGE; //GPIO_INTR_POSEDGE; // GPIO_INTR_ANYEDGE;   

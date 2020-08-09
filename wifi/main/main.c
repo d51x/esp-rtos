@@ -51,8 +51,9 @@ void app_main(void)
 
     //mcp23017_test_task(mcp23017_h);
     #ifdef CONFIG_MCP23017_ISR
-      
-    mcp23017_isr_handler_add(mcp23017_h, 15, 1, test_mcp23017_isr_cb8, NULL);
+      // 1 - сразу при нажатии
+      // 2 - только после отпускания
+    mcp23017_isr_handler_add(mcp23017_h, 15, 2, test_mcp23017_isr_cb8, NULL);
     mcp23017_isr_handler_add(mcp23017_h, 14, 1, test_mcp23017_isr_cb7, "test2");
     mcp23017_isr_handler_add(mcp23017_h, 13, 1, test_mcp23017_isr_cb6, "recv1");
     mcp23017_isr_handler_add(mcp23017_h, 12, 1, test_mcp23017_isr_cb5, "recv2");
