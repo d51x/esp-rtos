@@ -1,5 +1,5 @@
 if(CONFIG_COMPONENT_LCD2004)
-set(COMPONENT_SRCS "lcd2004.c")
+set(COMPONENT_SRCS "lcd2004_http.c" "lcd2004.c")
 
 
 set(COMPONENT_ADD_INCLUDEDIRS ". include")

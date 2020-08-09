@@ -9,6 +9,16 @@ void test2(char *buf);
 void test_recv1(char *buf);
 void test_recv2(char *buf);
 
+void test_mcp23017_isr_cb1(char *buf);
+void test_mcp23017_isr_cb2(char *buf);
+void test_mcp23017_isr_cb3(char *buf);
+void test_mcp23017_isr_cb4(char *buf);
+void test_mcp23017_isr_cb5(char *buf);
+void test_mcp23017_isr_cb6(char *buf);
+void test_mcp23017_isr_cb7(char *buf);
+void test_mcp23017_isr_cb8(char *buf);
+
+
 void app_main(void)
 {
 	//ESP_ERROR_CHECK(nvs_flash_init());
@@ -39,16 +49,27 @@ void app_main(void)
     ESP_LOGI(TAG, "CONFIG_COMPONENT_MCP23017 AVAILABLE");
     mcp23017_handle_t mcp23017_h = mcp23017_create(0x20 /*MCP23017_ADDR_DEFAULT*/ );
 
-    mcp23017_test_task(mcp23017_h);
+    //mcp23017_test_task(mcp23017_h);
+    #ifdef CONFIG_MCP23017_ISR
+      
+    mcp23017_isr_handler_add(mcp23017_h, 15, 1, test_mcp23017_isr_cb8, NULL);
+    mcp23017_isr_handler_add(mcp23017_h, 14, 1, test_mcp23017_isr_cb7, "test2");
+    mcp23017_isr_handler_add(mcp23017_h, 13, 1, test_mcp23017_isr_cb6, "recv1");
+    mcp23017_isr_handler_add(mcp23017_h, 12, 1, test_mcp23017_isr_cb5, "recv2");
+    mcp23017_isr_handler_add(mcp23017_h, 11, 1, test_mcp23017_isr_cb4, 123);
+    mcp23017_isr_handler_add(mcp23017_h, 10, 1, test_mcp23017_isr_cb3, NULL);
+    mcp23017_isr_handler_add(mcp23017_h, 9, 1, test_mcp23017_isr_cb2, NULL);
+    mcp23017_isr_handler_add(mcp23017_h, 8, 1, test_mcp23017_isr_cb1, NULL);
+    #endif
     #endif
     
-    wifi_init();
+    //wifi_init();
 
 
 
-    sntp_start();
+    //sntp_start();
     
-    webserver_init(&http_server);
+    //webserver_init(&http_server);
 
     #ifdef CONFIG_COMPONENT_I2C
     i2c_register_http_handler(http_server);
@@ -59,16 +80,16 @@ void app_main(void)
     lcd2004_register_http_print_data();
     lcd2004_register_http_handler(http_server);
     #endif
-        mqtt_init();
+        //mqtt_init();
         
 
-        mqtt_add_periodic_publish_callback( "test1", test1);
-        mqtt_add_periodic_publish_callback( "test2", test2);
+        //mqtt_add_periodic_publish_callback( "test1", test1);
+        //mqtt_add_periodic_publish_callback( "test2", test2);
 
-        mqtt_add_receive_callback("recv1", test_recv1);
-        mqtt_add_receive_callback("recv2", test_recv2);
+        //mqtt_add_receive_callback("recv1", test_recv1);
+        //mqtt_add_receive_callback("recv2", test_recv2);
 
-        mqtt_register_http_print_data();
+        //mqtt_register_http_print_data();
 
     #ifdef CONFIG_SENSOR_SHT21
     sht21_init();
@@ -157,3 +178,43 @@ void test_recv2(char *buf)
     ESP_LOGI(TAG, "received topic 'recv2' with data: %s", buf);
 }
 
+
+void test_mcp23017_isr_cb1(char *buf)
+{
+ESP_LOGI(TAG, "executed callback %s", __func__);
+}
+
+void test_mcp23017_isr_cb2(char *buf)
+{
+ESP_LOGI(TAG, "executed callback %s", __func__);
+}
+
+void test_mcp23017_isr_cb3(char *buf)
+{
+ESP_LOGI(TAG, "executed callback %s", __func__);
+}
+
+void test_mcp23017_isr_cb4(char *buf)
+{
+ESP_LOGI(TAG, "executed callback %s", __func__);
+}
+
+void test_mcp23017_isr_cb5(char *buf)
+{
+ESP_LOGI(TAG, "executed callback %s", __func__);
+}
+
+void test_mcp23017_isr_cb6(char *buf)
+{
+ESP_LOGI(TAG, "executed callback %s", __func__);
+}
+
+void test_mcp23017_isr_cb7(char *buf)
+{
+ESP_LOGI(TAG, "executed callback %s", __func__);
+}
+
+void test_mcp23017_isr_cb8(char *buf)
+{
+ESP_LOGI(TAG, "executed callback %s", __func__);
+}

@@ -35,6 +35,12 @@ typedef enum mcp23017_status {
 	MCP23017_ENABLED
 } mcp23017_status_t;
 
+typedef struct mcp23017_pin_isr {
+        uint8_t pin;
+        interrupt_cb pin_cb;
+        gpio_int_type_t intr_type;
+        void *args;
+} mcp23017_pin_isr_t;
 
 typedef struct mcp23017 {
 	uint8_t addr;
@@ -55,6 +61,8 @@ typedef struct mcp23017 {
         interrupt_cb isr_cb;
         QueueHandle_t taskq;
 	QueueHandle_t argq;
+        mcp23017_pin_isr_t *pin_isr; // указатель на массив коллбеков для пинов
+        uint8_t pin_isr_cnt;
         #endif
 } mcp23017_t;
 
@@ -82,7 +90,9 @@ esp_err_t mcp23017_set_inversions(mcp23017_handle_t dev_h, uint16_t pins);
 esp_err_t mcp23017_write_io(mcp23017_handle_t dev_h, uint16_t value);
 esp_err_t mcp23017_read_io(mcp23017_handle_t dev_h, uint16_t *data);
 
-//void mcp23017_isr_handler_add(mcp23017_handle_t dev_h, uint8_t pin, gpio_int_type_t intr_type, interrupt_cb cb);
+#ifdef CONFIG_MCP23017_ISR
+esp_err_t mcp23017_isr_handler_add(mcp23017_handle_t dev_h, uint8_t pin, gpio_int_type_t intr_type, interrupt_cb cb, void *args);
+#endif
 
 #endif // COMPONENT
 #endif
