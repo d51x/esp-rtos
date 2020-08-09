@@ -90,6 +90,9 @@ esp_err_t mcp23017_set_inversions(mcp23017_handle_t dev_h, uint16_t pins);
 esp_err_t mcp23017_write_io(mcp23017_handle_t dev_h, uint16_t value);
 esp_err_t mcp23017_read_io(mcp23017_handle_t dev_h, uint16_t *data);
 
+esp_err_t mcp23017_read_pin(mcp23017_handle_t dev_h, uint8_t pin, uint8_t *val);
+esp_err_t mcp23017_write_pin(mcp23017_handle_t dev_h, uint8_t pin, uint8_t val);
+
 #ifdef CONFIG_MCP23017_ISR
 esp_err_t mcp23017_isr_handler_add(mcp23017_handle_t dev_h, uint8_t pin, gpio_int_type_t intr_type, interrupt_cb cb, void *args);
 #endif

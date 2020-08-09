@@ -81,31 +81,26 @@ static void mcp23017_isr_cb(void *arg) {
             uint16_t data[2];
 			if ( xQueueReceive(dev->taskq, &data, 0) == pdPASS) 
 				{
-                    ESP_LOGI(TAG, " interrput: %4d \t 0x%04X \t " BYTE_TO_BINARY_PATTERN BYTE_TO_BINARY_PATTERN, data[0], data[0], BYTE_TO_BINARY(data[0] >> 8), BYTE_TO_BINARY(data[0]));
-                    ESP_LOGI(TAG, "gpio state: %4d \t 0x%04X \t " BYTE_TO_BINARY_PATTERN BYTE_TO_BINARY_PATTERN, data[1], data[1], BYTE_TO_BINARY(data[1] >> 8), BYTE_TO_BINARY(data[1]));
+                    //ESP_LOGI(TAG, " interrput: %4d \t 0x%04X \t " BYTE_TO_BINARY_PATTERN BYTE_TO_BINARY_PATTERN, data[0], data[0], BYTE_TO_BINARY(data[0] >> 8), BYTE_TO_BINARY(data[0]));
+                    //ESP_LOGI(TAG, "gpio state: %4d \t 0x%04X \t " BYTE_TO_BINARY_PATTERN BYTE_TO_BINARY_PATTERN, data[1], data[1], BYTE_TO_BINARY(data[1] >> 8), BYTE_TO_BINARY(data[1]));
 
                     // check pins with interrupts
                     for ( uint8_t i = 0; i < 16; i++)
                     {
                         if ( BIT_CHECK( data[0], i) != 0)
                         {
-                            ESP_LOGI(TAG, "Pin %d had interrupt", i);
                             // find callbacks for pin
                             for ( uint8_t j = 0; j < dev->pin_isr_cnt; j++)
                             {
                                 if ( dev->pin_isr[ j ].pin == i )
                                 {
-                                    ESP_LOGI(TAG, "Callback for pin %d found", i);
                                     // check pin state
                                     uint8_t state = BIT_CHECK( data[1], i) != 0;
-                                    ESP_LOGI(TAG, "pin %d state was %d", i, state);
 
-                                    // //GPIO_INTR_NEGEDGE; //GPIO_INTR_POSEDGE; // GPIO_INTR_ANYEDGE;   
                                     if (( state == 1 && dev->pin_isr[ j ].intr_type == GPIO_INTR_POSEDGE) || 
                                         ( state == 0 && dev->pin_isr[ j ].intr_type == GPIO_INTR_NEGEDGE))
                                     {
                                         // execute callback
-                                        ESP_LOGI(TAG, "execute callback for pin %d", i);
                                         dev->pin_isr[ j ].pin_cb( dev->pin_isr[ j ].args );
                                     }
 
@@ -163,7 +158,6 @@ mcp23017_handle_t mcp23017_create(uint8_t addr)
 
 esp_err_t mcp23017_delete(mcp23017_handle_t dev_h)
 {
-    ESP_LOGI(TAG, __func__);
     mcp23017_t* device = (mcp23017_t*) dev_h;
     device->i2c_bus_handle = NULL;
     free(device);
@@ -228,7 +222,6 @@ esp_err_t mcp23017_enable(mcp23017_handle_t dev_h)
 
 esp_err_t mcp23017_disable(mcp23017_handle_t dev_h)
 {
-    ESP_LOGI(TAG, __func__);
     mcp23017_t * mcp23017 = (mcp23017_t *)dev_h;
     mcp23017->i2c_bus_handle = NULL;
     mcp23017->status = MCP23017_DISABLED;
@@ -237,7 +230,6 @@ esp_err_t mcp23017_disable(mcp23017_handle_t dev_h)
 
 esp_err_t mcp23017_read_reg(mcp23017_handle_t dev_h, uint8_t reg_addr, uint8_t *value)
 {
-    ESP_LOGI(TAG, __func__);
     if ( dev_h == NULL ) return ESP_FAIL;
     mcp23017_t *dev = (mcp23017_t *) dev_h;
     if ( xSemaphoreI2C == NULL ) return ESP_FAIL;
@@ -257,7 +249,6 @@ esp_err_t mcp23017_read_reg(mcp23017_handle_t dev_h, uint8_t reg_addr, uint8_t *
 
 esp_err_t mcp23017_write_reg(mcp23017_handle_t dev_h, uint8_t reg_addr, uint8_t value)
 {
-    //ESP_LOGI(TAG, __func__);
     if ( dev_h == NULL ) return ESP_FAIL;
     mcp23017_t *dev = (mcp23017_t *) dev_h;
     if ( xSemaphoreI2C == NULL ) return ESP_FAIL;
@@ -273,7 +264,6 @@ esp_err_t mcp23017_write_reg(mcp23017_handle_t dev_h, uint8_t reg_addr, uint8_t 
 
 esp_err_t mcp23017_read(mcp23017_handle_t dev_h, uint8_t reg_start, uint8_t reg_cnt, uint8_t *data )
 {
-   //ESP_LOGI(TAG, __func__);
     if ( dev_h == NULL ) return ESP_FAIL;
     mcp23017_t *dev = (mcp23017_t *) dev_h;
     if ( xSemaphoreI2C == NULL ) return ESP_FAIL;
@@ -293,7 +283,6 @@ esp_err_t mcp23017_read(mcp23017_handle_t dev_h, uint8_t reg_start, uint8_t reg_
 
 esp_err_t mcp23017_write(mcp23017_handle_t dev_h, uint8_t reg_addr, uint8_t reg_cnt, uint8_t *data)
 {
-    //ESP_LOGI(TAG, __func__);
     if ( dev_h == NULL ) return ESP_FAIL;
 
     for ( uint8_t i = 0; i < reg_cnt; i++)
@@ -306,7 +295,6 @@ esp_err_t mcp23017_write(mcp23017_handle_t dev_h, uint8_t reg_addr, uint8_t reg_
 
 esp_err_t mcp23017_set_interrupts(mcp23017_handle_t dev_h, uint16_t pins)
 {
-    ESP_LOGI(TAG, __func__);
     if ( dev_h == NULL ) return ESP_FAIL;   
 
     uint8_t _pins[] = { MCP23017_PORT_A_BYTE(pins), MCP23017_PORT_B_BYTE(pins) };
@@ -322,7 +310,6 @@ esp_err_t mcp23017_set_interrupts(mcp23017_handle_t dev_h, uint16_t pins)
 
 esp_err_t mcp23017_set_defaults(mcp23017_handle_t dev_h, uint16_t defaultValues)
 {
-    ESP_LOGI(TAG, __func__);
     if ( dev_h == NULL ) return ESP_FAIL;   
 
     uint8_t _pins[] = { MCP23017_PORT_A_BYTE(defaultValues), MCP23017_PORT_B_BYTE(defaultValues) };
@@ -338,7 +325,6 @@ esp_err_t mcp23017_set_defaults(mcp23017_handle_t dev_h, uint16_t defaultValues)
 
 esp_err_t mcp23017_set_conditions(mcp23017_handle_t dev_h, uint16_t conditions)
 {
-    ESP_LOGI(TAG, __func__);
     if ( dev_h == NULL ) return ESP_FAIL;   
 
     uint8_t _pins[] = { MCP23017_PORT_A_BYTE(conditions), MCP23017_PORT_B_BYTE(conditions) };
@@ -354,7 +340,6 @@ esp_err_t mcp23017_set_conditions(mcp23017_handle_t dev_h, uint16_t conditions)
 
 esp_err_t mcp23017_set_directions(mcp23017_handle_t dev_h, uint16_t directions)
 {
-    ESP_LOGI(TAG, __func__);
     if ( dev_h == NULL ) return ESP_FAIL;   
 
     uint8_t _pins[] = { MCP23017_PORT_A_BYTE(directions), MCP23017_PORT_B_BYTE(directions) };
@@ -370,7 +355,6 @@ esp_err_t mcp23017_set_directions(mcp23017_handle_t dev_h, uint16_t directions)
 
 esp_err_t mcp23017_set_inversions(mcp23017_handle_t dev_h, uint16_t pins)
 {
-    ESP_LOGI(TAG, __func__);
     if ( dev_h == NULL ) return ESP_FAIL;   
 
     uint8_t _pins[] = { MCP23017_PORT_A_BYTE(pins), MCP23017_PORT_B_BYTE(pins) };
@@ -386,7 +370,6 @@ esp_err_t mcp23017_set_inversions(mcp23017_handle_t dev_h, uint16_t pins)
 
 esp_err_t mcp23017_write_io(mcp23017_handle_t dev_h, uint16_t value)
 {
-    //ESP_LOGI(TAG, __func__);
     if ( dev_h == NULL ) return ESP_FAIL;   
 
     uint8_t _pins[] = { MCP23017_PORT_A_BYTE(value), MCP23017_PORT_B_BYTE(value) };
@@ -403,7 +386,6 @@ esp_err_t mcp23017_write_io(mcp23017_handle_t dev_h, uint16_t value)
 
 esp_err_t mcp23017_read_io(mcp23017_handle_t dev_h, uint16_t *data)
 {
-    //ESP_LOGI(TAG, __func__);
     if ( dev_h == NULL ) return ESP_FAIL;   
 
     return mcp23017_read(dev_h, MCP23017_REG_GPIOA, 2, data );
@@ -411,7 +393,6 @@ esp_err_t mcp23017_read_io(mcp23017_handle_t dev_h, uint16_t *data)
 
 esp_err_t mcp23017_write_pin(mcp23017_handle_t dev_h, uint8_t pin, uint8_t val)
 {
-    ESP_LOGI(TAG, __func__);
     if ( dev_h == NULL ) return ESP_FAIL;     
 
     uint8_t port = ( pin < 8 ) ? MCP23017_REG_GPIOA : MCP23017_REG_GPIOB;
@@ -433,7 +414,6 @@ error:
 
 esp_err_t mcp23017_read_pin(mcp23017_handle_t dev_h, uint8_t pin, uint8_t *val)
 {
-    ESP_LOGI(TAG, __func__);
     if ( dev_h == NULL ) return ESP_FAIL;   
 
     uint8_t port = ( pin < 8 ) ? MCP23017_REG_GPIOA : MCP23017_REG_GPIOB;  

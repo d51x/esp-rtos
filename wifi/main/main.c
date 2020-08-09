@@ -53,14 +53,14 @@ void app_main(void)
     #ifdef CONFIG_MCP23017_ISR
       // 1 - сразу при нажатии
       // 2 - только после отпускания
-    mcp23017_isr_handler_add(mcp23017_h, 15, 2, test_mcp23017_isr_cb8, NULL);
-    mcp23017_isr_handler_add(mcp23017_h, 14, 1, test_mcp23017_isr_cb7, "test2");
-    mcp23017_isr_handler_add(mcp23017_h, 13, 1, test_mcp23017_isr_cb6, "recv1");
-    mcp23017_isr_handler_add(mcp23017_h, 12, 1, test_mcp23017_isr_cb5, "recv2");
-    mcp23017_isr_handler_add(mcp23017_h, 11, 1, test_mcp23017_isr_cb4, 123);
-    mcp23017_isr_handler_add(mcp23017_h, 10, 1, test_mcp23017_isr_cb3, NULL);
-    mcp23017_isr_handler_add(mcp23017_h, 9, 1, test_mcp23017_isr_cb2, NULL);
-    mcp23017_isr_handler_add(mcp23017_h, 8, 1, test_mcp23017_isr_cb1, NULL);
+    mcp23017_isr_handler_add(mcp23017_h, 15, 2, test_mcp23017_isr_cb8, mcp23017_h);
+    mcp23017_isr_handler_add(mcp23017_h, 14, 1, test_mcp23017_isr_cb7, mcp23017_h);
+    mcp23017_isr_handler_add(mcp23017_h, 13, 1, test_mcp23017_isr_cb6, mcp23017_h);
+    mcp23017_isr_handler_add(mcp23017_h, 12, 1, test_mcp23017_isr_cb5, mcp23017_h);
+    mcp23017_isr_handler_add(mcp23017_h, 11, 1, test_mcp23017_isr_cb4, mcp23017_h);
+    mcp23017_isr_handler_add(mcp23017_h, 10, 1, test_mcp23017_isr_cb3, mcp23017_h);
+    mcp23017_isr_handler_add(mcp23017_h, 9, 2, test_mcp23017_isr_cb2, mcp23017_h);
+    mcp23017_isr_handler_add(mcp23017_h, 8, 2, test_mcp23017_isr_cb1, mcp23017_h);
     #endif
     #endif
     
@@ -182,40 +182,82 @@ void test_recv2(char *buf)
 
 void test_mcp23017_isr_cb1(char *buf)
 {
-ESP_LOGI(TAG, "executed callback %s", __func__);
+    ESP_LOGI(TAG, "executed callback %s", __func__);
+
+    mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
+
+    uint8_t val = 0;
+    mcp23017_read_pin(mcp23017_h, 1, &val);
+    mcp23017_write_pin(mcp23017_h, 1, !val);    
 }
 
 void test_mcp23017_isr_cb2(char *buf)
 {
-ESP_LOGI(TAG, "executed callback %s", __func__);
+    ESP_LOGI(TAG, "executed callback %s", __func__);
+    mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
+
+    uint8_t val = 0;
+    mcp23017_read_pin(mcp23017_h, 1, &val);
+    mcp23017_write_pin(mcp23017_h, 1, !val);    
 }
 
 void test_mcp23017_isr_cb3(char *buf)
 {
-ESP_LOGI(TAG, "executed callback %s", __func__);
+    ESP_LOGI(TAG, "executed callback %s", __func__);
+    mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
+
+    uint8_t val = 0;
+    mcp23017_read_pin(mcp23017_h, 2, &val);
+    mcp23017_write_pin(mcp23017_h, 2, !val);    
 }
 
 void test_mcp23017_isr_cb4(char *buf)
 {
-ESP_LOGI(TAG, "executed callback %s", __func__);
+    ESP_LOGI(TAG, "executed callback %s", __func__);
+    mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
+
+    uint8_t val = 0;
+    mcp23017_read_pin(mcp23017_h, 3, &val);
+    mcp23017_write_pin(mcp23017_h, 3, !val);    
 }
 
 void test_mcp23017_isr_cb5(char *buf)
 {
-ESP_LOGI(TAG, "executed callback %s", __func__);
+    ESP_LOGI(TAG, "executed callback %s", __func__);
+    mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
+
+    uint8_t val = 0;
+    mcp23017_read_pin(mcp23017_h, 4, &val);
+    mcp23017_write_pin(mcp23017_h, 4, !val);    
 }
 
 void test_mcp23017_isr_cb6(char *buf)
 {
-ESP_LOGI(TAG, "executed callback %s", __func__);
+    ESP_LOGI(TAG, "executed callback %s", __func__);
+    uint8_t val = 0;
+
+    mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
+    mcp23017_read_pin(mcp23017_h, 5, &val);
+    mcp23017_write_pin(mcp23017_h, 5, !val);
 }
+
 
 void test_mcp23017_isr_cb7(char *buf)
 {
-ESP_LOGI(TAG, "executed callback %s", __func__);
+    ESP_LOGI(TAG, "executed callback %s", __func__);
+    mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
+
+    uint8_t val = 0;
+    mcp23017_read_pin(mcp23017_h, 6, &val);
+    mcp23017_write_pin(mcp23017_h, 6, !val);
 }
 
 void test_mcp23017_isr_cb8(char *buf)
 {
-ESP_LOGI(TAG, "executed callback %s", __func__);
+    ESP_LOGI(TAG, "executed callback %s", __func__);
+    mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
+
+    uint8_t val = 0;
+    mcp23017_read_pin(mcp23017_h, 7, &val);
+    mcp23017_write_pin(mcp23017_h, 7, !val);
 }
