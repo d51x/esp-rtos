@@ -41,21 +41,23 @@ uint32_t mqtt_error_count;
 uint32_t mqtt_reconnects;
 uint8_t mqtt_state;
 
-typedef void (* func_mqtt_send_cb)(char *payload);  
-typedef void (* func_mqtt_recv_cb)(const char *payload);  
+typedef void (* func_mqtt_send_cb)(char *payload, void *args);  
+typedef void (* func_mqtt_recv_cb)(const char *payload, void *args);  
 // typedef void (*func_mqtt_send_cb)(const char *topic, const char *payload);
 
-#define TOPIC_END_NAME_LENGTH 10
+#define TOPIC_END_NAME_LENGTH 20
 
 typedef struct {
     char topic[TOPIC_END_NAME_LENGTH];
     func_mqtt_send_cb fn_cb;
+    void *args;
 } mqtt_send_t;
 #define MQTT_SEND_CB 5
 
 typedef struct {
     char topic[TOPIC_END_NAME_LENGTH];
     func_mqtt_recv_cb fn_cb;
+    void *args;
 } mqtt_recv_t;
 #define MQTT_RECV_CB 5
 
@@ -78,7 +80,7 @@ void mqtt_publish(const char *_topic, const char *payload);
 // НУЖНО ИЗМЕНИТЬ ЗНАЧЕНИЯ MQTT_SEND_CB и MQTT_RECV_CB, если мало
 // название топика не длинее TOPIC_END_NAME_LENGTH - название без учета  "login/hostname/""
 // зарегистрировать функцию колбека, которая будет вызвана при периодической отправки данных с настроенным интервалом
-void mqtt_add_periodic_publish_callback( const char *topic, func_mqtt_send_cb fn_cb);
+void mqtt_add_periodic_publish_callback( const char *topic, func_mqtt_send_cb fn_cb, void *args);
 
 // зарегистрировать функцию колбека, которая будет вызвана при получении данных в указанном топике
-void mqtt_add_receive_callback( const char *topic, func_mqtt_recv_cb fn_cb);  
+void mqtt_add_receive_callback( const char *topic, func_mqtt_recv_cb fn_cb, void *args);  
