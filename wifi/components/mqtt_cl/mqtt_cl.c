@@ -137,7 +137,7 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
             ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
             break;
         case MQTT_EVENT_DATA:
-            ESP_LOGI(TAG, "MQTT_EVENT_DATA");
+            //ESP_LOGI(TAG, "MQTT_EVENT_DATA");
 
             process_data(event);
             break;
@@ -247,7 +247,7 @@ static void process_data(esp_mqtt_event_handle_t event)
     memset(data, 0, event->data_len+1);
     strncpy(data, event->data, event->data_len);
 
-    ESP_LOGI(TAG, "TOPIC=%s, DATA=%s", topic, data);
+    ESP_LOGI(TAG, "EVENT_DATA \t %s, \t %s", topic, data);
     //ESP_LOGI(TAG, "DATA=%s", data);
 
     // cut _mqtt_dev_name from topic

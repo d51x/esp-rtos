@@ -421,7 +421,7 @@ esp_err_t mcp23017_write_pin(mcp23017_handle_t dev_h, uint8_t pin, uint8_t val)
         uint8_t data[2];
         data[0] = pin;
         data[1] = val;
-        ESP_LOGW(TAG, "put to queue: pin = %d, val = %d", data[0], data[1]);
+        //ESP_LOGW(TAG, "put to queue: pin = %d, val = %d", data[0], data[1]);
         xQueueSendToBack(mcp23017_status_queue, &data, 0);
     }
 error:

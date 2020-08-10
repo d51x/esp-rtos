@@ -187,82 +187,91 @@ void test_recv2(char *buf, void *args)
 
 void test_mcp23017_isr_cb1(char *buf)
 {
-    ESP_LOGI(TAG, "executed callback %s", __func__);
-
     mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
 
-    uint8_t val = 0;
+    static uint8_t val = 0;
     mcp23017_read_pin(mcp23017_h, 0, &val);
-    mcp23017_write_pin(mcp23017_h, 0, !val);    
+    val = !val;
+        ESP_LOGI(TAG, "executed callback %s %d", __func__, val);
+    mcp23017_write_pin(mcp23017_h, 0, val);    
 }
 
 void test_mcp23017_isr_cb2(char *buf)
 {
-    ESP_LOGI(TAG, "executed callback %s", __func__);
     mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
 
-    uint8_t val = 0;
+    static uint8_t val = 0;
     mcp23017_read_pin(mcp23017_h, 1, &val);
-    mcp23017_write_pin(mcp23017_h, 1, !val);    
+    val = !val;
+    ESP_LOGI(TAG, "executed callback %s %d", __func__, val);    
+    mcp23017_write_pin(mcp23017_h, 1, val);    
 }
 
 void test_mcp23017_isr_cb3(char *buf)
 {
-    ESP_LOGI(TAG, "executed callback %s", __func__);
+
     mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
 
-    uint8_t val = 0;
+    static uint8_t val = 0;
     mcp23017_read_pin(mcp23017_h, 2, &val);
-    mcp23017_write_pin(mcp23017_h, 2, !val);    
+    val = !val;
+        ESP_LOGI(TAG, "executed callback %s %d", __func__, val);
+    mcp23017_write_pin(mcp23017_h, 2, val);    
 }
 
 void test_mcp23017_isr_cb4(char *buf)
 {
-    ESP_LOGI(TAG, "executed callback %s", __func__);
     mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
 
-    uint8_t val = 0;
+    static uint8_t val = 0;
     mcp23017_read_pin(mcp23017_h, 3, &val);
-    mcp23017_write_pin(mcp23017_h, 3, !val);    
+    val = !val;
+    ESP_LOGI(TAG, "executed callback %s %d", __func__, val);    
+    mcp23017_write_pin(mcp23017_h, 3, val);    
 }
 
 void test_mcp23017_isr_cb5(char *buf)
 {
-    ESP_LOGI(TAG, "executed callback %s", __func__);
     mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
 
-    uint8_t val = 0;
+    static uint8_t val = 0;
     mcp23017_read_pin(mcp23017_h, 4, &val);
-    mcp23017_write_pin(mcp23017_h, 4, !val);    
+    val = !val;
+        ESP_LOGI(TAG, "executed callback %s %d", __func__, val);
+    mcp23017_write_pin(mcp23017_h, 4, val);    
 }
 
 void test_mcp23017_isr_cb6(char *buf)
 {
-    ESP_LOGI(TAG, "executed callback %s", __func__);
-    uint8_t val = 0;
+    static uint8_t val = 0;
 
     mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
     mcp23017_read_pin(mcp23017_h, 5, &val);
-    mcp23017_write_pin(mcp23017_h, 5, !val);
+    val = !val;
+    ESP_LOGI(TAG, "executed callback %s %d", __func__, val);
+    mcp23017_write_pin(mcp23017_h, 5, val);
 }
 
 
 void test_mcp23017_isr_cb7(char *buf)
 {
-    ESP_LOGI(TAG, "executed callback %s", __func__);
     mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
 
-    uint8_t val = 0;
+    static uint8_t val = 0;
     mcp23017_read_pin(mcp23017_h, 6, &val);
-    mcp23017_write_pin(mcp23017_h, 6, !val);
+    val = !val;
+    ESP_LOGI(TAG, "executed callback %s %d", __func__, val);
+    mcp23017_write_pin(mcp23017_h, 6, val);
 }
 
 void test_mcp23017_isr_cb8(char *buf)
 {
-    ESP_LOGI(TAG, "executed callback %s", __func__);
+    
     mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
 
-    uint8_t val = 0;
+    static uint8_t val = 0;
     mcp23017_read_pin(mcp23017_h, 7, &val);
-    mcp23017_write_pin(mcp23017_h, 7, !val);
+    val = !val;
+    ESP_LOGI(TAG, "executed callback %s %d", __func__, val);
+    mcp23017_write_pin(mcp23017_h, 7, val);
 }
