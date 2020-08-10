@@ -48,21 +48,23 @@ typedef struct {
 extern http_print_page_block_t *http_print_page_block;
 
 
-void show_page_main(const char *title, char *data);
-void show_page_setup(const char *title, char *data);
-void show_page_config(const char *title, char *data);
-void show_page_tools(const char *title, char *data);
-void show_page_update(const char *title, char *data);
-void show_page_debug(const char *title, char *data);
+void show_custom_page(httpd_req_t *req, const char *uri, const char *title, char *data);
 
-void show_custom_page(const char *title, char *data);
+void show_page_main(httpd_req_t *req, const char *title, char *data);
+void show_page_setup(httpd_req_t *req,  const char *title, char *data);
+void show_page_config(httpd_req_t *req, const char *title, char *data);
+void show_page_tools(httpd_req_t *req, const char *title, char *data);
+void show_page_update(httpd_req_t *req, const char *title, char *data);
+void show_page_debug(httpd_req_t *req, const char *title, char *data);
+
+
 void page_generate_html_start(char *buf, const char *title);
 void page_generate_html_end(char *buf);
 void page_generate_top_header(char *buf);
 void page_show_menu(char *buf);
 void page_initialize_menu();
 
-void page_generate_data(char *buf, const char *data);
+void page_generate_data(const char *uri, char *data);
 
 
 
@@ -72,8 +74,8 @@ void show_http_page(httpd_req_t *req, char *data);
 
 
 
-void show_restart_page_data(char *data);
-void show_restarting_page_data(char *data);
+void show_restart_page_data(httpd_req_t *req, char *data);
+void show_restarting_page_data(httpd_req_t *req, char *data);
 
 
 
