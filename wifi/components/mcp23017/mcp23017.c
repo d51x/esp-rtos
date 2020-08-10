@@ -145,6 +145,10 @@ mcp23017_handle_t mcp23017_create(uint8_t addr)
     mcp23017->pins_saved = 0;
     mcp23017->pins_values = 0;
 
+    #ifdef CONFIG_MCP23017_HTTP
+    mcp23017->http_buttons = 0xFFFF;
+    #endif
+
     // interrupts
     #ifdef CONFIG_MCP23017_ISR
  	mcp23017->taskq = NULL;

@@ -24,6 +24,7 @@ esp_err_t i2cscan_get_handler(httpd_req_t *req);
 #endif
 
 //esp_err_t i2c_get_handler(httpd_req_t *req);
+void i2c_http_init(httpd_handle_t _server);
 
 #endif //#ifdef CONFIG_COMPONENT_I2C
 

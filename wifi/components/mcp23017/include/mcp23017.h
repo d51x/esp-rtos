@@ -64,6 +64,10 @@ typedef struct mcp23017 {
 	QueueHandle_t argq;
         mcp23017_pin_isr_t *pin_isr; // указатель на массив коллбеков для пинов
         uint8_t pin_isr_cnt;
+        #ifdef CONFIG_MCP23017_HTTP
+        uint16_t http_buttons;
+        char *names[16];
+        #endif
         #endif
 } mcp23017_t;
 

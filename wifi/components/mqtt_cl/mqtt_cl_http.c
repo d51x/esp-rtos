@@ -94,5 +94,11 @@ void mqtt_http_process_params(httpd_req_t *req, void *args)
         free(mqtt_cfg);
 
         mqtt_restart_task();
-    } 
+    }
+        
+}
+
+void mqtt_http_init(httpd_handle_t _server)
+{
+    mqtt_register_http_print_data();
 }

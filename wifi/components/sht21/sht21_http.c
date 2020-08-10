@@ -25,5 +25,10 @@ void sht21_register_http_print_data()
     register_print_page_block( "sht21_data", PAGES_URI[ PAGE_URI_ROOT], 3, sht21_print_data, NULL, NULL, NULL);
     
 }
+
+void sht21_http_init(httpd_handle_t _server)
+{
+    sht21_register_http_print_data();
+}
 #endif
 

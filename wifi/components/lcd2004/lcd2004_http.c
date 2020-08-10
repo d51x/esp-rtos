@@ -172,4 +172,10 @@ void lcd2004_register_http_handler(httpd_handle_t _server)
     add_uri_get_handler( _server, "/lcd", lcd2004_get_handler, NULL); 
 }
 
+void lcd2004_http_init(httpd_handle_t _server)
+{
+    lcd2004_register_http_print_data();
+    lcd2004_register_http_handler(_server);
+}
+
 #endif

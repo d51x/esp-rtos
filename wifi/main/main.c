@@ -39,14 +39,11 @@ void app_main(void)
 	ESP_LOGI(TAG, "SDK: %s", esp_get_idf_version());
 	
     #ifdef CONFIG_COMPONENT_LCD2004
-    //lcd2004_init(LCD2004_ADDR_DEFAULT, 20, 4);
     lcd2004_init();
     lcd2004_test_task();
-    
     #endif
 
     #ifdef CONFIG_COMPONENT_MCP23017
-    ESP_LOGI(TAG, "CONFIG_COMPONENT_MCP23017 AVAILABLE");
     mcp23017_handle_t mcp23017_h = mcp23017_create(0x20 /*MCP23017_ADDR_DEFAULT*/ );
 
     //mcp23017_test_task(mcp23017_h);
@@ -65,48 +62,46 @@ void app_main(void)
     #endif
     
     wifi_init();
-
-
-
     sntp_start();
     
     webserver_init(&http_server);
 
-    wifi_register_http_print_data();
+    wifi_http_init(http_server);
     ota_http_init(http_server);
 
     #ifdef CONFIG_COMPONENT_I2C
-    i2c_register_http_handler(http_server);
-    i2c_register_http_print_data();
+    i2c_http_init(http_server);
     #endif
 
     #ifdef CONFIG_COMPONENT_LCD2004_HTTP
-    lcd2004_register_http_print_data();
-    lcd2004_register_http_handler(http_server);
+    lcd2004_http_init(http_server);
     #endif
-        mqtt_init();
-        
 
-        mqtt_add_periodic_publish_callback( "test1", test1, NULL);
-        mqtt_add_periodic_publish_callback( "test2", test2, NULL);
+    mqtt_init();
 
-        mqtt_add_receive_callback("recv1", test_recv1, NULL);
-        mqtt_add_receive_callback("recv2", test_recv2, NULL);
+    mqtt_add_periodic_publish_callback( "test1", test1, NULL);
+    mqtt_add_periodic_publish_callback( "test2", test2, NULL);
 
+    mqtt_add_receive_callback("recv1", test_recv1, NULL);
+    mqtt_add_receive_callback("recv2", test_recv2, NULL);
 
-        // register mcp23017
-        mcp23017_mqtt_init(mcp23017_h);
+    // register mcp23017
+    #ifdef CONFIG_MCP23017_HTTP
+    mcp23017_mqtt_init(mcp23017_h);
+    //((mcp23017_t *) mcp23017_h)->http_buttons = 0b1010100000000000;
+    mcp23017_http_init(http_server, mcp23017_h);
+    mcp23017_http_set_btn_name(mcp23017_h, 15, "Кнопка 1");
+    mcp23017_http_set_btn_name(mcp23017_h, 13, "Кнопка 2");
+    mcp23017_http_set_btn_name(mcp23017_h, 11, "Кнопка 3");
+    #endif
 
+    mqtt_http_init(http_server);
 
-        mqtt_register_http_print_data();
-
-        mcp23017_register_http_print_data(mcp23017_h);  
-        mcp23017_register_http_handler(http_server, mcp23017_h);
-
+    
     #ifdef CONFIG_SENSOR_SHT21
     sht21_init();
     sht21_start( 5 );
-    sht21_register_http_print_data();
+    sht21_http_init(http_server);
     #endif
 
 

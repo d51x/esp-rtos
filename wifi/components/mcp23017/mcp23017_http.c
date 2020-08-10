@@ -1,5 +1,6 @@
 #include "mcp23017_http.h"
 
+#ifdef CONFIG_MCP23017_HTTP
 const char *html_block_mcp23107_start ICACHE_RODATA_ATTR = 
     "<div class='group rnd'>"
         "<h4 class='brd-btm'>MCP23017:</h4>";      
@@ -9,8 +10,8 @@ const char *html_block_mcp23107_end ICACHE_RODATA_ATTR =
 
 const char *html_mcp23017_btn ICACHE_RODATA_ATTR =
 
-                                       "<button id='mcp23017-%d' class='button rht %s' "            // on или off - текущее состояние
-                                                        "data-class='button rht' "
+                                       "<button id='mcp23017-%d' class='button lht %s' "            // on или off - текущее состояние
+                                                        "data-class='button lht' "
                                                         "data-uri='" MCP23017_URI "?st=mcp&pin=%d&val=' "
                                                         "data-val='%d' "                    // 0 или 1 - нужное состояние кнопки,которое будет передано в запрос для изменения
                                                         "data-text='%s'"                    // текст для кнопки, который подставится после нажатия, парметр замены {0}
@@ -35,23 +36,26 @@ static void mcp23017_print_data(char *data, void *args)
         uint16_t values;
         mcp23017_read_io(dev_h, &values);
         uint8_t val = (BIT_CHECK(values, i) != 0 ) ;
+        uint8_t visible = (BIT_CHECK(dev->http_buttons, i) != 0 ) ;
+        if ( visible ) {
+            
+            char btn_name[16];
+            snprintf(btn_name, 16, "PIN%02d", i);
 
-        char btn_name[16];
-        snprintf(btn_name, 16, "PIN%02d", i);
-
-        char *buf_btn = (char *) calloc(250, sizeof(char));
-        snprintf(buf_btn, 512, html_mcp23017_btn
-                                , i                         // id
-                                , val ? "on" : "off"        // class
-                                , i                         // uri pin
-                                , !val                      // data-val
-                                , btn_name                  // data-text
-                                , i                         // btnclick id
-                                , i                         // btnclick id2
-                                , btn_name                  // текст кнопки
-                                );
-        strncat(buf, buf_btn, 512);
-        free(buf_btn);
+            char *buf_btn = (char *) calloc(250, sizeof(char));
+            snprintf(buf_btn, 512, html_mcp23017_btn
+                                    , i                         // id
+                                    , val ? "on" : "off"        // class
+                                    , i                         // uri pin
+                                    , !val                      // data-val
+                                    , ( dev->names[i] != NULL ) ? dev->names[i] : btn_name                  // data-text
+                                    , i                         // btnclick id
+                                    , i                         // btnclick id2
+                                    , ( dev->names[i] != NULL ) ? dev->names[i] : btn_name                  // текст кнопки
+                                    );
+            strncat(buf, buf_btn, 512);
+            free(buf_btn);
+        }
     }
 
 
@@ -142,3 +146,16 @@ void mcp23017_register_http_handler(httpd_handle_t _server, mcp23017_handle_t de
     ctx->args = dev_h;
     add_uri_get_handler( _server, MCP23017_URI, mcp23017_get_handler, ctx); 
 }
+
+void mcp23017_http_init(httpd_handle_t _server, mcp23017_handle_t dev_h)
+{
+    mcp23017_register_http_print_data(dev_h);  
+    mcp23017_register_http_handler(_server, dev_h);
+}
+
+void mcp23017_http_set_btn_name(mcp23017_handle_t dev_h, uint8_t idx, const char *name)
+{
+    mcp23017_t *dev = (mcp23017_t *) dev_h;   
+    dev->names[idx] = name;
+}
+#endif

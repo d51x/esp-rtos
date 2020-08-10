@@ -148,6 +148,12 @@ esp_err_t i2cscan_get_handler(httpd_req_t *req)
      
     return ESP_OK;
 }
+
+void i2c_http_init(httpd_handle_t _server)
+{
+    i2c_register_http_handler(_server);
+    i2c_register_http_print_data();   
+}
 #endif
 
 #endif //#ifdef CONFIG_COMPONENT_I2C

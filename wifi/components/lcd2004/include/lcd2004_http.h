@@ -17,6 +17,7 @@
 extern const char *html_block_lcd2004;    
 void lcd2004_register_http_print_data(); 
 void lcd2004_register_http_handler(httpd_handle_t _server);
+void lcd2004_http_init(httpd_handle_t _server);
 
 #endif
 

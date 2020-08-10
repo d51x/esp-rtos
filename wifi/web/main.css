@@ -146,6 +146,11 @@ margin: 0 8px 4px 4px;
 width: 55%;	
 }
 
+.lht {
+    min-width: 70px;
+    margin-left: 6px;
+    margin-right: 3px;
+}
 .rht{
 float: right;	
 }
@@ -298,4 +303,5 @@ float: right;
     display: inline-block;
     width: 100%;
     text-align: center;
+    padding: 0 4px 16px 4px;
 }

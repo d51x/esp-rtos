@@ -21,19 +21,11 @@
 #include "wifi_http.h"
 #include "mqtt_cl.h"
 #include "mqtt_cl_http.h"
-
 #include "ota_http.h"
-
 #include "sntp.h"
-//#include "core/httpd.h"
 #include "httpd.h"
-//#include "core/http_page.h"
 #include "http_page.h"
-
-#include "i2c_http.h"
-
 #include "esp_log.h"
-
 #include "utils.h"
 
 #ifdef CONFIG_COMPONENT_I2C
@@ -49,18 +41,18 @@
 #include "pcf8574.h"
 #endif
 
-    #ifdef CONFIG_COMPONENT_LCD2004
-    #include "lcd2004.h"
-    #endif
-    
-    #ifdef CONFIG_COMPONENT_LCD2004_HTTP
-    #include "lcd2004_http.h"
-    #endif
+#ifdef CONFIG_COMPONENT_LCD2004
+#include "lcd2004.h"
+#endif
+
+#ifdef CONFIG_COMPONENT_LCD2004_HTTP
+#include "lcd2004_http.h"
+#endif
 
 #ifdef CONFIG_COMPONENT_MCP23017
-    #include "mcp23017.h"
-    #include "mcp23017_mqtt.h"
-    #include "mcp23017_http.h"
+#include "mcp23017.h"
+#include "mcp23017_mqtt.h"
+#include "mcp23017_http.h"
 #endif
 
 httpd_handle_t http_server = NULL;
