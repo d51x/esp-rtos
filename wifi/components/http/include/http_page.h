@@ -54,7 +54,7 @@ void show_page_main(httpd_req_t *req, const char *title, char *data);
 void show_page_setup(httpd_req_t *req,  const char *title, char *data);
 void show_page_config(httpd_req_t *req, const char *title, char *data);
 void show_page_tools(httpd_req_t *req, const char *title, char *data);
-void show_page_update(httpd_req_t *req, const char *title, char *data);
+void show_page_ota(httpd_req_t *req, const char *title, char *data);
 void show_page_debug(httpd_req_t *req, const char *title, char *data);
 
 

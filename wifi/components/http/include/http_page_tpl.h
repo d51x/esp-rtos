@@ -71,29 +71,6 @@ const char *html_page_devinfo ICACHE_RODATA_ATTR =
   "</div>";
 
 
-const char *html_page_ota ICACHE_RODATA_ATTR = 
-  "<p>Выбрать Firmware</p>"
-  "<form enctype='multipart/form-data' method='post' action='/update' accept='.bin'>" 
-    "<p><input type='file' name='file' class='button norm rh' /></p>" 
-    "<p><div class='lf2'><input type='submit' value='Загрузить' class='button norm rht' /></p>"
-  "</form>"; 
-
-const char *html_page_setup_wifi ICACHE_RODATA_ATTR = 
-  "<div class='group rnd'>"
-    "<h4 class='brd-btm'>WiFi Settings:</h4>" 
-    "<form method='GET'>" 
-      "<p><label class='lf'>Hostname: </label><input size='20' name='hostname' class='edit rh' value='%s' /></p>"       
-      "<p><label class='lf'>SSID: </label><input size='20' name='ssid' class='edit rh' value='%s' /></p>"
-      "<p><label class='lf'>Password: </label><input size='20' name='pass' class='edit rh' value='%s' /></p>"
-      "<p><label class='lf'>Mode:</label>"
-        "<label><input type='radio' name='wifi_mode' value='1' %s /> STA</label>" 
-        "<label><input type='radio' name='wifi_mode' value='2' %s /> AP</label>"
-      "</p>"
-      "<p><input type='hidden' name='st' value='1'></p>" 
-      "<p class='lf2'><input type='submit' value='Сохранить' class='button norm rht'></p>" 
-    "</form>"
-  "</div>";
-
 const char *html_page_reboot_button_block ICACHE_RODATA_ATTR = 
   "<div class='group rnd'><div class='lf2'>" 
     "<button id='reboot' class='button off rht' onclick='reboot()'>Перезагрузить</button>" 

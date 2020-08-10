@@ -17,7 +17,7 @@ void register_uri_handlers(httpd_handle_t _server) {
     add_uri_get_handler( _server, PAGES_URI[PAGE_URI_DEBUG], debug_get_handler, &PAGES_HANDLER[PAGE_URI_DEBUG]); 
     add_uri_get_handler( _server, PAGES_URI[PAGE_URI_TOOLS], tools_get_handler, &PAGES_HANDLER[PAGE_URI_TOOLS]); 
     add_uri_get_handler( _server, PAGES_URI[PAGE_URI_OTA], update_get_handler, &PAGES_HANDLER[PAGE_URI_OTA]); 
-    add_uri_post_handler( _server, "/update", update_post_handler); 
+    //add_uri_post_handler( _server, "/update", update_post_handler); 
 
     
     //add_uri_get_handler( _server, "/reboot", reboot_get_handler); 
@@ -80,12 +80,21 @@ void add_uri_get_handler(httpd_handle_t _server, const char *uri, httpd_uri_func
 }
 
 
-void add_uri_post_handler(httpd_handle_t _server, const char *uri, httpd_uri_func func) {
+void add_uri_post_handler(httpd_handle_t _server, const char *uri, httpd_uri_func func, void *ctx) 
+{
+    user_ctx_t *_ctx = (user_ctx_t *) ctx;
+
     httpd_uri_t my_uri;
       my_uri.uri      = strdup(uri);
       my_uri.method   = HTTP_POST;
       my_uri.handler  = func;
       my_uri.user_ctx = NULL;
+
+    if ( ctx != NULL ) 
+    {
+      my_uri.user_ctx = ctx;
+    }
+
     // ESP_LOGI(TAG, __func__);
     // ESP_LOGI(TAG, "my_uri.handler addr: %p", my_uri.handler);
     // ESP_LOGI(TAG, "_server is %s", (_server != NULL) ? "not NULL" : "NULL");

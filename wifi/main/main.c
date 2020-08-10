@@ -73,6 +73,7 @@ void app_main(void)
     webserver_init(&http_server);
 
     wifi_register_http_print_data();
+    ota_http_init(http_server);
 
     #ifdef CONFIG_COMPONENT_I2C
     i2c_register_http_handler(http_server);

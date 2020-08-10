@@ -13,16 +13,13 @@ pages:
 
 
 static const char *TAG = "HTTPH";
-static void process_wifi_param(httpd_req_t *req);
-
-static void process_mqtt_param(httpd_req_t *req);
 
 const char *PAGES_URI[PAGE_URI_MAX] = { 
     HTTP_URI_ROOT,                    // PAGE_URI_ROOT
     HTTP_URI_SETUP,               // PAGE_URI_SETUP
     HTTP_URI_DEBUG,               // PAGE_URI_DEBUG
     HTTP_URI_TOOLS,               // PAGE_URI_TOOLS
-    HTTP_URI_UPDATE,              // PAGE_URI_OTA
+    HTTP_URI_OTA,              // PAGE_URI_OTA
     HTTP_URI_REBOOT,              // PAGE_URI_REBOOT
     "/main.css",            // PAGE_URI_CSS
     "/ajax.js",             // PAGE_URI_AJAX
@@ -38,7 +35,7 @@ user_ctx_t PAGES_HANDLER[PAGE_URI_MAX] = {
     {HTTP_STR_SETUP,   true,   show_page_setup,      NULL},
     {HTTP_STR_DEBUG,   true,   show_page_debug,      NULL},
     {HTTP_STR_TOOLS,   true,   show_page_tools,      NULL},
-    {HTTP_STR_UPDATE,  true,   show_page_update,     NULL},
+    {HTTP_STR_OTA,     true,   show_page_ota,     NULL},
     {HTTP_STR_REBOOT,  false,  reboot_get_handler,   NULL},
     {"",               false,  NULL,                 NULL},
     {"",               false,  NULL,                 NULL},
@@ -69,7 +66,7 @@ void process_params(httpd_req_t *req)
 esp_err_t main_get_handler(httpd_req_t *req) 
 {
     char page[PAGE_MAIN_BUFFER_SIZE];  
-    strncpy(page, HTTP_STR_MAIN, PAGE_MAIN_BUFFER_SIZE);
+    strcpy(page, "");
     show_http_page( req, page);
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
     httpd_resp_send(req, page, strlen(page));
@@ -87,8 +84,6 @@ esp_err_t setup_get_handler(httpd_req_t *req){
   // check params
 	if ( http_get_has_params(req) == ESP_OK) 
 	{
-		process_wifi_param(req);
-		//process_mqtt_param(req);
         process_params(req);
 
         char *path = http_uri_clean( req );
@@ -97,39 +92,12 @@ esp_err_t setup_get_handler(httpd_req_t *req){
         return ESP_OK;
 	}
 	  
-  strncpy(page, HTTP_STR_SETUP, PAGE_DEFAULT_BUFFER_SIZE);
+  strcpy(page, "");
   //show_page_setup( page );
   show_http_page( req, page);
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
   httpd_resp_send(req, page, strlen(page));
   return ESP_OK;
-}
-
-void process_wifi_param(httpd_req_t *req)
-{
-
-}
-
-
-
-void process_mqtt_param(httpd_req_t *req)
-{
-
-}
-
-
-esp_err_t config_get_handler(httpd_req_t *req){
-  char page[PAGE_DEFAULT_BUFFER_SIZE];  
-
-
-
-	// show page
-  	strncpy(page, HTTP_STR_CONFIG, PAGE_DEFAULT_BUFFER_SIZE);
-  	//show_page_config( page );
-    show_http_page( req, page);
-  	httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
-  	httpd_resp_send(req, page, strlen(page));
-  	return ESP_OK;
 }
 
 esp_err_t tools_get_handler(httpd_req_t *req){
@@ -141,7 +109,7 @@ esp_err_t tools_get_handler(httpd_req_t *req){
 	}
 
   char page[PAGE_DEFAULT_BUFFER_SIZE];  
-  strncpy(page, HTTP_STR_TOOLS, PAGE_DEFAULT_BUFFER_SIZE);
+  strcpy(page, "");
   //show_page_tools( page );
   show_http_page( req, page);
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
@@ -150,51 +118,24 @@ esp_err_t tools_get_handler(httpd_req_t *req){
 }
 
 esp_err_t update_get_handler(httpd_req_t *req){
+
+	if ( http_get_has_params(req) == ESP_OK) 
+	{
+        process_params(req);
+	}
+
+
   char page[PAGE_DEFAULT_BUFFER_SIZE];  
-  strncpy(page, HTTP_STR_UPDATE, PAGE_DEFAULT_BUFFER_SIZE);
-  //show_page_update( page );
+  strcpy(page, "");
   show_http_page( req, page);
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
   httpd_resp_send(req, page, strlen(page));
   return ESP_OK;
 }
 
-esp_err_t update_post_handler(httpd_req_t *req){
-    
-    char err_text[400];
-    char page[PAGE_DEFAULT_BUFFER_SIZE];
-    uint32_t start_time = millis(); 
-
-    if ( ota_task_upgrade_from_web(req, err_text) == ESP_OK ) {
-        // upgrading is OK, restart esp and redirect to main page in 10
-        char header[40] = "";
-        set_redirect_header(10, "/", header);
-        strcpy(page, header);
-
-        sprintf(page+strlen(page), "File uploaded, it took %d sec. Restarting....", (uint32_t)(millis()-start_time)/1000);
-        xTaskCreate(&systemRebootTask, "systemRebootTask", 1024, (int *)3000, 5, NULL);  
-		httpd_resp_set_hdr(req, "Refresh", "10; /");
-  
-    } else {
-        // upgrading fail show ota page again
-        // show upgrade fail and redirect to ota page in 10 sec
-        //strcpy(page, "<head><meta http-equiv=\"refresh\" content=\"10; URL=/\" /></head>");
-        
-
-        //strcpy(page+strlen(page), "OTA upgrade failed...\n");        
-        strcat(page, "OTA upgrade failed...\n");        
-        //strcpy(page+strlen(page), err_text);        
-        strcat(page, err_text);        
-        httpd_resp_set_status(req, HTTPD_500);
-    }
-    
-    httpd_resp_send(req, page, -1);
-    return ESP_OK;
-}
-
 esp_err_t debug_get_handler(httpd_req_t *req){
   char page[PAGE_DEFAULT_BUFFER_SIZE];  
-  strncpy(page, HTTP_STR_DEBUG, PAGE_DEFAULT_BUFFER_SIZE);
+  strcpy(page, "");
   //show_page_debug( page );
     show_http_page( req, page);
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);

@@ -22,6 +22,8 @@
 #include "mqtt_cl.h"
 #include "mqtt_cl_http.h"
 
+#include "ota_http.h"
+
 #include "sntp.h"
 //#include "core/httpd.h"
 #include "httpd.h"

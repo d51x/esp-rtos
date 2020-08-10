@@ -33,8 +33,8 @@ void page_initialize_menu()
     strcpy(http_menu[2].uri,    HTTP_URI_TOOLS  );
     strcpy(http_menu[2].name,   HTTP_STR_TOOLS  );   
 
-    strcpy(http_menu[3].uri,    HTTP_URI_UPDATE );
-    strcpy(http_menu[3].name,   HTTP_STR_UPDATE );
+    strcpy(http_menu[3].uri,    HTTP_URI_OTA );
+    strcpy(http_menu[3].name,   HTTP_STR_OTA );
 
     strcpy(http_menu[4].uri,    HTTP_URI_DEBUG  );
     strcpy(http_menu[4].name,   HTTP_STR_DEBUG  );
@@ -43,7 +43,7 @@ void page_initialize_menu()
     { HTTP_URI_ROOT,   HTTP_STR_MAIN   },
     { HTTP_URI_SETUP,  HTTP_STR_SETUP  },
     { HTTP_URI_TOOLS,  HTTP_STR_TOOLS  },
-    { HTTP_URI_UPDATE, HTTP_STR_UPDATE },
+    { HTTP_URI_OTA,     HTTP_STR_OTA },
     { HTTP_URI_DEBUG,  HTTP_STR_DEBUG  }
 };
 */
@@ -67,11 +67,6 @@ void page_generate_html_end(char *_buf)
     sprintf(_buf + strlen(_buf), html_page_end, buf, FW_VER);
     free(buf);
 }
-
-
-
-
-
 
 void page_generate_top_header(char *buf)
 {
@@ -107,8 +102,6 @@ void page_generate_data(const char *uri, char *data)
     sprintf(data + strlen(data), html_page_content_end);
 }
 
-
-
 void page_show_menu(char *buf)
 {
     // TODO add callback to add custom menu item from component
@@ -135,7 +128,7 @@ void generate_page(httpd_req_t *req, const char *uri, const char *title, const c
 
     // may be printed as chunk
     page_generate_html_end(data);  
-    
+
     #ifdef CONFIG_CONPONENT_DEBUG
         print_task_stack_depth(TAG, "page: %s", uri);    
     #endif     
@@ -174,7 +167,6 @@ void show_http_page(httpd_req_t *req, char *data)
         free( _uri );
     } 
 }
-
 
 void print_page_block(const char *uri, char *data)
 {
@@ -221,10 +213,6 @@ void print_page_block(const char *uri, char *data)
 
     }
 
-
-    if ( strcmp(uri, PAGES_URI[ PAGE_URI_OTA ]) == 0 ) {
-        strcpy(data + strlen(data), html_page_ota);    // TODO сделать через блок и зарегистрировать
-    }
     if ( strcmp(uri, PAGES_URI[ PAGE_URI_TOOLS ]) == 0 ) {
         sprintf( data + strlen(data), html_page_reboot_button_block);    // TODO сделать через блок и зарегистрировать
     }
@@ -254,7 +242,7 @@ void show_page_tools(httpd_req_t *req, const char *title, char *data)
     generate_page(req, PAGES_URI[ PAGE_URI_TOOLS ], title, data);
 }
 
-void show_page_update(httpd_req_t *req, const char *title, char *data)
+void show_page_ota(httpd_req_t *req, const char *title, char *data)
 {
     generate_page(req, PAGES_URI[ PAGE_URI_OTA ], title, data);
 }
