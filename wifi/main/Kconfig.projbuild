@@ -95,6 +95,12 @@ menu "Project config"
             help
                 Apply MQTT settings ON AIR on setup web page, when settings was changed
 
+        config MQTT_TOPIC_SEND_RECV
+            bool "MQTT the same topic for send and receive"
+            default y
+            help
+                Apply MQTT settings to make the same topic for sending and receiving data                
+
     endmenu    
 
     menu "I2C Component"        

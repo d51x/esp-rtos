@@ -9,13 +9,9 @@ mcp23017_handle_t _dev_h;
 void mcp23017_mqtt_periodic_send_cb(char *buf, void *args)
 {
     // для отправки в buf положить значение пина
-    //mcp23017_mqtt_t *p = (mcp23017_mqtt_t *)args;
-    uint8_t pin = (uint8_t)args;
-    //ESP_LOGI(TAG, "%s, pin %d", __func__, p->pin);
-    //ESP_LOGI(TAG, "%s, pin %d", __func__, pin);
+    mcp23017_mqtt_t *p = (mcp23017_mqtt_t *)args;
     uint8_t value = 0;
-    //mcp23017_read_pin( p->dev_h, p->pin, &value);
-    mcp23017_read_pin( _dev_h, pin, &value);
+    mcp23017_read_pin( p->dev_h, p->pin, &value);
     value = (value != 0);
     itoa(value, buf, 10);
 }
@@ -23,22 +19,22 @@ void mcp23017_mqtt_periodic_send_cb(char *buf, void *args)
 // void mqtt_add_receive_callback( const char *topic, func_mqtt_recv_cb fn_cb); 
 void mcp23017_mqtt_recv_cb(char *buf, void *args)
 {
-    
-    //mcp23017_mqtt_t *p = (mcp23017_mqtt_t *)args;
-    uint8_t pin = (uint8_t)args;
-    //ESP_LOGI(TAG, "%s, pin %d", __func__, p->pin);
-    
-
-// проверка на предыдущее значение
-    static uint8_t prev = 0;
+    mcp23017_mqtt_t *p = (mcp23017_mqtt_t *)args;
     uint8_t value = atoi( buf );
 
-    ESP_LOGI(TAG, "%s, pin %d, val %d", __func__, pin, value);
-    //if ( prev == value) return;
-    
-    //if ( mcp23017_write_pin(p->dev_h, p->pin, value) == ESP_OK )  
-    if ( mcp23017_write_pin(_dev_h, pin, value) == ESP_OK )  
-        prev = value;  
+    #ifdef CONFIG_MQTT_TOPIC_SEND_RECV
+    if ( p->prev != value )
+    {
+    #endif
+        
+        ESP_LOGI(TAG, "%s, pin %d, val %d", __func__, p->pin, value);
+        esp_err_t err =  mcp23017_write_pin( p->dev_h, p->pin, value);
+
+    #ifdef CONFIG_MQTT_TOPIC_SEND_RECV    
+        if ( err == ESP_OK )
+            p->prev = value;       
+    }
+    #endif 
 }
 
 void mcp23017_mqtt_recv_queue_cb(void *arg)
@@ -76,10 +72,10 @@ void mcp23017_mqtt_init(mcp23017_handle_t dev_h)
         p->pin = i;
 
         sprintf(t, "%s%d", MCP23017_MQTT_SEND_TOPIC, i);
-        mqtt_add_periodic_publish_callback( t, mcp23017_mqtt_periodic_send_cb, i);
+        mqtt_add_periodic_publish_callback( t, mcp23017_mqtt_periodic_send_cb, (mcp23017_mqtt_t *)p);
 
         sprintf(t, "%s%d", MCP23017_MQTT_RECV_TOPIC, i);
-        mqtt_add_receive_callback(t, mcp23017_mqtt_recv_cb, i);
-        free(p);
+        mqtt_add_receive_callback(t, mcp23017_mqtt_recv_cb, (mcp23017_mqtt_t *)p);
+        //free(p);    make after in delete callback
     }    
 }
