@@ -27,8 +27,8 @@
 #define STR_YES "ДА"
 #define STR_NO "НЕТ"
 
-#define PAGE_MAIN_BUFFER_SIZE       1024*8
-#define PAGE_DEFAULT_BUFFER_SIZE    1024*8
+#define PAGE_MAIN_BUFFER_SIZE       CONFIG_HTTP_PAGE_SIZE //1024*6
+#define PAGE_DEFAULT_BUFFER_SIZE    CONFIG_HTTP_PAGE_SIZE //1024*6
 
 typedef void (* func_http_print_page_block)(const char *data, void *args);  
 typedef esp_err_t (*httpd_uri_process_fn)(httpd_req_t *req, void *args);

@@ -107,7 +107,11 @@ void webserver_init(httpd_handle_t* _server) {
 
 
 
-httpd_handle_t webserver_start(void){
+httpd_handle_t webserver_start(void)
+{
+    ESP_LOGI(TAG, "WEB_SERVER_STACK_SIZE %d", WEB_SERVER_STACK_SIZE);
+    ESP_LOGI(TAG, "WEB_SERVER_MAX_URI_HANDLERS %d", WEB_SERVER_MAX_URI_HANDLERS);
+    ESP_LOGI(TAG, "WEB_SERVER_MAX_URI_HANDLERS %d", WEB_SERVER_MAX_URI_HANDLERS);
     httpd_handle_t _server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.stack_size = WEB_SERVER_STACK_SIZE;
