@@ -3,11 +3,11 @@
 
 static const char *TAG = "MAIN";
 
-void test1(char *buf);
-void test2(char *buf);
+void test1(char *buf, void *args);
+void test2(char *buf, void *args);
 
-void test_recv1(char *buf);
-void test_recv2(char *buf);
+void test_recv1(char *buf, void *args);
+void test_recv2(char *buf, void *args);
 
 void test_mcp23017_isr_cb1(char *buf);
 void test_mcp23017_isr_cb2(char *buf);
@@ -64,13 +64,13 @@ void app_main(void)
     #endif
     #endif
     
-    //wifi_init();
+    wifi_init();
 
 
 
-    //sntp_start();
+    sntp_start();
     
-    //webserver_init(&http_server);
+    webserver_init(&http_server);
 
     #ifdef CONFIG_COMPONENT_I2C
     i2c_register_http_handler(http_server);
@@ -81,16 +81,21 @@ void app_main(void)
     lcd2004_register_http_print_data();
     lcd2004_register_http_handler(http_server);
     #endif
-        //mqtt_init();
+        mqtt_init();
         
 
-        //mqtt_add_periodic_publish_callback( "test1", test1);
-        //mqtt_add_periodic_publish_callback( "test2", test2);
+        mqtt_add_periodic_publish_callback( "test1", test1, NULL);
+        mqtt_add_periodic_publish_callback( "test2", test2, NULL);
 
-        //mqtt_add_receive_callback("recv1", test_recv1);
-        //mqtt_add_receive_callback("recv2", test_recv2);
+        mqtt_add_receive_callback("recv1", test_recv1, NULL);
+        mqtt_add_receive_callback("recv2", test_recv2, NULL);
 
-        //mqtt_register_http_print_data();
+
+        // register mcp23017
+        mcp23017_mqtt_init(mcp23017_h);
+
+
+        mqtt_register_http_print_data();
 
     #ifdef CONFIG_SENSOR_SHT21
     sht21_init();
@@ -157,24 +162,24 @@ void app_main(void)
 
 //mqtt_add_periodic_publish_callback( const char *topic, func_mqtt_send_cb fn_cb);
 // void mqtt_add_receive_callback( const char *topic, func_mqtt_recv_cb fn_cb); -
-void test1(char *buf) {
+void test1(char *buf, void *args) {
     static uint32_t cnt = 0;
     itoa(cnt++, buf, 10);
 }
 
-void test2(char *buf){
+void test2(char *buf, void *args){
     static uint32_t cnt = 1000000;
     sprintf(buf, "%d", cnt);
     cnt -= 10;
     if ( cnt == 0) cnt = 1000000;
 }
 
-void test_recv1(char *buf)
+void test_recv1(char *buf, void *args)
 {
     ESP_LOGI(TAG, "received topic 'recv1' with data: %s", buf);
 }
 
-void test_recv2(char *buf)
+void test_recv2(char *buf, void *args)
 {
     ESP_LOGI(TAG, "received topic 'recv2' with data: %s", buf);
 }
@@ -187,8 +192,8 @@ void test_mcp23017_isr_cb1(char *buf)
     mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
 
     uint8_t val = 0;
-    mcp23017_read_pin(mcp23017_h, 1, &val);
-    mcp23017_write_pin(mcp23017_h, 1, !val);    
+    mcp23017_read_pin(mcp23017_h, 0, &val);
+    mcp23017_write_pin(mcp23017_h, 0, !val);    
 }
 
 void test_mcp23017_isr_cb2(char *buf)

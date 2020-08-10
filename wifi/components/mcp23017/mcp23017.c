@@ -51,6 +51,9 @@
 static const char* TAG = "MCP23017";
 
 #ifdef CONFIG_MCP23017_ISR
+
+#define MCP23017_ISR_DELAY_MS 60
+
 static void IRAM_ATTR mcp23027_isr_handler(void *arg) {
     portBASE_TYPE HPTaskAwoken = pdFALSE;
     BaseType_t xHigherPriorityTaskWoken;
@@ -61,10 +64,15 @@ static void IRAM_ATTR mcp23027_isr_handler(void *arg) {
     uint16_t data[2];
     mcp23017_read(dev_h, MCP23017_REG_INTFA, 4, &data );
 
-    if (dev->taskq != NULL ) {
-            xQueueOverwriteFromISR(dev->taskq, &data, &xHigherPriorityTaskWoken);
-    }
+    static uint32_t t = 0;
 
+    if ( millis() - t >= MCP23017_ISR_DELAY_MS )
+    {
+        if (dev->taskq != NULL ) {
+                xQueueOverwriteFromISR(dev->taskq, &data, &xHigherPriorityTaskWoken);
+        }
+        t = millis();
+    }
     portEND_SWITCHING_ISR( HPTaskAwoken == pdTRUE );
 }
 #endif
@@ -74,7 +82,6 @@ static void mcp23017_isr_cb(void *arg) {
 
 	mcp23017_handle_t *dev_h = (mcp23017_handle_t *) arg;
     mcp23017_t * dev = (mcp23017_t *)dev_h;
-
 
 	while (1) {
 		if ( dev->taskq ) {
@@ -217,6 +224,8 @@ esp_err_t mcp23017_enable(mcp23017_handle_t dev_h)
     #endif
 
     dev->status = MCP23017_ENABLED;
+
+    mcp23017_status_queue = xQueueCreate(5, sizeof(uint8_t) * 2);
     return ESP_OK;
 }
 
@@ -408,12 +417,20 @@ esp_err_t mcp23017_write_pin(mcp23017_handle_t dev_h, uint8_t pin, uint8_t val)
     
     err = mcp23017_write_reg(dev_h, port, value );
 
+    if ( err == ESP_OK ) {
+        uint8_t data[2];
+        data[0] = pin;
+        data[1] = val;
+        ESP_LOGW(TAG, "put to queue: pin = %d, val = %d", data[0], data[1]);
+        xQueueSendToBack(mcp23017_status_queue, &data, 0);
+    }
 error:
     return err;
 }
 
 esp_err_t mcp23017_read_pin(mcp23017_handle_t dev_h, uint8_t pin, uint8_t *val)
 {
+    //ESP_LOGI(TAG, "%s", __func__);
     if ( dev_h == NULL ) return ESP_FAIL;   
 
     uint8_t port = ( pin < 8 ) ? MCP23017_REG_GPIOA : MCP23017_REG_GPIOB;  

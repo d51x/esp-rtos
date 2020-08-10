@@ -2,7 +2,7 @@
 # componet standalone mode
 
     if(CONFIG_COMPONENT_MCP23017)
-        set(COMPONENT_SRCS "mcp23017.c")
+        set(COMPONENT_SRCS "mcp23017_mqtt.c" "mcp23017.c")
 
         set(COMPONENT_ADD_INCLUDEDIRS ". include")
     else()

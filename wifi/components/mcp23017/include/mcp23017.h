@@ -16,6 +16,7 @@
 
 #ifdef CONFIG_COMPONENT_MCP23017
 
+#define GPIO_EXT_START 200
 #define MCP23017_I2C_ADDRESS_DEFAULT   (0x20)           //0100A2A1A0+R/W  // 7-bit i2c addresses MUST be shifted left 1 bit (chibios does this for us)
 #define MCP23017_INTA_GPIO_DEFAULT      CONFIG_MCP23017_ISR_INTA_GPIO // 4          
 #define MCP23017_INTB_GPIO_DEFAULT      CONFIG_MCP23017_ISR_INTB_GPIO // 5
@@ -66,6 +67,7 @@ typedef struct mcp23017 {
         #endif
 } mcp23017_t;
 
+QueueHandle_t mcp23017_status_queue;
 
 mcp23017_handle_t mcp23017_create(uint8_t addr);
 esp_err_t mcp23017_delete(mcp23017_handle_t dev_h);
