@@ -134,7 +134,11 @@ void generate_page(httpd_req_t *req, const char *uri, const char *title, const c
     page_generate_data(uri, data);
 
     // may be printed as chunk
-    page_generate_html_end(data);   
+    page_generate_html_end(data);  
+    
+    #ifdef CONFIG_CONPONENT_DEBUG
+        print_task_stack_depth(TAG, "page: %s", uri);    
+    #endif     
 }
 
 void show_http_page(httpd_req_t *req, char *data)
@@ -207,18 +211,6 @@ void print_page_block(const char *uri, char *data)
     }
 
     // print data
-    // TODO wifi
-    if ( strcmp(uri, PAGES_URI[ PAGE_URI_TOOLS ]) == 0) {
-        sprintf(data + strlen(data), html_page_setup_wifi 
-                        , wifi_cfg->hostname         // hostname
-                        , wifi_cfg->ssid         // ssid
-                        , wifi_cfg->password         // pass    
-                        , (wifi_cfg->mode == WIFI_MODE_STA) ? "checked" : ""          // sta checked
-                        , (wifi_cfg->mode == WIFI_MODE_AP)  ? "checked" : ""         // ap checked
-        );
-    }
-
-
     for ( i = 0; i < found_cnt; i++) 
     {
         uint8_t idx = indexes[i][0];
@@ -249,9 +241,7 @@ void show_page_main(httpd_req_t *req, const char *title, char *data)
 {
     // TODO: uri and title already in req
     generate_page(req, PAGES_URI[ PAGE_URI_ROOT ], title, data);
-    #ifdef CONFIG_CONPONENT_DEBUG
-        print_task_stack_depth(TAG, "main page");    
-    #endif
+
 }
 
 void show_page_setup(httpd_req_t *req, const char *title, char *data)
@@ -302,11 +292,7 @@ esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t i
         }
     }    
 
-    //ESP_LOGI(TAG, "register new print page block");
-    
     http_print_page_block_count++; // увеличим размер массива
-    //ESP_LOGI(TAG, "printpage block count %d", http_print_page_block_count);
-
     http_print_page_block = (http_print_page_block_t *) realloc(http_print_page_block, http_print_page_block_count * sizeof(http_print_page_block_t));
     strcpy( http_print_page_block[ http_print_page_block_count - 1 ].uri, uri); 
     strcpy( http_print_page_block[ http_print_page_block_count - 1 ].name, name); 
@@ -315,11 +301,6 @@ esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t i
     http_print_page_block[ http_print_page_block_count - 1 ].args1 = args1;
     http_print_page_block[ http_print_page_block_count - 1 ].process_cb = fn_cb;
     http_print_page_block[ http_print_page_block_count - 1 ].args2 = args2;
-
-    //ESP_LOGI(TAG, "registered printpage block %s\t\t%d\t\t%p", 
-    //        http_print_page_block[ http_print_page_block_count - 1 ].uri, 
-    //        http_print_page_block[ http_print_page_block_count - 1 ].index,
-    //        http_print_page_block[ http_print_page_block_count - 1 ].fn_print_block);
 
     return ESP_OK;
 }

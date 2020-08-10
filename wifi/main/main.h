@@ -18,6 +18,7 @@
 
 
 #include "wifi.h"
+#include "wifi_http.h"
 #include "mqtt_cl.h"
 #include "mqtt_cl_http.h"
 

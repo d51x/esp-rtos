@@ -107,36 +107,7 @@ esp_err_t setup_get_handler(httpd_req_t *req){
 
 void process_wifi_param(httpd_req_t *req)
 {
-	char param[100];
-	// TODO: check for empty hostname and ssid
-	if ( http_get_key_str(req, "st", param, sizeof(param)) == ESP_OK ) {
-		if ( atoi(param) != HTML_PAGE_CFG_WIFI ) {
-			return;	
-		}
-	}
 
- 	if ( http_get_key_str(req, "hostname", param, sizeof(param)) == ESP_OK ) {
-        strcpy(wifi_cfg->hostname, param);
-        tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, wifi_cfg->hostname);
-        
-        mqtt_set_device_name(wifi_cfg->hostname);
-    }
-
-    if ( http_get_key_str(req, "ssid", param, sizeof(param)) == ESP_OK ) {
-        strcpy(wifi_cfg->ssid, param);
-    }
-
-    if ( http_get_key_str(req, "pass", param, sizeof(param)) == ESP_OK ) {
-        strcpy(wifi_cfg->password, param);
-    }
-
-    wifi_cfg->mode = WIFI_MODE_NULL;
-    if ( http_get_key_str(req, "wifi_mode", param, sizeof(param)) == ESP_OK ) {
-        wifi_cfg->mode = atoi(param);
-    }
-
-	wifi_cfg->first = 0;
-	wifi_cfg_save(wifi_cfg);
 }
 
 

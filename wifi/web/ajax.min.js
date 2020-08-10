@@ -133,6 +133,8 @@ function btnclick(id, id2, v, st) {
 			else if ( resp == 0 ) vnew = 0;
 			else if ( resp == "ON" ) vnew = 1;
 			else if ( resp == 1 ) vnew = 1;
+			else if ( resp == "ERROR" ) vnew = value;
+			else if ( resp == "OK" ) vnew = !value;
 			else vnew = 0;			
 			var cls = btn.getAttribute("data-class");
 			var snew = vnew > 0 ? " on" : " off";
