@@ -112,15 +112,7 @@ void app_main(void)
     pcf8574_test_task(pcf8574_h);
     #endif    
     
-
-
-
-
     while (true) {
-        
-        
-            //ESP_LOGI(TAG, "SHT21 Temperature: %0.2fC", (float) sht21_get_temp());
-            //ESP_LOGI(TAG, "SHT21 Humidity: %0.2f%%", (float) sht21_get_hum());
 
         #ifdef CONFIG_DEBUG_PRINT_TASK_INFO
             print_tasks_info();

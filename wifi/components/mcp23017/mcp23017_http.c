@@ -156,6 +156,6 @@ void mcp23017_http_init(httpd_handle_t _server, mcp23017_handle_t dev_h)
 void mcp23017_http_set_btn_name(mcp23017_handle_t dev_h, uint8_t idx, const char *name)
 {
     mcp23017_t *dev = (mcp23017_t *) dev_h;   
-    dev->names[idx] = name;
+    dev->names[idx] = name; 
 }
 #endif

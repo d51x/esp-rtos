@@ -19,6 +19,6 @@ extern const char *html_block_mcp23107;
 void mcp23017_register_http_print_data(mcp23017_handle_t dev_h);
 void mcp23017_register_http_handler(httpd_handle_t _server, mcp23017_handle_t dev_h);
 void mcp23017_http_init(httpd_handle_t _server, mcp23017_handle_t dev_h);
-void mcp23017_http_set_btn_name(mcp23017_handle_t dev_h, uint8_t idx, const char *name);
+void mcp23017_http_set_btn_name(mcp23017_handle_t dev_h, uint8_t idx, const char *name); 
 #endif
 #endif
