@@ -282,7 +282,6 @@ esp_err_t mcp23017_read(mcp23017_handle_t dev_h, uint8_t reg_start, uint8_t reg_
         if ( err == ESP_FAIL ) goto error;
 
         err = i2c_read_data( dev->addr, data, reg_cnt);
-
     error:
         xSemaphoreGive( xSemaphoreI2C );
         return err;
@@ -397,7 +396,13 @@ esp_err_t mcp23017_read_io(mcp23017_handle_t dev_h, uint16_t *data)
 {
     if ( dev_h == NULL ) return ESP_FAIL;   
 
-    return mcp23017_read(dev_h, MCP23017_REG_GPIOA, 2, data );
+    esp_err_t err = mcp23017_read(dev_h, MCP23017_REG_GPIOA, 2, data );
+    if ( err == ESP_OK )
+    {
+        mcp23017_t *dev = (mcp23017_t *) dev_h;
+        dev->pins_values = *data;
+    }
+    return err;
 }
 
 esp_err_t mcp23017_write_pin(mcp23017_handle_t dev_h, uint8_t pin, uint8_t val)

@@ -97,6 +97,9 @@ void app_main(void)
 
         mqtt_register_http_print_data();
 
+        mcp23017_register_http_print_data(mcp23017_h);  
+        mcp23017_register_http_handler(http_server, mcp23017_h);
+
     #ifdef CONFIG_SENSOR_SHT21
     sht21_init();
     sht21_start( 5 );

@@ -60,7 +60,7 @@ void process_params(httpd_req_t *req)
         _uri = http_uri_clean(req);
         if ( strcmp( _uri, http_print_page_block[i].uri) == 0 && http_print_page_block[i].process_cb != NULL) {
             // do
-            http_print_page_block[i].process_cb(req); 
+            http_print_page_block[i].process_cb(req, http_print_page_block[i].args2); 
         }
         free(_uri);
     }

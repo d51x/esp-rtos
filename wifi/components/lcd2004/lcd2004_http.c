@@ -44,7 +44,7 @@ const char *html_block_lcd2004 ICACHE_RODATA_ATTR = "<div class='group rnd'>"
                                         "</button>"                                                                               
                                   "</div>"; 
 
-void lcd2004_print_options(char *data)
+void lcd2004_print_options(char *data, void *args)
 {
     lcd2004_conf_t *cfg = (lcd2004_conf_t *)calloc(1, sizeof(lcd2004_conf_t));
     lcd2004_get_cfg( cfg );
@@ -73,7 +73,7 @@ void lcd2004_print_options(char *data)
     free(cfg);
 }
 
-void lcd2004_http_process_params(httpd_req_t *req)
+void lcd2004_http_process_params(httpd_req_t *req, void *args)
 {
     ESP_LOGI("LCD2004_HTTP", "%s", __func__);
    // check params
@@ -101,7 +101,7 @@ void lcd2004_http_process_params(httpd_req_t *req)
 
 void lcd2004_register_http_print_data() 
 {
-    register_print_page_block( "lcd2004_options", PAGES_URI[ PAGE_URI_TOOLS], 3, lcd2004_print_options, lcd2004_http_process_params );
+    register_print_page_block( "lcd2004_options", PAGES_URI[ PAGE_URI_TOOLS], 3, lcd2004_print_options, NULL, lcd2004_http_process_params, NULL );
 }
 
 esp_err_t lcd2004_get_handler(httpd_req_t *req)

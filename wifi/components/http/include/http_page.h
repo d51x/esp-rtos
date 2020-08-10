@@ -27,18 +27,22 @@
 #define STR_YES "ДА"
 #define STR_NO "НЕТ"
 
-#define PAGE_MAIN_BUFFER_SIZE       1024*4
-#define PAGE_DEFAULT_BUFFER_SIZE    1024*4
+#define PAGE_MAIN_BUFFER_SIZE       1024*8
+#define PAGE_DEFAULT_BUFFER_SIZE    1024*8
 
-typedef void (* func_http_print_page_block)(const char *data);  
+typedef void (* func_http_print_page_block)(const char *data, void *args);  
+typedef esp_err_t (*httpd_uri_process_fn)(httpd_req_t *req, void *args);
+
 extern uint8_t http_print_page_block_count;
 
 typedef struct {
     const char uri[HTTPD_MAX_URI_LEN + 1];
     uint8_t index;
     func_http_print_page_block fn_print_block;
+    void *args1;
     char name[20];
-    httpd_uri_func process_cb;
+    httpd_uri_process_fn process_cb;
+    void *args2;
 } http_print_page_block_t;
 
 extern http_print_page_block_t *http_print_page_block;
@@ -84,7 +88,7 @@ void set_redirect_header(uint8_t time, const char *uri, char *data);
 // uri - на какой странице выводить
 // index - очередность вывода
 // fn_cb - функция коллбека для формирования буфера
-esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t index, func_http_print_page_block fn_cb, httpd_uri_func fn_cb2);
+esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t index, func_http_print_page_block fn_cb, void *args1, httpd_uri_func fn_cb2, void *args2);
 
 
 esp_err_t register_http_page_menu(const char *uri, const char *name);

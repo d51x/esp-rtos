@@ -24,7 +24,7 @@ const char *html_page_config_mqtt ICACHE_RODATA_ATTR = "<div class='group rnd'>"
                                     "</div>";  
 
 
-static void mqtt_print_options(char *data)
+static void mqtt_print_options(char *data, void *args)
 {
 
     mqtt_config_t *mqtt_cfg = malloc(sizeof(mqtt_config_t));
@@ -43,10 +43,10 @@ static void mqtt_print_options(char *data)
 
 void mqtt_register_http_print_data() 
 {
-    register_print_page_block( "mqtt_options", PAGES_URI[ PAGE_URI_SETUP ], 2, mqtt_print_options, mqtt_http_process_params );
+    register_print_page_block( "mqtt_options", PAGES_URI[ PAGE_URI_SETUP ], 2, mqtt_print_options, NULL, mqtt_http_process_params, NULL );
 }
 
-void mqtt_http_process_params(httpd_req_t *req)
+void mqtt_http_process_params(httpd_req_t *req, void *args)
 {
    // check params
 

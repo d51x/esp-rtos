@@ -57,6 +57,7 @@
 #ifdef CONFIG_COMPONENT_MCP23017
     #include "mcp23017.h"
     #include "mcp23017_mqtt.h"
+    #include "mcp23017_http.h"
 #endif
 
 httpd_handle_t http_server = NULL;

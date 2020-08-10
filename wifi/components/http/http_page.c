@@ -271,7 +271,7 @@ void print_page_block(const char *uri, char *data)
         //ESP_LOGI(TAG, "print block (%s) with index %d (%d) func addr %p", http_print_page_block[idx].name, idx, indexes[i][1], http_print_page_block[ idx ].fn_print_block);
         if (strcmp(http_print_page_block[idx].uri, uri) == 0 && http_print_page_block[idx].fn_print_block != NULL) 
         {
-            http_print_page_block[ idx ].fn_print_block(data);            
+            http_print_page_block[ idx ].fn_print_block(data, http_print_page_block[ idx ].args1);            
         }
 
     }
@@ -296,9 +296,7 @@ void show_page_main(const char *title, char *data)
 
     char *page_data = malloc(PAGE_DEFAULT_BUFFER_SIZE);
     strcpy(page_data, "");
-
     print_page_block( PAGES_URI[ PAGE_URI_ROOT ], page_data);
-
     generate_page(data, title, page_data);
     free(page_data);
 
@@ -414,7 +412,7 @@ void show_restarting_page_data(char *data)
 
 }
 
-esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t index, func_http_print_page_block fn_print_block, httpd_uri_func fn_cb)
+esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t index, func_http_print_page_block fn_print_block, void *args1, httpd_uri_func fn_cb, void *args2)
 {
     //ESP_LOGI(TAG, "function %s started", __func__);
 
@@ -442,7 +440,9 @@ esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t i
     strcpy( http_print_page_block[ http_print_page_block_count - 1 ].name, name); 
     http_print_page_block[ http_print_page_block_count - 1 ].index = index; 
     http_print_page_block[ http_print_page_block_count - 1 ].fn_print_block = fn_print_block;
+    http_print_page_block[ http_print_page_block_count - 1 ].args1 = args1;
     http_print_page_block[ http_print_page_block_count - 1 ].process_cb = fn_cb;
+    http_print_page_block[ http_print_page_block_count - 1 ].args2 = args2;
 
     //ESP_LOGI(TAG, "registered printpage block %s\t\t%d\t\t%p", 
     //        http_print_page_block[ http_print_page_block_count - 1 ].uri, 

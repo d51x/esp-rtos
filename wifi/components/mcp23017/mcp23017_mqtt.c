@@ -42,7 +42,7 @@ void mcp23017_mqtt_recv_queue_cb(void *arg)
     const portTickType xTicksToWait = 100 / portTICK_RATE_MS;
     uint8_t data[2];
 
-    mcp23017_handle_t mqtt_h = (mcp23017_handle_t)arg;
+    mcp23017_handle_t dev_h = (mcp23017_handle_t)arg;
 
     for( ;; )
     {

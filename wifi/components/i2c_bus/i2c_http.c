@@ -23,7 +23,7 @@ const char *html_page_tools_i2c ICACHE_RODATA_ATTR = "<div class='group rnd'>"
                                   "</div>";      
 
 
-void i2c_print_options(char *data)
+void i2c_print_options(char *data, void *args)
 {
     i2c_config_t *cfg = (i2c_config_t *) calloc(1, sizeof(i2c_config_t));
     i2c_load_cfg( cfg );
@@ -40,7 +40,7 @@ void i2c_register_http_menu()
 
 void i2c_register_http_print_data() 
 {
-    register_print_page_block( "i2c_options", PAGES_URI[ PAGE_URI_TOOLS], 3, i2c_print_options, i2c_http_process_params );
+    register_print_page_block( "i2c_options", PAGES_URI[ PAGE_URI_TOOLS], 3, i2c_print_options, NULL, i2c_http_process_params, NULL  );
 }
 
 
@@ -60,7 +60,7 @@ void i2c_register_http_handler(httpd_handle_t _server)
 }
 
 
-void i2c_http_process_params(httpd_req_t *req)
+void i2c_http_process_params(httpd_req_t *req, void *args)
 {
 
    // check params

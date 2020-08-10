@@ -64,28 +64,30 @@ esp_err_t my_function_get_handler(httpd_req_t *req)
 void add_uri_post_handler(httpd_handle_t _server, const char *uri, httpd_uri_func func);
 
 3. Вывод блока информации на любой странице
-esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t index, func_http_print_page_block fn_print_block, httpd_uri_func process_cb)
+esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t index, func_http_print_page_block fn_print_block, void *args1, httpd_uri_func process_cb, void *args2)
 
 name - имя блока
 uri - на какой странице нужно вывести блок текста/данных/форму
 index - приоритет отображения блока, 0,1,2 и т.д.
         чем меньше число, тем выше выводятся данные
-fn_print_block - callback функция, которая будет формировать блок данных, должна быть объявлена в вашем модуле        
+fn_print_block - callback функция, которая будет формировать блок данных, должна быть объявлена в вашем модуле 
+args1 - параметры для fn_print_block
 process_cb   - callback функция, которая будет вызвана для обрабобки параметров uri, аналог get-хендлера
+args2 - параметры для process_cb
 т.е. на странице Tools можно вставить блока с фомрой и кнопкой, при нажатии кнопки будет отправлен get-запрос на странице Tools,
 хендлер этой страницы вызовет на process_cb, а мы в нем проанализируем параметры uri
 параметр может быть NULL, если требуется только вывести данные
 
 пример
-register_print_page_block( "/tools", 3, show_mydata_block, my_process_params );
+register_print_page_block( "/tools", 3, show_mydata_block, NULL, my_process_params, NULL );
 
-void show_mydata_block(char *data)
+void show_mydata_block(char *data, void *args)
 {
     uint8_t temp = 35;    
     sprintf(data+strlen(data), "Temperature = %d", temp);
 }
 
-void my_process_params(httpd_req_t *req)
+void my_process_params(httpd_req_t *req, void *args)
 {
    // check params
 	if ( http_get_has_params(req) == ESP_OK) 
