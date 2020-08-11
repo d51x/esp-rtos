@@ -70,13 +70,13 @@ typedef esp_err_t (* ledcontrol_register_channel_f)(ledcontrol_channel_t );  // 
 typedef esp_err_t (* ledcontrol_set_duty_f)(ledcontrol_channel_t *, uint16_t);  // установить duty канала
 typedef uint16_t (* ledcontrol_get_duty_f)(ledcontrol_channel_t *);  // получить duty канала
 typedef void (* ledcontrol_update_f)();  // aka pwm start
-typedef void (* ledcontrol_channel_on_f)(ledcontrol_channel_t *);  
-typedef void (* ledcontrol_channel_off_f)(ledcontrol_channel_t *);  
-typedef void (* ledcontrol_channel_next_duty_f)(ledcontrol_channel_t *, uint8_t);  
-typedef void (* ledcontrol_channel_prev_duty_f)(ledcontrol_channel_t *, uint8_t);  
-typedef void (* ledcontrol_channel_fade_f)(ledcontrol_channel_t *, uint16_t, uint16_t, uint16_t);  
-typedef void (* ledcontrol_channel_fade_to_off_f)(ledcontrol_channel_t *, uint16_t, uint16_t);  
-typedef void (* ledcontrol_channel_fade_to_on_f)(ledcontrol_channel_t *, uint16_t, uint16_t);  
+typedef esp_err_t (* ledcontrol_channel_on_f)(ledcontrol_channel_t *);  
+typedef esp_err_t (* ledcontrol_channel_off_f)(ledcontrol_channel_t *);  
+typedef esp_err_t (* ledcontrol_channel_next_duty_f)(ledcontrol_channel_t *, uint8_t);  
+typedef esp_err_t (* ledcontrol_channel_prev_duty_f)(ledcontrol_channel_t *, uint8_t);  
+typedef esp_err_t (* ledcontrol_channel_fade_f)(ledcontrol_channel_t *, uint16_t, uint16_t, uint16_t);  
+typedef esp_err_t (* ledcontrol_channel_fade_to_off_f)(ledcontrol_channel_t *, uint16_t, uint16_t);  
+typedef esp_err_t (* ledcontrol_channel_fade_to_on_f)(ledcontrol_channel_t *, uint16_t, uint16_t);  
 typedef void (* ledcontrol_channel_set_brightness_table_f)(ledcontrol_channel_t *, brightness_table_e);  
 typedef void (* ledcontrol_all_off_f)();  
 typedef void (* ledcontrol_all_on_f)();  

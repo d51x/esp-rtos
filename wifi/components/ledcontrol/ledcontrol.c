@@ -10,13 +10,13 @@ esp_err_t ledcontrol_register_channel(ledcontrol_channel_t ledc_ch);
 esp_err_t ledcontrol_set_duty(ledcontrol_channel_t *channel, uint16_t duty);
 uint16_t ledcontrol_get_duty(ledcontrol_channel_t *channel);
 void ledcontrol_update();
-void ledcontrol_channel_on(ledcontrol_channel_t *channel);
-void ledcontrol_channel_off(ledcontrol_channel_t *channel);
-void ledcontrol_channel_next_duty(ledcontrol_channel_t *channel, uint8_t step);
-void ledcontrol_channel_prev_duty(ledcontrol_channel_t *channel, uint8_t step);
-void ledcontrol_channel_fade(ledcontrol_channel_t *channel, uint16_t duty_from, uint16_t duty_to, uint16_t duty_delay);
-void ledcontrol_channel_fade_to_off(ledcontrol_channel_t *channel, uint16_t duty_from, uint16_t duty_delay);
-void ledcontrol_channel_fade_to_on(ledcontrol_channel_t *channel, uint16_t duty_to, uint16_t duty_delay);
+esp_err_t ledcontrol_channel_on(ledcontrol_channel_t *channel);
+esp_err_t ledcontrol_channel_off(ledcontrol_channel_t *channel);
+esp_err_t ledcontrol_channel_next_duty(ledcontrol_channel_t *channel, uint8_t step);
+esp_err_t ledcontrol_channel_prev_duty(ledcontrol_channel_t *channel, uint8_t step);
+esp_err_t ledcontrol_channel_fade(ledcontrol_channel_t *channel, uint16_t duty_from, uint16_t duty_to, uint16_t duty_delay);
+esp_err_t ledcontrol_channel_fade_to_off(ledcontrol_channel_t *channel, uint16_t duty_from, uint16_t duty_delay);
+esp_err_t ledcontrol_channel_fade_to_on(ledcontrol_channel_t *channel, uint16_t duty_to, uint16_t duty_delay);
 void ledcontrol_channel_set_brightness_table(ledcontrol_channel_t *channel, brightness_table_e bright_tbl);
 
 // для нескольких каналов одного цвета
@@ -164,19 +164,21 @@ void ledcontrol_update(){
 
 }
 
-void ledcontrol_channel_on(ledcontrol_channel_t *channel){
+esp_err_t ledcontrol_channel_on(ledcontrol_channel_t *channel){
     // set MAX DUTY
-    ledcontrol_set_duty(channel, MAX_DUTY);
+    esp_err_t err = ledcontrol_set_duty(channel, MAX_DUTY);
     ledcontrol_update();
+    return err;
 }
 
-void ledcontrol_channel_off(ledcontrol_channel_t *channel){
+esp_err_t ledcontrol_channel_off(ledcontrol_channel_t *channel){
     // set MAX DUTY
-    ledcontrol_set_duty(channel, 0);
+    esp_err_t err = ledcontrol_set_duty(channel, 0);
     ledcontrol_update();
+    return err;
 }
 
-void ledcontrol_channel_next_duty(ledcontrol_channel_t *channel, uint8_t step)
+esp_err_t ledcontrol_channel_next_duty(ledcontrol_channel_t *channel, uint8_t step)
 {
     uint16_t duty = channel->duty;
     if ( duty <= MAX_DUTY - step ) 
@@ -184,10 +186,11 @@ void ledcontrol_channel_next_duty(ledcontrol_channel_t *channel, uint8_t step)
     else
         duty = MAX_DUTY;
 
-    ledcontrol_set_duty(channel, duty);
+    esp_err_t err = ledcontrol_set_duty(channel, duty);
+    return err;
 }
 
-void ledcontrol_channel_prev_duty(ledcontrol_channel_t *channel, uint8_t step)
+esp_err_t ledcontrol_channel_prev_duty(ledcontrol_channel_t *channel, uint8_t step)
 {
     uint16_t duty = channel->duty;
     if ( duty >= step ) 
@@ -195,7 +198,8 @@ void ledcontrol_channel_prev_duty(ledcontrol_channel_t *channel, uint8_t step)
     else
         duty = 0;
 
-    ledcontrol_set_duty(channel, duty);
+    esp_err_t err = ledcontrol_set_duty(channel, duty);
+    return err;
 }
 
 static uint8_t get_min_index_from_brightness_table(ledcontrol_channel_t *channel, uint16_t duty) {
@@ -239,8 +243,8 @@ static uint8_t get_max_index_from_brightness_table(ledcontrol_channel_t *channel
     return idx;
 }
 
-static void ledcontrol_channel_fade_by_table(ledcontrol_channel_t *channel, uint16_t duty_from, uint16_t duty_to, uint16_t duty_delay){
-
+static esp_err_t ledcontrol_channel_fade_by_table(ledcontrol_channel_t *channel, uint16_t duty_from, uint16_t duty_to, uint16_t duty_delay){
+    esp_err_t err = ESP_FAIL;
     direction_e direction;
     uint8_t idx_start = 0;
     uint8_t idx_stop = 0;
@@ -265,7 +269,9 @@ static void ledcontrol_channel_fade_by_table(ledcontrol_channel_t *channel, uint
         
         uint8_t duty = tbl[i];
         
-        ledcontrol_set_duty(channel, duty);
+        err = ledcontrol_set_duty(channel, duty);
+        if ( err == ESP_FAIL )
+            break;
         ledcontrol_update();
         if ( direction == UP )
             i++;   // TODO: учесть brightness table
@@ -274,13 +280,15 @@ static void ledcontrol_channel_fade_by_table(ledcontrol_channel_t *channel, uint
 
         vTaskDelay( duty_delay / portTICK_RATE_MS );
     }
+    return err;
 }   
 
 
-void ledcontrol_channel_fade(ledcontrol_channel_t *channel, uint16_t duty_from, uint16_t duty_to, uint16_t duty_delay) {
+esp_err_t ledcontrol_channel_fade(ledcontrol_channel_t *channel, uint16_t duty_from, uint16_t duty_to, uint16_t duty_delay) {
+    esp_err_t err = ESP_FAIL;
     if ( channel->bright_tbl != TBL_NONE ) {
-        ledcontrol_channel_fade_by_table(channel, duty_from, duty_to, duty_delay);
-        return;
+        err = ledcontrol_channel_fade_by_table(channel, duty_from, duty_to, duty_delay);
+        return err;
     }
 
     direction_e direction = (duty_from < duty_to) ? UP : DOWN;
@@ -293,7 +301,9 @@ void ledcontrol_channel_fade(ledcontrol_channel_t *channel, uint16_t duty_from, 
           )  
     {
 
-        ledcontrol_set_duty(channel, duty);
+        err = ledcontrol_set_duty(channel, duty);
+        if ( err == ESP_FAIL )
+            break;        
         ledcontrol_update();
         if ( direction == UP )
             duty++;   // TODO: учесть brightness table
@@ -303,16 +313,17 @@ void ledcontrol_channel_fade(ledcontrol_channel_t *channel, uint16_t duty_from, 
         vTaskDelay( duty_delay / portTICK_RATE_MS );
     }
 
+    return err;
 }
 
 // с указанного уровня до 0
-void ledcontrol_channel_fade_to_off(ledcontrol_channel_t *channel, uint16_t duty_from, uint16_t duty_delay) {
-    ledcontrol_channel_fade(channel, duty_from, 0, duty_delay);
+esp_err_t ledcontrol_channel_fade_to_off(ledcontrol_channel_t *channel, uint16_t duty_from, uint16_t duty_delay) {
+    return ledcontrol_channel_fade(channel, duty_from, 0, duty_delay);
 }
 
 // с нуля до указанного уровня
-void ledcontrol_channel_fade_to_on(ledcontrol_channel_t *channel, uint16_t duty_to, uint16_t duty_delay) {
-    ledcontrol_channel_fade(channel, 0, duty_to, duty_delay);
+esp_err_t ledcontrol_channel_fade_to_on(ledcontrol_channel_t *channel, uint16_t duty_to, uint16_t duty_delay) {
+    return ledcontrol_channel_fade(channel, 0, duty_to, duty_delay);
 }
 
 void ledcontrol_channel_set_brightness_table(ledcontrol_channel_t *channel, brightness_table_e bright_tbl){

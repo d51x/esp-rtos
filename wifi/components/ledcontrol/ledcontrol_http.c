@@ -44,6 +44,8 @@ esp_err_t ledcontrol_get_handler(httpd_req_t *req)
     ip/ledc?ch=<channel>&fade=1&from=<duty_from>&to=<duty_to>&delay=<duty_delay>
     ip/ledc?allon=1
     ip/ledc?alloff=1
+    ip/ledc?ch=<channel> - print channel duty
+    ip/ledc?all=1 - print all channels duty
 */
     esp_err_t err = ESP_FAIL;
     // check params
@@ -58,10 +60,12 @@ esp_err_t ledcontrol_get_handler(httpd_req_t *req)
         char param[100];
         if ( http_get_key_str(req, "ch", param, sizeof(param)) == ESP_OK ) 
         {
+            err = ESP_OK;
             uint8_t ch = atoi(param);
             if ( ch < 0 || ch > ledc->led_cnt /*LEDCONTROL_CHANNEL_MAX*/ ) 
             {
                 err = ESP_FAIL;
+                strcpy(page, "ERROR");
                 goto end;
             }    
 
@@ -73,41 +77,28 @@ esp_err_t ledcontrol_get_handler(httpd_req_t *req)
                 // channel->set_duty
                 if ( val >= 0 && val <= MAX_DUTY ) 
                 {
-                    ledc->set_duty( channel, val );
+                    err = ledc->set_duty( channel, val );
                     ledc->update();
-                    err = ESP_OK;
                 }
             } 
             else if ( http_get_key_long(req, "on", &val) == ESP_OK ) 
             {
                 // channel > on
                 if ( val == 1) 
-                {
-                    ledc->on(channel);
-                    err = ESP_OK;
-                }
+                    err = ledc->on(channel);
             } 
             else if ( http_get_key_long(req, "off", &val) == ESP_OK ) 
             {
                 // channel > off
                 if ( val == 1) 
-                {
-                    ledc->off(channel);
-                    err = ESP_OK;
-                }
+                    err = ledc->off(channel);
             } 
             else if ( http_get_key_long(req, "step", &val) == ESP_OK ) 
             {
-                // channel > next_duty
-                err = ESP_OK;
                 if ( val > 0 ) 
-                {
-                    ledc->next_duty(channel, val);    
-                } 
+                    err = ledc->next_duty(channel, val);    
                 else if ( val < 0 ) 
-                {
-                    ledc->prev_duty(channel, val*(-1));   
-                }               
+                    err = ledc->prev_duty(channel, val*(-1));   
             } 
             else if ( http_get_key_long(req, "fade", &val) == ESP_OK ) 
             {
@@ -117,19 +108,44 @@ esp_err_t ledcontrol_get_handler(httpd_req_t *req)
                      http_get_key_long(req, "to", &to) == ESP_OK &&
                      http_get_key_long(req, "delay", &delay) == ESP_OK )
                 {
-                    ledc->fade( channel, from, to, delay);
-                    err = ESP_OK;
+                    err = ledc->fade( channel, from, to, delay);
                 }
             }
+
+            if ( err == ESP_OK )
+            {
+                itoa( ledc->get_duty( channel), page, 10);
+            }
+            else
+                strcpy(page, "ERROR");
         } 
         else if ( http_get_key_str(req, "allon", param, sizeof(param)) == ESP_OK ) 
         {
             ledc->on_all();
+            strcpy(page, "OK");
         } 
         else if ( http_get_key_str(req, "alloff", param, sizeof(param)) == ESP_OK ) 
         {
             ledc->off_all();
+            strcpy(page, "OK");
         }            
+        else if ( http_get_key_str(req, "all", param, sizeof(param)) == ESP_OK )
+        {
+            // print all duties and channels
+            strcpy(page, "{");
+            for (uint8_t i = 0; i < ledc->led_cnt; i++ ) {             
+                char s[12];
+                
+                ledcontrol_channel_t *ch = ledc->channels + i;
+                uint8_t val = ledc->get_duty( ch );                
+                sprintf(s, "\"ch%d\": %d", i, val);
+                strcat(page, s);
+                if ( i < ledc->led_cnt-1 ) 
+                    strcat(page, ", ");                
+            }
+            strcpy(page+strlen(page), "}");
+        }
+        
     }
 end:
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);

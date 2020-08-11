@@ -28,7 +28,6 @@ void ledcontrol_mqtt_recv_cb(char *buf, void *args)
     {
     #endif
         
-    ESP_LOGI(TAG, "%s, channel %d, val %d", __func__, p->channel, value);
     esp_err_t err =  ESP_FAIL;
     if ( value >= 0 && value <= MAX_DUTY ) 
     {
