@@ -112,6 +112,67 @@ void app_main(void)
     pcf8574_test_task(pcf8574_h);
     #endif    
     
+    #ifdef CONFIG_LED_CONTROL
+    // ===== create led channels ============================
+    ledcontrol_channel_t *ch_red = calloc(1, sizeof(ledcontrol_channel_t)); 
+    ch_red->pin = 15;
+    ch_red->channel = 0;
+    ch_red->bright_tbl = TBL_32B;
+    ch_red->name = "Красный";
+    ch_red->group = 1;
+    
+    ledcontrol_channel_t *ch_green = calloc(1, sizeof(ledcontrol_channel_t));
+    ch_green->pin = 12;
+    ch_green->channel = 1;
+    ch_green->bright_tbl = TBL_32B;
+    ch_green->name = "Зеленый";
+    ch_green->group = 1;
+
+    ledcontrol_channel_t *ch_blue = calloc(1, sizeof(ledcontrol_channel_t)+1);
+    ch_blue->pin = 13;
+    ch_blue->channel = 2;
+    ch_blue->bright_tbl = TBL_32B;
+    ch_blue->name = "Синий";
+    ch_blue->group = 1;
+
+
+    // ===== create led controller ============================
+    ledcontrol_t *ledc_h = ledcontrol_create(500, 3);
+    ledcontrol_t *ledc = (ledcontrol_t *)ledc_h;
+
+    // ==== register led channels to led controller =============
+    ledc->register_channel(*ch_red);
+    ledc->register_channel(*ch_green);
+    ledc->register_channel(*ch_blue);
+
+    // ====== initialize led controller =======================
+    ledc->init();  
+
+    
+    // обязательно добавляем группы перед инициализацией
+    
+    
+    
+    ledcontrol_http_add_group(ledc_h, "RGB Controller", 1, 5);
+    //ledcontrol_http_add_group(ledc_h, "Сине-зеленая подсветка", 2, 6);
+    ledcontrol_http_init(http_server, ledc_h);
+    ledcontrol_mqtt_init(ledc_h);
+
+        #ifdef CONFIG_RGB_CONTROL
+        // === create and init RGB controller ================
+        rgbcontrol_t *rgb_ledc = rgbcontrol_init(ledc, ch_red, ch_green, ch_blue);
+
+        // ==== create and init rgb effects =======================
+        // === setup effects to RGB controller    
+        rgbcontrol_effects_init(rgb_ledc);    
+        
+        rgbcontrol_http_init(http_server, rgb_ledc);
+        rgbcontrol_mqtt_init(rgb_ledc);
+        #endif
+
+    #endif
+
+
     while (true) {
 
         #ifdef CONFIG_DEBUG_PRINT_TASK_INFO

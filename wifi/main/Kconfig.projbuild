@@ -103,6 +103,28 @@ menu "Project config"
 
     endmenu    
 
+    menu "HTTP server"
+        config HTTP_SERVER_STACK_SIZE
+            int "Webserver task stack size"
+            range 4096 16384
+            default 8192
+            help
+                Webserver tasks stack size
+
+        config HTTP_PAGE_SIZE
+            int "Web page buffer size"
+            range 4096 8192
+            default 4096
+            help
+                Webserver page buffer size 4096 / 5120 / 6144 / 7168 / 8192
+
+        config HTTP_HANDLERS_COUNT
+            int "Handlers count"
+            default 40
+            help
+                Webserver handlers count
+    endmenu
+
     menu "I2C Component"        
         config COMPONENT_I2C
             bool "Enable I2C driver"
@@ -206,6 +228,28 @@ menu "Project config"
                 Enable MCP23017 web control
 
 
+    endmenu
+    
+    menu "LED Control"
+        config LED_CONTROL
+            bool "Enable LED Control driver"
+            default n
+            help
+                Enable LED Control driver for GPIO   
+        
+        config LED_CONTROL_HTTP
+            bool "Enable control LED via HTTP"
+            default n      
+            depends on LED_CONTROL
+            help
+                Enable control LED via HTTP (slider) and HTTP GET
+        
+        config RGB_CONTROL
+            bool "Enable RGBW Control driver"
+            default n
+            depends on LED_CONTROL && LED_CONTROL_HTTP
+            help
+                Enable RGBW Control  
     endmenu
     
     menu "Sensors"

@@ -55,6 +55,18 @@
 #include "mcp23017_http.h"
 #endif
 
+#ifdef CONFIG_LED_CONTROL
+#include "ledcontrol.h"
+#include "ledcontrol_http.h"
+#include "ledcontrol_mqtt.h"
+#endif
+
+#ifdef CONFIG_RGB_CONTROL
+#include "rgbcontrol.h"
+#include "rgbcontrol_http.h"
+#include "rgbcontrol_mqtt.h"
+#endif
+
 httpd_handle_t http_server = NULL;
 
 extern void sntp_start();
