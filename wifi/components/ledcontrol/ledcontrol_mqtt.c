@@ -8,7 +8,14 @@ ledcontrol_handle_t _dev_h;
 void ledcontrol_mqtt_periodic_send_cb(char *buf, void *args)
 {
     // для отправки в buf положить значение пина
+    ledcontrol_mqtt_t *p = (ledcontrol_mqtt_t *)args;
+    ledcontrol_handle_t dev_h = p->dev_h;
+    ledcontrol_t *ledc = (ledcontrol_t *)dev_h;
+    ledcontrol_channel_t *ch = ledc->channels + p->channel;
 
+    uint8_t value = 0;
+    value = ledc->get_duty( ch );
+    itoa(value, buf, 10);
 }
 
 void ledcontrol_mqtt_recv_cb(char *buf, void *args)
