@@ -14,12 +14,13 @@ const char *html_block_led_control_item ICACHE_RODATA_ATTR =
     "<p>"
         "<span><b>%s</b></span>"                 // s - title,
         //"<span><input type=\"range\" max=\"255\" name=\"ledc%d\" value=\"%d\"></span>"          // slider, d - channel id, d - duty
-        "<span><input type=\"range\" max=\"255\" name=\"ledc%d\" value=\"%d\" data-uri=\"ledc?ch=%d&duty=\" onchange=\"slider(this.value, this.name, this.data-uri);\">"
-        "<span><i id=\"ledc%d\">%d</i></span>"              // d - channel id, d - duty
+        "<span><input type=\"range\" max=\"255\" name=\"ledc%d\" value=\"%d\" data-uri=\"ledc?ch=%d&duty=\" onchange=\"slider(this.value, this.name, this.dataset.uri);\">"
+        "<span><i id=\"ledc%d\" >%d</i></span>"              // d - channel id, d - duty
     "</p>"; 
 
 static const char* TAG = "LEDCHTTP";
 
+// todo - title + указать номера каналов
 static void ledcontrol_print_data(char *data, void *args)
 {
     ledcontrol_handle_t ledc_h = (ledcontrol_handle_t)args;
@@ -31,7 +32,7 @@ static void ledcontrol_print_data(char *data, void *args)
     for (uint8_t i = 0; i < ledc->led_cnt; i++ ) {   
         ledcontrol_channel_t *ch = ledc->channels + i;
         sprintf( data+strlen(data), html_block_led_control_item
-                                      , "Title"
+                                      , ch->name
                                       , ch->channel                                   // channel num
                                       , ch->duty              // channel duty    
                                       , ch->channel     // for data-uri                                  

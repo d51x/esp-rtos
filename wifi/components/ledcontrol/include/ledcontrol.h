@@ -93,6 +93,7 @@ struct ledcontrol_channel {
 		bool inverted;
 		brightness_table_e bright_tbl;
 		ledcontrol_t *ledc;
+		char *name;
 };
 
 struct ledcontrol {
