@@ -26,9 +26,14 @@ const char *effects_item ICACHE_RODATA_ATTR = "<option value=\"%d\" %s>%s</optio
 
 static void rgbcontrol_print_data(char *data, void *args)
 {
+    ESP_LOGW(TAG, "%s", __func__ );
+
     rgbcontrol_t *rgb_ctrl = (rgbcontrol_t *)args;
+    ESP_LOGW(TAG, "rgb_ctrl %p", rgb_ctrl );
+
     effects_t *ee = rgb_ctrl->effects;
-    
+    ESP_LOGW(TAG, "effects %p", ee );
+
     if ( ee == NULL ) return;
     
     char select[600] = "";
@@ -41,6 +46,8 @@ static void rgbcontrol_print_data(char *data, void *args)
                                         , (ee->effect_id == i || ( i == COLOR_EFFECTS_MAX-1 && ee->effect_id == -1) ) ? "selected=\"selected\" " : ""
                                         , e->name);
     }
+
+    ESP_LOGW(TAG, "select %s", select );
 
     effect_t *e = ee->effect + ee->effect_id;
     color_rgb_t rgb;
@@ -55,6 +62,9 @@ static void rgbcontrol_print_data(char *data, void *args)
                                              //(ee->effect_id == -1) ? "color" : e->name, ee->effect_id
                                            , select
     );    
+
+ESP_LOGW(TAG, "data %s", data );
+
 }
 
 void rgbcontrol_register_http_print_data(rgbcontrol_handle_t dev_h)
@@ -258,7 +268,7 @@ void rgbcontrol_register_http_handler(httpd_handle_t _server, rgbcontrol_handle_
 
 void rgbcontrol_http_init(httpd_handle_t _server, rgbcontrol_handle_t dev_h)
 {
-    //rgbcontrol_register_http_print_data(dev_h);
+    rgbcontrol_register_http_print_data(dev_h);
     rgbcontrol_register_http_handler(_server, dev_h);
 }
 
