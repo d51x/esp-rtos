@@ -238,7 +238,7 @@ void test_recv2(char *buf, void *args)
     ESP_LOGI(TAG, "received topic 'recv2' with data: %s", buf);
 }
 
-
+#ifdef CONFIG_COMPONENT_MCP23017
 void test_mcp23017_isr_cb1(char *buf)
 {
     mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
@@ -329,3 +329,5 @@ void test_mcp23017_isr_cb8(char *buf)
     ESP_LOGI(TAG, "executed callback %s %d", __func__, val);
     mcp23017_write_pin(mcp23017_h, 7, val);
 }
+
+#endif
