@@ -155,3 +155,15 @@ function btnclick(id, id2, v, st) {
 		
 	});
 }
+
+function slider(val, name, uri) 
+{
+	console.log('params: val = %d, name = %s, uri = %s', val, name, uri);
+	
+	ajax_request(uri + val, function(res) {
+		var resp = res.responseText;	
+		var duty = document.getElementById( name );
+		duty.innerHTML = resp; 		
+	});
+
+}
