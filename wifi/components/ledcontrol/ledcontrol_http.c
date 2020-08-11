@@ -3,7 +3,7 @@
 #ifdef CONFIG_LED_CONTROL_HTTP
 
 const char *html_block_led_control_start ICACHE_RODATA_ATTR = "<div class='group rnd'>"
-                                    "<h4 class='brd-btm'>Led control:</h4>";
+                                    "<h4 class='brd-btm'>%s</h4>";
 
 const char *html_block_led_control_end ICACHE_RODATA_ATTR = "</div>";
 
@@ -12,41 +12,88 @@ const char *html_block_led_control_data_start ICACHE_RODATA_ATTR = "<div class=\
 
 const char *html_block_led_control_item ICACHE_RODATA_ATTR = 
     "<p>"
-        "<span><b>%s</b></span>"                 // s - title,
+        "<span class='lf'><b>%s</b></span>"                 // s - title,
         //"<span><input type=\"range\" max=\"255\" name=\"ledc%d\" value=\"%d\"></span>"          // slider, d - channel id, d - duty
-        "<span><input type=\"range\" max=\"255\" name=\"ledc%d\" value=\"%d\" data-uri=\"ledc?ch=%d&duty=\" onchange=\"slider(this.value, this.name, this.dataset.uri);\">"
-        "<span><i id=\"ledc%d\" >%d</i></span>"              // d - channel id, d - duty
+        "<span class='rh'>"
+            "<input type=\"range\" max=\"255\" name=\"ledc%d\" value=\"%d\" data-uri=\"ledc?ch=%d&duty=\" onchange=\"slider(this.value, this.name, this.dataset.uri);\" />"
+            "<i id=\"ledc%d\" >%d</i>"
+        "</span>"              // d - channel id, d - duty
     "</p>"; 
 
 static const char* TAG = "LEDCHTTP";
 
-// todo - title + указать номера каналов
+#define LED_CONTROLLER_GROUP_TITLE_DEFAULT "LED Controller"
+
+ledcontrol_group_t *led_groups;
+uint8_t led_groups_count = 0;
+
+static void ledcontrol_add_initial_group(ledcontrol_handle_t dev_h)
+{
+    if (  led_groups_count == 0 )
+    {
+        led_groups_count++;
+        led_groups = (ledcontrol_group_t *) realloc( led_groups, sizeof(ledcontrol_group_t) * led_groups_count );
+
+        led_groups[ led_groups_count - 1 ].title = LED_CONTROLLER_GROUP_TITLE_DEFAULT;
+        led_groups[ led_groups_count - 1 ].group = 0;
+        led_groups[ led_groups_count - 1 ].dev_h = dev_h;
+        led_groups[ led_groups_count - 1 ].priority = 5;
+    }
+}
+
 static void ledcontrol_print_data(char *data, void *args)
 {
-    ledcontrol_handle_t ledc_h = (ledcontrol_handle_t)args;
+    ledcontrol_group_t *group = (ledcontrol_group_t *)args;
+    ledcontrol_handle_t ledc_h = group->dev_h;
     ledcontrol_t *ledc = (ledcontrol_t *)ledc_h;
     
-    strcpy(data+strlen(data), html_block_led_control_start);
+    sprintf(data+strlen(data), html_block_led_control_start, group->title);
     strcpy(data+strlen(data), html_block_led_control_data_start);
 
-    for (uint8_t i = 0; i < ledc->led_cnt; i++ ) {   
+    for (uint8_t i = 0; i < ledc->led_cnt; i++ ) 
+    {   
         ledcontrol_channel_t *ch = ledc->channels + i;
-        sprintf( data+strlen(data), html_block_led_control_item
-                                      , ch->name
-                                      , ch->channel                                   // channel num
-                                      , ch->duty              // channel duty    
-                                      , ch->channel     // for data-uri                                  
-                                      , ch->channel                                   // channel num
-                                      , ch->duty              // channel duty
-                                      );
+        if ( group->group == ch->group)
+        {        
+            sprintf( data+strlen(data), html_block_led_control_item
+                                        , ch->name
+                                        , ch->channel                                   // channel num
+                                        , ch->duty              // channel duty    
+                                        , ch->channel     // for data-uri                                  
+                                        , ch->channel                                   // channel num
+                                        , ch->duty              // channel duty
+                                        );
+        }
     }
     
+    strcpy(data+strlen(data), html_block_led_control_end);
     strcpy(data+strlen(data), html_block_led_control_end);
 }
 
 void ledcontrol_register_http_print_data(ledcontrol_handle_t dev_h)
 {
-    register_print_page_block( "ledc_data", PAGES_URI[ PAGE_URI_ROOT], 5, ledcontrol_print_data, dev_h, NULL, NULL );
+    ledcontrol_t *ledc = (ledcontrol_t *)dev_h;
+
+    for ( uint8_t i = 0; i < led_groups_count; i++ )
+    {
+        // проверить, что группа не пустая
+        uint8_t found = 0;
+        for (uint8_t k = 0; k < ledc->led_cnt; k++ ) 
+        {
+            ledcontrol_channel_t *ch = ledc->channels + k;
+            found = ( ch->group == led_groups[i].group);
+            if ( found ) break;
+        }
+
+        // не выводим блок для пустой группы
+        if ( found )
+        {
+            char block_name[20];
+            snprintf(block_name, 20, "ledc_data%d", i);
+            register_print_page_block( block_name, PAGES_URI[ PAGE_URI_ROOT], led_groups[i].priority, ledcontrol_print_data, &led_groups[i], NULL, NULL );
+        }
+    }
+    
 }
 
 esp_err_t ledcontrol_get_handler(httpd_req_t *req)
@@ -178,8 +225,29 @@ void ledcontrol_register_http_handler(httpd_handle_t _server, ledcontrol_handle_
 
 void ledcontrol_http_init(httpd_handle_t _server, ledcontrol_handle_t dev_h)
 {
+    ledcontrol_add_initial_group(dev_h);
     ledcontrol_register_http_print_data(dev_h);  
     ledcontrol_register_http_handler(_server, dev_h);
+}
+
+void ledcontrol_http_add_group(ledcontrol_handle_t dev_h, const char *title, uint8_t num, uint8_t priority)
+{
+    ledcontrol_add_initial_group(dev_h);
+
+    for (uint8_t i = 0; i < led_groups_count; i++) 
+    {
+        if ( strcmp(led_groups[i].title, title) == 0 && led_groups[i].dev_h == dev_h)
+            return;
+    }
+
+    led_groups_count++;
+    led_groups = (ledcontrol_group_t *) realloc( led_groups, sizeof(ledcontrol_group_t) * led_groups_count );
+
+    led_groups[ led_groups_count - 1 ].title = title;
+    led_groups[ led_groups_count - 1 ].group = num;
+    led_groups[ led_groups_count - 1 ].dev_h = dev_h;
+    led_groups[ led_groups_count - 1 ].priority = priority;
+
 }
 
 #endif

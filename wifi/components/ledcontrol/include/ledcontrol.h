@@ -94,6 +94,7 @@ struct ledcontrol_channel {
 		brightness_table_e bright_tbl;
 		ledcontrol_t *ledc;
 		char *name;
+		uint8_t group;
 };
 
 struct ledcontrol {

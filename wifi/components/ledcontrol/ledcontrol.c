@@ -86,12 +86,14 @@ esp_err_t ledcontrol_register_channel(ledcontrol_channel_t led_channel)
     }
 
     uint8_t ch = led_channel.channel;
+    
     memcpy( &ledc->channels[ ch ], &led_channel, sizeof(ledcontrol_channel_handle_t));
     ledc->channels[ ch ].duty = 0;
     ledc->channels[ ch ].bright_tbl = led_channel.bright_tbl;
     ledc->channels[ ch ].inverted = led_channel.inverted;
     ledc->channels[ ch ].name = led_channel.name;
     ledc->channels[ ch ].ledc = ledc;
+    ledc->channels[ ch ].group = led_channel.group;
 
     return ESP_OK;
 }
