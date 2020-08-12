@@ -13,6 +13,7 @@
 #include "colors.h"
 #include "rgbcontrol.h"
 
+
 #ifdef CONFIG_RGB_EFFECTS
 
 #define COLOR_EFFECTS_MAX 13
@@ -108,7 +109,6 @@ static effect_t color_effects[COLOR_EFFECTS_MAX]  = {
 };
 
 effects_t* effects_init(void *rgbctrl, effect_set_color_hsv_f *cb);
-
 /*
 
 At first, create led_controller object

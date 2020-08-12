@@ -35,6 +35,7 @@ static void rgbcontrol_print_data(char *data, void *args)
 
     #ifdef CONFIG_RGB_EFFECTS
     effects_t *ee = rgb_ctrl->effects;
+    ESP_LOGW(TAG, "rgb_ctrl->effects %p", rgb_ctrl->effects);
     if ( ee == NULL ) return;    
     #endif
 

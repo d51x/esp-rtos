@@ -110,9 +110,8 @@ QueueHandle_t rgbcontrol_color_queue;
 // создать объект rgbcontrol
 rgbcontrol_t* rgbcontrol_init(ledcontrol_t *ledc, ledcontrol_channel_t *red, ledcontrol_channel_t *green, ledcontrol_channel_t *blue);
 
-#ifdef CONFIG_RGB_EFFECTS
-void rgbcontrol_effects_init(rgbcontrol_t *rgbctrl, effects_t* effects);
-#endif
+
+
 /*
 
 At first, create led_controller object
