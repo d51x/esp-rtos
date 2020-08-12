@@ -13,3 +13,7 @@ esp/logs/
 *.old
 *.rej
 *.code-workspace
+*.bin
+*.json
+*.commit
+esp_kitchen/sdkconfig_new_30.07.2020
