@@ -30,13 +30,14 @@ pages:
 #define HTTP_STR_CONFIG "Config"
 #define HTTP_STR_DEBUG "Debug"
 #define HTTP_STR_TOOLS "Tools"
-#define HTTP_STR_UPDATE "Update"
+#define HTTP_STR_OTA "Update"
 #define HTTP_STR_REBOOT "Reboot"
 
 #define HTTP_URI_ROOT "/"
 #define HTTP_URI_SETUP "/setup"
 #define HTTP_URI_TOOLS "/tools"
-#define HTTP_URI_UPDATE "/update"
+#define HTTP_URI_OTA "/update"
+#define HTTP_URI_OTAPOST "/update"
 #define HTTP_URI_DEBUG "/debug"
 #define HTTP_URI_REBOOT "/reboot"
 #define HTTP_URI_ICON_MENU "/menu.png"
@@ -51,7 +52,7 @@ typedef enum {
     
 } html_page_cfg_num_t;
 
-typedef void (* func_http_show_page)(const char *t, char *d); 
+typedef void (* func_http_show_page)(httpd_req_t *req, const char *t, char *d); 
 
 typedef struct user_ctx {
     char title[20];
