@@ -26,8 +26,11 @@
 #define RGB_DEFAULT_FADEUP 40
 #define RGB_DEFAULT_FADEDOWN 40
 
+#ifdef CONFIG_RGB_EFFECTS
 #define MQTT_TOPIC_EFFECT_NAME "effect/name"
 #define MQTT_TOPIC_EFFECT_ID "effect/id"
+#endif
+
 #define MQTT_TOPIC_COLOR_INT "color/int"
 
 typedef void *rgbcontrol_handle_t;      // rgbcontrol object
@@ -47,8 +50,10 @@ typedef void (* rgbcontrol_set_saturation_f)(int8_t value);
 typedef void (* rgbcontrol_fade_saturation_f)(int8_t saturation_from, int8_t saturation_to, int16_t saturation_delay);
 typedef void (* rgbcontrol_inc_saturation_f)(int8_t step);
 typedef void (* rgbcontrol_dec_saturation_f)(int8_t step);
-typedef void (* rgbcontrol_set_effects_f)(void *effects);
 
+#ifdef CONFIG_RGB_EFFECTS
+typedef void (* rgbcontrol_set_effects_f)(void *effects);
+#endif
 
 struct rgbcontrol {
 	color_hsv_t hsv;
@@ -59,9 +64,10 @@ struct rgbcontrol {
 	int fade_delay;
     int fadeup_delay;
     int fadedown_delay;
-    int effect_id; // TODO: переделать на указатель 
 
-    void *effects;
+
+
+    
 	// указатели на функции
 	rgbcontrol_set_color_hsv_f      set_color_hsv;
 	rgbcontrol_set_color_rgb_f      set_color_rgb;
@@ -77,8 +83,13 @@ struct rgbcontrol {
     rgbcontrol_fade_saturation_f    fade_saturation;
     rgbcontrol_inc_saturation_f     inc_saturation;
     rgbcontrol_dec_saturation_f     dec_saturation;
-    
-    rgbcontrol_set_effects_f     set_effects;
+
+    #ifdef CONFIG_RGB_EFFECTS
+    int effect_id; // TODO: переделать на указатель 
+    void *effects;
+    rgbcontrol_set_effects_f     set_effects;    
+    #endif    
+
 
 };
 
@@ -99,7 +110,9 @@ QueueHandle_t rgbcontrol_color_queue;
 // создать объект rgbcontrol
 rgbcontrol_t* rgbcontrol_init(ledcontrol_t *ledc, ledcontrol_channel_t *red, ledcontrol_channel_t *green, ledcontrol_channel_t *blue);
 
-void rgbcontrol_effects_init(rgbcontrol_t *rgbctrl);
+#ifdef CONFIG_RGB_EFFECTS
+void rgbcontrol_effects_init(rgbcontrol_t *rgbctrl, effects_t* effects);
+#endif
 /*
 
 At first, create led_controller object

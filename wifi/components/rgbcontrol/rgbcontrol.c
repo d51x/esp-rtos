@@ -22,7 +22,9 @@ void rgbcontrol_fade_saturation(int8_t saturation_from, int8_t saturation_to, in
 void rgbcontrol_inc_saturation(int8_t step);
 void rgbcontrol_dec_saturation(int8_t step);
 
+#ifdef CONFIG_RGB_EFFECTS
 void rgbcontrol_set_effects(effects_t *effects);
+#endif
 
 void _rgbcontrol_set_color_rgb(color_rgb_t rgb, bool update);
 void _rgbcontrol_set_color_hsv(color_hsv_t hsv, bool update);
@@ -57,7 +59,6 @@ rgbcontrol_t* rgbcontrol_init(ledcontrol_t *ledc, ledcontrol_channel_t *red, led
     rgb_ctrl->fade_delay = RGB_DEFAULT_FADE;
     rgb_ctrl->fadeup_delay = RGB_DEFAULT_FADEUP;
     rgb_ctrl->fadedown_delay = RGB_DEFAULT_FADEDOWN;
-    rgb_ctrl->effect_id = COLOR_EFFECTS_MAX-1;
 
 	// указатели на функции
 	rgb_ctrl->set_color_hsv = rgbcontrol_set_color_hsv;
@@ -75,7 +76,10 @@ rgbcontrol_t* rgbcontrol_init(ledcontrol_t *ledc, ledcontrol_channel_t *red, led
     rgb_ctrl->inc_saturation = rgbcontrol_inc_saturation;
     rgb_ctrl->dec_saturation = rgbcontrol_dec_saturation;
 
-    rgb_ctrl->set_effects = rgbcontrol_set_effects;
+    #ifdef CONFIG_RGB_EFFECTS
+    rgb_ctrl->effect_id = COLOR_EFFECTS_MAX-1;
+    rgb_ctrl->set_effects = rgbcontrol_set_effects;    
+    #endif
 
     rgbcontrol_color_queue = xQueueCreate(5, sizeof(rgbcontrol_queue_t));
     return rgb_ctrl;
@@ -203,13 +207,17 @@ void rgbcontrol_fade_saturation(int8_t saturation_from, int8_t saturation_to, in
     }  
 }
 
+#ifdef CONFIG_RGB_EFFECTS
 void rgbcontrol_set_effects(effects_t *effects){
     rgb_ctrl->effects = effects;
 }
 
-void rgbcontrol_effects_init(rgbcontrol_t *rgbctrl)
+void rgbcontrol_effects_init(rgbcontrol_t *rgbctrl, effects_t* effects)
 {
-    effects_t* effects = effects_init( rgbctrl, rgbctrl->set_color_hsv );
+    effects_init( rgbctrl, rgbctrl->set_color_hsv );
     rgbctrl->set_effects( effects );
 }
+#endif
+
+
 #endif

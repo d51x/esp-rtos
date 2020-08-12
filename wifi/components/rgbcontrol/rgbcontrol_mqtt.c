@@ -36,6 +36,8 @@ static void rgbcontrol_mqtt_recv_queue_cb(void *arg)
                 itoa(data->data, payload, 10);
                 mqtt_publish(MQTT_SEND_TOPIC_COLOR_INT, payload);
             } 
+            
+            #ifdef CONFIG_RGB_EFFECTS
             else if (data->type == RGB_EFFECT_ID )
             {
                 itoa(data->data, payload, 10);
@@ -45,6 +47,7 @@ static void rgbcontrol_mqtt_recv_queue_cb(void *arg)
             {
                 mqtt_publish(MQTT_SEND_TOPIC_EFFECT_NAME, (char *)data>data);  
             }
+            #endif
         }  
     }    
 }
@@ -61,6 +64,8 @@ static void rgbcontrol_mqtt_periodic_send_color_int_cb(char *buf, void *args)
     free(rgb);
 }
 
+
+#ifdef CONFIG_RGB_EFFECTS
 static void rgbcontrol_mqtt_periodic_send_effect_id_cb(char *buf, void *args)
 {
     rgbcontrol_t *rgb_ctrl = (rgbcontrol_t *)args;
@@ -74,6 +79,7 @@ static void rgbcontrol_mqtt_periodic_send_effect_name_cb(char *buf, void *args)
     effects_t *ef = (effects_t *) rgb_ctrl->effects;    
     strcpy(buf, ef->effect->name);
 }
+#endif
 
 static void rgbcontrol_mqtt_recv_color_int_cb(char *buf, void *args)
 {
@@ -83,13 +89,19 @@ static void rgbcontrol_mqtt_recv_color_int_cb(char *buf, void *args)
     
     if ( color32 != prev )
     {
+        
+        #ifdef CONFIG_RGB_EFFECTS
         effects_t *ef = (effects_t *) rgb_ctrl->effects;
         if ( ef != NULL ) ef->stop(); 
+        #endif
+
         rgb_ctrl->set_color_int(color32); 
         prev = color32;
     }
 }
 
+
+#ifdef CONFIG_RGB_EFFECTS
 static void rgbcontrol_mqtt_recv_effect_id_cb(char *buf, void *args)
 {
     rgbcontrol_t *rgb_ctrl = (rgbcontrol_t *)args;
@@ -103,6 +115,7 @@ static void rgbcontrol_mqtt_recv_effect_id_cb(char *buf, void *args)
     }
     
 }
+#endif
 
 void rgbcontrol_mqtt_init(rgbcontrol_handle_t dev_h)
 {
@@ -110,11 +123,18 @@ void rgbcontrol_mqtt_init(rgbcontrol_handle_t dev_h)
     xTaskCreate(rgbcontrol_mqtt_recv_queue_cb, "rgbctrl", 1024, dev_h, 13, NULL);
 
     mqtt_add_periodic_publish_callback( MQTT_SEND_TOPIC_COLOR_INT, rgbcontrol_mqtt_periodic_send_color_int_cb, dev_h); 
+
+    
+    #ifdef CONFIG_RGB_EFFECTS
     mqtt_add_periodic_publish_callback( MQTT_SEND_TOPIC_EFFECT_ID, rgbcontrol_mqtt_periodic_send_effect_id_cb, dev_h); 
     mqtt_add_periodic_publish_callback( MQTT_SEND_TOPIC_EFFECT_NAME, rgbcontrol_mqtt_periodic_send_effect_name_cb, dev_h); 
+    #endif
 
     mqtt_add_receive_callback(MQTT_RECV_TOPIC_COLOR_INT, rgbcontrol_mqtt_recv_color_int_cb, dev_h);  
+    
+    #ifdef CONFIG_RGB_EFFECTS
     mqtt_add_receive_callback(MQTT_RECV_TOPIC_EFFECT_ID, rgbcontrol_mqtt_recv_effect_id_cb, dev_h);  
+    #endif
 }
 
 #endif
