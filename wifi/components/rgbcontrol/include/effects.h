@@ -13,7 +13,7 @@
 #include "colors.h"
 #include "rgbcontrol.h"
 
-#ifdef CONFIG_RGB_CONTROL
+#ifdef CONFIG_RGB_EFFECTS
 
 #define COLOR_EFFECTS_MAX 13
 #define EFFECT_STOP COLOR_EFFECTS_MAX-1

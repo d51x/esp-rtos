@@ -1,6 +1,6 @@
 #include "rgbcontrol_mqtt.h"
 
-#ifdef CONFIG_RGB_CONTROL
+#ifdef CONFIG_RGB_CONTROLLER
 
 static const char* TAG = "RGBMQTT";
 

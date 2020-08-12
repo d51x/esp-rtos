@@ -20,7 +20,7 @@
 #include "effects.h"
 #include "http_utils.h"
 
-#ifdef CONFIG_RGB_CONTROL
+#ifdef CONFIG_RGB_CONTROLLER
 
 #define RGB_DEFAULT_FADE 1000
 #define RGB_DEFAULT_FADEUP 40

@@ -8,7 +8,7 @@
 
 
 
-#ifdef CONFIG_RGB_CONTROL
+#ifdef CONFIG_RGB_CONTROLLER
 
 typedef struct rgbcontrol_mqtt {
     rgbcontrol_handle_t dev_h;

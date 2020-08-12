@@ -10,7 +10,7 @@
 #include "http_handlers.h"
 #include "httpd.h"
 
-#ifdef CONFIG_RGB_CONTROL
+#ifdef CONFIG_RGB_CONTROLLER_HTTP
 
 #define RGB_CONTROL_URI "/colors"
 

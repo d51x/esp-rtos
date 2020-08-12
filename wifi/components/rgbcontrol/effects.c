@@ -1,6 +1,6 @@
 #include "effects.h"
 
-#ifdef CONFIG_RGB_CONTROL
+#ifdef CONFIG_RGB_EFFECTS
 
 static const char *TAG = "COLOREFFECT";
 

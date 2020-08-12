@@ -1,6 +1,6 @@
 #include "rgbcontrol_http.h"
 
-#ifdef CONFIG_RGB_CONTROL
+#ifdef CONFIG_RGB_CONTROLLER_HTTP
 
 static const char* TAG = "RGBHTTP";
 
