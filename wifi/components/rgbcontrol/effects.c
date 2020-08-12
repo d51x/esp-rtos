@@ -91,11 +91,13 @@ void effects_set_effect( int8_t id ){
 
         data->type = RGB_EFFECT_ID;
         data->data = (char *) e->name;
-        xQueueSendToBack(rgbcontrol_color_queue, data, 0);
+        if ( rgbcontrol_color_queue != NULL ) 
+            xQueueSendToBack(rgbcontrol_color_queue, data, 0);
 
         data->type = RGB_EFFECT_ID;
         data->data = id;
-        xQueueSendToBack(rgbcontrol_color_queue, data, 0);
+        if (rgbcontrol_color_queue != NULL )
+            xQueueSendToBack(rgbcontrol_color_queue, data, 0);
 
         free(data);        
     }

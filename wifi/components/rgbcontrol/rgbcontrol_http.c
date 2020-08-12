@@ -14,15 +14,16 @@ const char *effects_data ICACHE_RODATA_ATTR =
         "</div>"            
         "<div style=\"height: 50px;border: 1px solid grey;float: right;display: inline-block;width:  50%%;background: rgb(%d,%d,%d)\"></div>"
 
-        "<div><p><span><b>Color effect:</b></span>"
-         //"<span id=\"color\">%s (%d)</span>"
          #ifdef CONFIG_RGB_EFFECTS
-        "<select id=\"effects\" onchange=\"effects()\">"
-        "%s"
-        "</select>"
+        "<div>"
+            "<p><span><b>Color effect:</b></span>"
+                "<select id=\"effects\" onchange=\"effects()\">"
+                "%s"
+                "</select>"
+            "</p>"
+        "</div>"
         #endif
-        "</p></div>"
-        "</div>";
+    "</div>";
 
 #ifdef CONFIG_RGB_EFFECTS
 const char *effects_item ICACHE_RODATA_ATTR = "<option value=\"%d\" %s>%s</option>";
@@ -30,21 +31,13 @@ const char *effects_item ICACHE_RODATA_ATTR = "<option value=\"%d\" %s>%s</optio
 
 static void rgbcontrol_print_data(char *data, void *args)
 {
-    ESP_LOGW(TAG, "%s", __func__ );
-
     rgbcontrol_t *rgb_ctrl = (rgbcontrol_t *)args;
-    ESP_LOGW(TAG, "rgb_ctrl %p", rgb_ctrl );
-
 
     #ifdef CONFIG_RGB_EFFECTS
     effects_t *ee = rgb_ctrl->effects;
-    ESP_LOGW(TAG, "effects %p", ee );
-
     if ( ee == NULL ) return;    
     #endif
 
-
-    
     char select[600] = "";
     
     #ifdef CONFIG_RGB_EFFECTS
@@ -61,7 +54,14 @@ static void rgbcontrol_print_data(char *data, void *args)
     #endif
 
     color_rgb_t rgb;
-    hsv_to_rgb(&rgb, rgb_ctrl->hsv);
+
+    rgb.r = rgb_ctrl->ledc->get_duty( rgb_ctrl->ledc->channels + rgb_ctrl->red.channel);
+    rgb.g = rgb_ctrl->ledc->get_duty( rgb_ctrl->ledc->channels + rgb_ctrl->green.channel);
+    rgb.b = rgb_ctrl->ledc->get_duty( rgb_ctrl->ledc->channels + rgb_ctrl->blue.channel);
+
+    color_hsv_t **hsv;
+    rgb_to_hsv(&rgb, &rgb_ctrl->hsv);
+
     sprintf(data+strlen(data), effects_data, rgb_ctrl->hsv.h
                                            , rgb_ctrl->hsv.s
                                            , rgb_ctrl->hsv.v
@@ -262,6 +262,7 @@ esp_err_t rgbcontrol_get_handler(httpd_req_t *req)
             {
                 err = http_process_hex(req, param, sizeof(param));  // rgb?type=hex&val=value
             } 
+            #ifdef CONFIG_RGB_EFFECTS
             else if ( strcmp(param, "effect") == ESP_OK ) 
             {
                 if ( http_get_key_str(req, "id", param, sizeof(param)) == ESP_OK ) 
@@ -278,6 +279,7 @@ esp_err_t rgbcontrol_get_handler(httpd_req_t *req)
                         ef->set_by_name( param );
                 }
             }
+            #endif
         }
 
         strcpy( page, (err == ESP_OK ) ? "OK" : "ERROR");  

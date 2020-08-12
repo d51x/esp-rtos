@@ -37,10 +37,7 @@ pages:
 #define HTTP_URI_SETUP "/setup"
 #define HTTP_URI_TOOLS "/tools"
 #define HTTP_URI_OTA "/update"
-<<<<<<< HEAD
-=======
 #define HTTP_URI_OTAPOST "/update"
->>>>>>> master
 #define HTTP_URI_DEBUG "/debug"
 #define HTTP_URI_REBOOT "/reboot"
 #define HTTP_URI_ICON_MENU "/menu.png"

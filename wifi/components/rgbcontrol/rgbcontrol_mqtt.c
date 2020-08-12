@@ -28,7 +28,7 @@ static void rgbcontrol_mqtt_recv_queue_cb(void *arg)
 
     for( ;; )
     {
-        if ( xQueueReceive( rgbcontrol_color_queue, data, xTicksToWait ) == pdPASS )
+        if ( rgbcontrol_color_queue != NULL && xQueueReceive( rgbcontrol_color_queue, data, xTicksToWait ) == pdPASS )
         {
             
             if ( data->type == RGB_COLOR_INT)
@@ -88,8 +88,7 @@ static void rgbcontrol_mqtt_recv_color_int_cb(char *buf, void *args)
     static uint32_t prev = 0;
     
     if ( color32 != prev )
-    {
-        
+    {   
         #ifdef CONFIG_RGB_EFFECTS
         effects_t *ef = (effects_t *) rgb_ctrl->effects;
         if ( ef != NULL ) ef->stop(); 

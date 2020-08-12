@@ -45,9 +45,6 @@ rgbcontrol_t* rgbcontrol_init(ledcontrol_t *ledc, ledcontrol_channel_t *red, led
     rgb_ctrl = calloc(1, sizeof(rgbcontrol_t));
     rgb_ctrl->ledc = ledc;
 
-    //memcpy(&rgb_ctrl->red, &red, sizeof(ledcontrol_channel_t));
-    //memcpy(&rgb_ctrl->green, &green, sizeof(ledcontrol_channel_t));
-    //memcpy(&rgb_ctrl->blue, &blue, sizeof(ledcontrol_channel_t));
     rgb_ctrl->red = *red;
     rgb_ctrl->green = *green;
     rgb_ctrl->blue = *blue;
@@ -82,6 +79,7 @@ rgbcontrol_t* rgbcontrol_init(ledcontrol_t *ledc, ledcontrol_channel_t *red, led
     #endif
 
     rgbcontrol_color_queue = xQueueCreate(5, sizeof(rgbcontrol_queue_t));
+
     return rgb_ctrl;
 }
 
@@ -117,7 +115,8 @@ void rgbcontrol_set_color_int(uint32_t color32) {
     rgbcontrol_queue_t *data = (rgbcontrol_queue_t *) calloc(1, sizeof(rgbcontrol_queue_t));
     data->type = RGB_COLOR_INT;
     data->data = color32;
-    xQueueSendToBack(rgbcontrol_color_queue, data, 0);
+    if ( rgbcontrol_color_queue != NULL ) 
+        xQueueSendToBack(rgbcontrol_color_queue, data, 0);
     free(data);
 }
 
