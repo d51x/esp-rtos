@@ -103,6 +103,28 @@ menu "Project config"
 
     endmenu    
 
+    menu "HTTP server"
+        config HTTP_SERVER_STACK_SIZE
+            int "Webserver task stack size"
+            range 4096 16384
+            default 8192
+            help
+                Webserver tasks stack size
+
+        config HTTP_PAGE_SIZE
+            int "Web page buffer size"
+            range 4096 8192
+            default 4096
+            help
+                Webserver page buffer size 4096 / 5120 / 6144 / 7168 / 8192
+
+        config HTTP_HANDLERS_COUNT
+            int "Handlers count"
+            default 40
+            help
+                Webserver handlers count
+    endmenu
+        
     menu "I2C Component"        
         config COMPONENT_I2C
             bool "Enable I2C driver"

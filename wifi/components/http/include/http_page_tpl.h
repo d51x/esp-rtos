@@ -25,12 +25,12 @@ const char *html_page_start ICACHE_RODATA_ATTR =
       "<title>%s</title>"
       "<meta name='viewport' content='width=480'>"
       "<meta name='mobile-web-app-capable' content='yes'><link rel='stylesheet' type='text/css' href='main.css'/>"
-      "<script type='text/javascript' src='ajax.js'></script>"
     "</head>"
     "<body>"
       "<div id='main'>"; 
 
 const char *html_page_end ICACHE_RODATA_ATTR = 
+      "<script type='text/javascript' src='ajax.js'></script>"
       "<div id='clear'></div>"
         "<div id='footer' class='rnd'>"
           "<div id='time'><span><b>%s</b></div>"            // local time

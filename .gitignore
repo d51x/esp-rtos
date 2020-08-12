@@ -13,3 +13,8 @@ esp/logs/
 *.old
 *.rej
 *.code-workspace
+back/
+esp_kitchen/sdkconfig_new_30.07.2020
+*.bin
+*.commit
+wifi/.vscode/c_cpp_properties.json

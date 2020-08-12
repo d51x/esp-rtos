@@ -37,7 +37,7 @@ httpd_handle_t webserver_start(void);
 void webserver_stop(httpd_handle_t server);
 void register_uri_handlers(httpd_handle_t _server);
 void add_uri_get_handler(httpd_handle_t _server, const char *uri, httpd_uri_func func, void *ctx);
-void add_uri_post_handler(httpd_handle_t _server, const char *uri, httpd_uri_func func);
+void add_uri_post_handler(httpd_handle_t _server, const char *uri, httpd_uri_func func, void *ctx);
 void make_redirect(httpd_req_t *req, uint8_t timeout, const char *path);
 
 #endif /* __HTTPD_H__ */
