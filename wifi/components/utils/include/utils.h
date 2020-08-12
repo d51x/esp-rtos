@@ -143,9 +143,11 @@ uint32_t hex2int(char *hex);
 
 uint32_t uround(float);
 
+
 void print_task_stack_depth(const char *TAG, const char *task_name);
 
 #ifdef CONFIG_DEBUG_PRINT_TASK_INFO
+
 void print_tasks_info();
 #endif
 

@@ -57,8 +57,18 @@
 
 httpd_handle_t http_server = NULL;
 
+    #ifdef CONFIG_COMPONENT_MCP23017
+        mcp23017_handle_t mcp23017_h;
+    #endif
+    
+    #ifdef CONFIG_COMPONENT_PCF8574
+        pcf8574_handle_t pcf8574_h;
+    #endif    
+
 extern void sntp_start();
 
-
+void initialize_modules();
+void initialize_modules_mqtt();
+void initialize_modules_http(httpd_handle_t _server);
 
 #endif 
