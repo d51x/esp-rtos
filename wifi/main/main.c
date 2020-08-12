@@ -249,6 +249,51 @@ void initialize_modules()
     #endif
 
     #ifdef CONFIG_LED_CONTROLLER
+    // ===== create led channels ============================
+    ch_red = calloc(1, sizeof(ledcontrol_channel_t)); 
+    ch_red->pin = 15;
+    ch_red->channel = 0;
+    ch_red->bright_tbl = TBL_32B;
+    ch_red->name = "Красный";
+    ch_red->group = 1;
+    
+    ch_green = calloc(1, sizeof(ledcontrol_channel_t));
+    ch_green->pin = 12;
+    ch_green->channel = 1;
+    ch_green->bright_tbl = TBL_32B;
+    ch_green->name = "Зеленый";
+    ch_green->group = 1;
+
+    ch_blue = calloc(1, sizeof(ledcontrol_channel_t)+1);
+    ch_blue->pin = 13;
+    ch_blue->channel = 2;
+    ch_blue->bright_tbl = TBL_32B;
+    ch_blue->name = "Синий";
+    ch_blue->group = 1;
+
+
+    // ===== create led controller ============================
+    ledc_h = ledcontrol_create(500, 3);
+    ledc = (ledcontrol_t *)ledc_h;
+
+    // ==== register led channels to led controller =============
+    ledc->register_channel(*ch_red);
+    ledc->register_channel(*ch_green);
+    ledc->register_channel(*ch_blue);
+
+    // ====== initialize led controller =======================
+    ledc->init();  
+
+    #ifdef CONFIG_RGB_CONTROLLER
+        // === create and init RGB controller ================
+        rgb_ledc = rgbcontrol_init(ledc, ch_red, ch_green, ch_blue);
+
+        #ifdef CONFIG_RGB_EFFECTS
+        // ==== create and init rgb effects =======================
+        // === setup effects to RGB controller  
+        rgbcontrol_effects_init(rgb_ledc, effects);  
+        #endif
+    #endif
 
     #endif
 }
@@ -270,7 +315,7 @@ void initialize_modules_mqtt()
     #endif     
 
     #ifdef CONFIG_LED_CONTROLLER
-
+    ledcontrol_mqtt_init(ledc_h);
     #endif
 }
 
@@ -303,38 +348,8 @@ void initialize_modules_http(httpd_handle_t _server)
     #endif
 
     #ifdef CONFIG_LED_CONTROL_HTTP
-
+    ledcontrol_http_add_group(ledc_h, "RGB Controller", 1, 5);
+    //ledcontrol_http_add_group(ledc_h, "Сине-зеленая подсветка", 2, 6);
+    ledcontrol_http_init(http_server, ledc_h);
     #endif        
-}void initialize_modules_http(httpd_handle_t _server)
-{
-
-    wifi_http_init( _server );
-    ota_http_init( _server );
-
-    #ifdef CONFIG_COMPONENT_I2C
-    i2c_http_init( _server );
-    #endif
-
-    #ifdef CONFIG_COMPONENT_LCD2004_HTTP
-    lcd2004_http_init( _server );
-    #endif
-
-    #ifdef CONFIG_MCP23017_HTTP
-    //((mcp23017_t *) mcp23017_h)->http_buttons = 0b1010100000000000;
-    mcp23017_http_init(_server, mcp23017_h);
-    mcp23017_http_set_btn_name(mcp23017_h, 15, "Кнопка 1");
-    mcp23017_http_set_btn_name(mcp23017_h, 13, "Кнопка 2");
-    mcp23017_http_set_btn_name(mcp23017_h, 11, "Кнопка 3");
-    #endif
-
-    mqtt_http_init(_server);
-
-    #ifdef CONFIG_SENSOR_SHT21
-    sht21_http_init(_server);
-    #endif
-
-    #ifdef CONFIG_LED_CONTROL_HTTP
-
-    #endif        
-}
 }

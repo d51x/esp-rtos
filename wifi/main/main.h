@@ -85,7 +85,6 @@
 
 httpd_handle_t http_server = NULL;
 
-extern void sntp_start();
     #ifdef CONFIG_COMPONENT_MCP23017
         mcp23017_handle_t mcp23017_h;
     #endif
