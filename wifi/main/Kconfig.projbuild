@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # put here your custom config value
 menu "Project config"
 
@@ -261,4 +262,290 @@ menu "Project config"
                 Enable SHT21 sensor
     endmenu
 
+=======
+# put here your custom config value
+menu "Project config"
+
+        config FW_VER
+            string "project version"
+            default "1.0"
+            help
+                Project version
+
+
+    menu "WIFI Config"
+        config ESP_WIFI_SSID
+            string "WiFi SSID"
+            default "myssid"
+            help
+            SSID (network name) for the example to connect to.
+
+        config ESP_WIFI_PASSWORD
+            string "WiFi Password"
+            default "mypassword"
+            help
+            WiFi password (WPA or WPA2) for the example to use.
+
+        config WIFI_AP_PASSWORD
+            string "WiFi AP Password"
+            default ""
+            help
+                WiFi password used in recovery network
+
+        config ESP_MAXIMUM_RETRY
+            int "Maximum retry"
+            default 5
+            help
+                Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
+                    
+    endmenu
+
+
+    menu "Debug options"
+        config COMPONENT_DEBUG
+            bool "Enable Debug Component"
+            default false
+            help
+                Active the debug control component / tasks.
+
+            config DEBUG_PRINT_TASK_INFO
+                bool "Print task info"
+                default n
+                depends on COMPONENT_DEBUG
+                help
+                    Enable this option to print task info - name, state, prio, free stack size
+    endmenu
+
+    menu "MQTT Component"        
+        config MQTT_URL
+            string "MQTT URL"
+            default "mqtt://192.168.2.63:1883"
+            help
+                URL of the broker to connect to
+
+         config MQTT_LOGIN
+            string "MQTT username"
+            default ""
+            help
+                MQTT username for login
+
+         config MQTT_PASS
+            string "MQTT password"
+            default ""
+            help
+                MQTT password for login
+
+        config MQTT_TOPIC_BASE
+            string "MQTT Base for default topic"
+            default "home/"
+            help
+                Base for default topic, which is concatenate with ESP Name (hostname). It is important
+                to remember to put a slash (/) at the end.
+                    
+        config MQTT_KEEPALIVE_TIMEOUT
+            int "MQTT Keep Alive (ses)"
+            default 60
+            help
+                Number of miliseconds to send keep alive
+
+        config MQTT_TASK_PRIORITY
+            int "Task priority"
+            default 12
+            help
+                MQTT Task priority (default 12)  
+
+         config MQTT_SETTINGS_ON_AIR
+            bool "MQTT apply setting ON AIR"
+            default y
+            help
+                Apply MQTT settings ON AIR on setup web page, when settings was changed
+
+        config MQTT_TOPIC_SEND_RECV
+            bool "MQTT the same topic for send and receive"
+            default y
+            help
+                Apply MQTT settings to make the same topic for sending and receiving data                
+
+    endmenu    
+
+    menu "HTTP server"
+        config HTTP_SERVER_STACK_SIZE
+            int "Webserver task stack size"
+            range 4096 16384
+            default 8192
+            help
+                Webserver tasks stack size
+
+        config HTTP_PAGE_SIZE
+            int "Web page buffer size"
+            range 4096 8192
+            default 4096
+            help
+                Webserver page buffer size 4096 / 5120 / 6144 / 7168 / 8192
+
+        config HTTP_HANDLERS_COUNT
+            int "Handlers count"
+            default 40
+            help
+                Webserver handlers count
+    endmenu
+        
+    menu "I2C Component"        
+        config COMPONENT_I2C
+            bool "Enable I2C driver"
+            default y
+            help
+                Enable I2C driver
+
+        config COMPONENT_I2C_GPIO_SDA
+            int "SDA GPIO"
+            default 2
+            depends on COMPONENT_I2C
+            help
+                SDA Gpio number
+
+        config COMPONENT_I2C_GPIO_SCL
+            int "SCL GPIO"
+            default 0
+            depends on COMPONENT_I2C
+            help
+                SCL Gpio number
+
+        config COMPONENT_I2C_SCANNER
+            bool "Enable I2C scanner"
+            default y
+            depends on COMPONENT_I2C
+            help
+                Enable I2C scanner
+
+        config COMPONENT_PCF8574
+            bool "PCF8574"
+            default n
+            depends on COMPONENT_I2C
+            help
+                Enable PCF8574
+
+        config COMPONENT_LCD2004
+            bool "LCD2004"
+            default n
+            depends on COMPONENT_I2C
+            help
+                Enable LCD2004
+
+        config COMPONENT_LCD2004_ADDR
+            hex "LCD address (HEX) on I2C"
+            default 0x3F
+            depends on COMPONENT_LCD2004
+            help
+                LCD address in HEX on I2C
+
+        config COMPONENT_LCD2004_HTTP
+            bool "LCD2004 web control"
+            default n
+            depends on   COMPONENT_LCD2004
+            help
+                Options and control block on Tools page, control LCD2004 via http (on/off backlight)
+
+        config COMPONENT_MCP23017
+            bool "MCP23017"
+            default n
+            depends on COMPONENT_I2C
+            help
+                Enable MCP23017
+
+        config MCP23017_GPIO_INPUTS
+            hex "MCP23017 GPIO INPUTS"
+            default 0xFF00
+            depends on COMPONENT_MCP23017
+            help
+                Set pins as INPUT (default 0xFF00 - PORTB), other pins (PORTA) as OUTPUTS. 
+                0x00 - all optputs, 0xFF - all inputs, 
+                bits sequence 15 14 13 .... 2 1 0
+                1 - input
+                0 - output
+
+        config MCP23017_ISR
+            bool "MCP23017 interrupts"
+            default n
+            depends on COMPONENT_MCP23017
+            help
+                Enable MCP23017 interrupts
+
+        config MCP23017_ISR_INTA_GPIO
+            int "GPIO for INTA"
+            default 4
+            depends on MCP23017_ISR
+            help
+                Set GPIO for INTA. 255 - disable
+
+        config MCP23017_ISR_INTB_GPIO
+            int "GPIO for INTB"
+            default 5
+            depends on MCP23017_ISR
+            help
+                Set GPIO for INTB, 255 - disable
+
+        config MCP23017_HTTP
+            bool "MCP23017 web control"
+            default n
+            depends on COMPONENT_MCP23017
+            help
+                Enable MCP23017 web control
+
+
+    endmenu
+    
+    menu "LED Controller"
+        config LED_CONTROLLER
+            bool "Enable LED Controller"
+            default n
+            help
+                Enable LED Controller
+
+            config LED_CONTROL_HTTP
+                bool "Channel sliders on page and HTTP GET control"
+                default y
+                depends on LED_CONTROLLER
+                help
+                    Enable LED Control by HTTP GET and web page sliders of channels
+
+            config RGB_CONTROLLER
+                bool "Enable RBG Controller + mqtt"
+                default n
+                depends on LED_CONTROLLER
+                help
+                    Enable RGB Controller, more convinient control of 3 LED Channels via MQTT 
+
+                config RGB_CONTROLLER_HTTP
+                    bool "Enable HTTP GET for RGB controller"
+                    default n
+                    depends on RGB_CONTROLLER
+                    help
+                        Enable HTTP GET requests for more convinient control of 3 LED Channels    
+
+                config RGB_EFFECTS
+                    bool "Enable RGB Effects"
+                    default n
+                    depends on RGB_CONTROLLER
+                    help
+                        Enable HTTP GET requests for more convinient control of 3 LED Channels      
+                        
+                    config RGB_EFFECTS_HTTP
+                        bool "Enable HTTP GET and web select input for control RGB Effects"
+                        default n
+                        depends on RGB_EFFECTS
+                        help
+                            Enable HTTP GET and web select input for control RGB Effects                          
+    endmenu
+
+    menu "Sensors"
+        config SENSOR_SHT21
+            bool "SHT21 sensor"
+            default n
+            depends on COMPONENT_I2C
+            help 
+                Enable SHT21 sensor
+    endmenu
+
+>>>>>>> master
 endmenu

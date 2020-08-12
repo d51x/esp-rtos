@@ -10,7 +10,6 @@
 #include "i2c_bus.h"
 #include "freertos/task.h"
 
-#include "mqtt_cl.h"
 
 #ifdef CONFIG_SENSOR_SHT21
 #define SHT21_ADDR 0x40

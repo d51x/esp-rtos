@@ -67,7 +67,10 @@ portBASE_TYPE ticks_to_wait);
 //}
 //#endif
 
+#ifdef CONFIG_COMPONENT_I2C_SCANNER
 uint8_t i2c_bus_scan(i2c_bus_handle_t bus, uint8_t* devices);
+#endif
+
 i2c_bus_handle_t i2c_bus_init();
 
 void i2c_load_cfg(i2c_config_t *cfg);

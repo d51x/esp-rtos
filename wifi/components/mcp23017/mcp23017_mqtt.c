@@ -27,8 +27,7 @@ void mcp23017_mqtt_recv_cb(char *buf, void *args)
     {
     #endif
         
-        ESP_LOGI(TAG, "%s, pin %d, val %d", __func__, p->pin, value);
-        esp_err_t err =  mcp23017_write_pin( p->dev_h, p->pin, value);
+    esp_err_t err =  mcp23017_write_pin( p->dev_h, p->pin, value);
 
     #ifdef CONFIG_MQTT_TOPIC_SEND_RECV    
         if ( err == ESP_OK )
@@ -51,15 +50,14 @@ void mcp23017_mqtt_recv_queue_cb(void *arg)
             char t[20], v[2];
             sprintf( t, "%s%d", MCP23017_MQTT_SEND_TOPIC, data[0]);
             itoa(data[1], v, 10);
-            //ESP_LOGE(TAG, "recv from queue %s = %s", t, v);
-            mqtt_publish(t, v);
-        }  
+            mqtt_publish(t, v);     
+        }           
     }
 }
 
 void mcp23017_mqtt_init(mcp23017_handle_t dev_h)
 {
-    xTaskCreate(mcp23017_mqtt_recv_queue_cb, "mcp23017_recv", 1024, dev_h, 10, NULL);
+    xTaskCreate(mcp23017_mqtt_recv_queue_cb, "mcp23017_recv", 1024 + 256, dev_h, 10, NULL); // При 1024 иногда случался Stack canary watchpoint triggered (mcp23017_recv)
 
     _dev_h = dev_h;
 

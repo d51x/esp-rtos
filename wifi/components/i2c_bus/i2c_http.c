@@ -50,13 +50,6 @@ void i2c_register_http_handler(httpd_handle_t _server)
     #ifdef CONFIG_COMPONENT_I2C_SCANNER
     add_uri_get_handler( _server, "/i2cscan", i2cscan_get_handler, NULL); 
     #endif    
-    
-    //user_ctx_t *ctx = (user_ctx_t *) calloc(1, sizeof(user_ctx_t));
-    //strncpy(ctx->title, "i2c page", 20);
-    //ctx->show = true;    
-    //add_uri_get_handler( _server, "/i2c", i2c_get_handler, ctx); 
-    //add_uri_get_handler( _server, "/i2c", i2c_get_handler, NULL); 
-    //free(ctx);
 }
 
 
@@ -149,11 +142,12 @@ esp_err_t i2cscan_get_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+#endif
+
 void i2c_http_init(httpd_handle_t _server)
 {
     i2c_register_http_handler(_server);
     i2c_register_http_print_data();   
 }
-#endif
 
 #endif //#ifdef CONFIG_COMPONENT_I2C

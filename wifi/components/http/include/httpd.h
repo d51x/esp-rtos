@@ -22,7 +22,7 @@
 
 
 
-#define WEB_SERVER_STACK_SIZE       1024*8*2
+#define WEB_SERVER_STACK_SIZE       CONFIG_HTTP_SERVER_STACK_SIZE //1024*8*2
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt);
 typedef esp_err_t (*httpd_uri_func)(httpd_req_t *req);
@@ -37,7 +37,7 @@ httpd_handle_t webserver_start(void);
 void webserver_stop(httpd_handle_t server);
 void register_uri_handlers(httpd_handle_t _server);
 void add_uri_get_handler(httpd_handle_t _server, const char *uri, httpd_uri_func func, void *ctx);
-void add_uri_post_handler(httpd_handle_t _server, const char *uri, httpd_uri_func func);
+void add_uri_post_handler(httpd_handle_t _server, const char *uri, httpd_uri_func func, void *ctx);
 void make_redirect(httpd_req_t *req, uint8_t timeout, const char *path);
 
 #endif /* __HTTPD_H__ */

@@ -1,5 +1,6 @@
 #include "ledcontrol_mqtt.h"
 
+#ifdef CONFIG_LED_CONTROLLER
 
 static const char* TAG = "LEDCMQTT";
 
@@ -62,3 +63,5 @@ void ledcontrol_mqtt_init(ledcontrol_handle_t dev_h)
         mqtt_add_receive_callback(t, ledcontrol_mqtt_recv_cb, (ledcontrol_mqtt_t *)p);                   
     }
 }
+
+#endif

@@ -365,17 +365,16 @@ uint32_t uround(float val) {
     return res;
 }
 
-
 void print_task_stack_depth(const char *TAG, const char *func_name){
+    #if CONFIG_FREERTOS_USE_TRACE_FACILITY  && CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
     TaskStatus_t xTaskDetails;
-    // configUSE_TRACE_FACILITY  CONFIG_FREERTOS_USE_TRACE_FACILITY
-    // #if configGENERATE_RUN_TIME_STATS == 1  CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
     vTaskGetInfo( NULL, &xTaskDetails, pdTRUE, eInvalid );
     ESP_LOGI(TAG, "Function: %s, Task %s stack depth: %d", func_name, xTaskDetails.pcTaskName, xTaskDetails.usStackHighWaterMark);
 
-        //UBaseType_t uxHighWaterMark;
-        //uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        //ESP_LOGI(TAG, "%s stack depth: %d", task_name, uxHighWaterMark);
+    //UBaseType_t uxHighWaterMark;
+    //uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+    //ESP_LOGI(TAG, "%s stack depth: %d", task_name, uxHighWaterMark);
+    #endif
 }
 
 #ifdef CONFIG_DEBUG_PRINT_TASK_INFO
