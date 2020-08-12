@@ -247,6 +247,10 @@ void initialize_modules()
         sht21_init();
         sht21_start(5);
     #endif
+
+    #ifdef CONFIG_LED_CONTROLLER
+
+    #endif
 }
 
 void initialize_modules_mqtt()
@@ -264,6 +268,10 @@ void initialize_modules_mqtt()
     #ifdef CONFIG_SENSOR_SHT21
     sht21_mqtt_init();
     #endif     
+
+    #ifdef CONFIG_LED_CONTROLLER
+
+    #endif
 }
 
 void initialize_modules_http(httpd_handle_t _server)
@@ -292,5 +300,9 @@ void initialize_modules_http(httpd_handle_t _server)
 
     #ifdef CONFIG_SENSOR_SHT21
     sht21_http_init(_server);
-    #endif    
+    #endif
+
+    #ifdef CONFIG_LED_CONTROL_HTTP
+
+    #endif        
 }

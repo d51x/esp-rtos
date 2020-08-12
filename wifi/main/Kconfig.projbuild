@@ -155,14 +155,14 @@ menu "Project config"
 
         config COMPONENT_PCF8574
             bool "PCF8574"
-            default y
+            default n
             depends on COMPONENT_I2C
             help
                 Enable PCF8574
 
         config COMPONENT_LCD2004
             bool "LCD2004"
-            default y
+            default n
             depends on COMPONENT_I2C
             help
                 Enable LCD2004
@@ -176,14 +176,14 @@ menu "Project config"
 
         config COMPONENT_LCD2004_HTTP
             bool "LCD2004 web control"
-            default y
+            default n
             depends on   COMPONENT_LCD2004
             help
                 Options and control block on Tools page, control LCD2004 via http (on/off backlight)
 
         config COMPONENT_MCP23017
             bool "MCP23017"
-            default y
+            default n
             depends on COMPONENT_I2C
             help
                 Enable MCP23017
@@ -230,6 +230,20 @@ menu "Project config"
 
     endmenu
     
+    menu "LED Controller"
+        config LED_CONTROLLER
+            bool "Enable LED Controller"
+            default n
+            help
+                Enable LED Controller
+
+        config LED_CONTROL_HTTP
+            bool "Channel sliders on page and HTTP GET control"
+            default y
+            help
+                Enable LED Control by HTTP GET and web page sliders of channels
+    endmenu
+
     menu "Sensors"
         config SENSOR_SHT21
             bool "SHT21 sensor"
