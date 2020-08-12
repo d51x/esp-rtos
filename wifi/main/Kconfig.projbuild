@@ -237,12 +237,40 @@ menu "Project config"
             help
                 Enable LED Controller
 
-        config LED_CONTROL_HTTP
-            bool "Channel sliders on page and HTTP GET control"
-            default y
-            depends on LED_CONTROLLER
-            help
-                Enable LED Control by HTTP GET and web page sliders of channels
+            config LED_CONTROL_HTTP
+                bool "Channel sliders on page and HTTP GET control"
+                default y
+                depends on LED_CONTROLLER
+                help
+                    Enable LED Control by HTTP GET and web page sliders of channels
+
+            config RGB_CONTROLLER
+                bool "Enable RBG Controller + mqtt"
+                default n
+                depends on LED_CONTROLLER
+                help
+                    Enable RGB Controller, more convinient control of 3 LED Channels via MQTT 
+
+                config RGB_CONTROLLER_HTTP
+                    bool "Enable HTTP GET for RGB controller"
+                    default n
+                    depends on RGB_CONTROLLER
+                    help
+                        Enable HTTP GET requests for more convinient control of 3 LED Channels    
+
+                config RGB_EFFECTS
+                    bool "Enable RGB Effects"
+                    default n
+                    depends on RGB_CONTROLLER
+                    help
+                        Enable HTTP GET requests for more convinient control of 3 LED Channels      
+                        
+                    config RGB_EFFECTS_HTTP
+                        bool "Enable HTTP GET and web select input for control RGB Effects"
+                        default n
+                        depends on RGB_EFFECTS
+                        help
+                            Enable HTTP GET and web select input for control RGB Effects                          
     endmenu
 
     menu "Sensors"
