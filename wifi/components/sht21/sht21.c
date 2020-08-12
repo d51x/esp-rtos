@@ -183,8 +183,6 @@ static void sht21_periodic_task(void *arg)
 {
     uint32_t delay = (uint32_t)arg;
 
-    sht21_mqtt_send();
-
     while (1) {
         //ESP_LOGI(TAG, "%s is_initialized %d", __func__, is_initialized);
         if ( !is_initialized ) 
@@ -209,9 +207,7 @@ static void sht21_periodic_task(void *arg)
 
 void sht21_start(uint32_t delay)
 {
-    
     xTaskCreate(sht21_periodic_task, "sht21_task", SHT21_PERIODIC_TASK_STACK_DEPTH, delay, SHT21_PERIODIC_TASK_PRIORITY, &xHandle);
-    
 }
 
 
@@ -223,20 +219,5 @@ void sht21_stop()
      }
 }
 
-static void sht21_mqtt_send_temp(char *payload)
-{
-    sprintf(payload, "%0.2f", sht21_get_temp());
-}
 
-static void sht21_mqtt_send_hum(char *payload)
-{
-    sprintf(payload, "%0.2f", sht21_get_hum());
-}
-
-// периодическая отправка по mqtt через callback
-void sht21_mqtt_send()
-{
-    mqtt_add_periodic_publish_callback( "sht21/temp", sht21_mqtt_send_temp );
-    mqtt_add_periodic_publish_callback( "sht21/hum", sht21_mqtt_send_hum );
-}
 #endif

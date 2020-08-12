@@ -35,6 +35,7 @@
 #ifdef CONFIG_SENSOR_SHT21
 #include "sht21.h"
 #include "sht21_http.h"
+#include "sht21_mqtt.h"
 #endif
 
 #ifdef CONFIG_COMPONENT_PCF8574

@@ -9,6 +9,7 @@ void test2(char *buf, void *args);
 void test_recv1(char *buf, void *args);
 void test_recv2(char *buf, void *args);
 
+#ifdef CONFIG_MCP23017_ISR
 void test_mcp23017_isr_cb1(char *buf);
 void test_mcp23017_isr_cb2(char *buf);
 void test_mcp23017_isr_cb3(char *buf);
@@ -17,7 +18,7 @@ void test_mcp23017_isr_cb5(char *buf);
 void test_mcp23017_isr_cb6(char *buf);
 void test_mcp23017_isr_cb7(char *buf);
 void test_mcp23017_isr_cb8(char *buf);
-
+#endif
 
 void app_main(void)
 {
@@ -96,6 +97,7 @@ void app_main(void)
 
 //mqtt_add_periodic_publish_callback( const char *topic, func_mqtt_send_cb fn_cb);
 // void mqtt_add_receive_callback( const char *topic, func_mqtt_recv_cb fn_cb); -
+/*
 void test1(char *buf, void *args) {
     static uint32_t cnt = 0;
     itoa(cnt++, buf, 10);
@@ -117,8 +119,9 @@ void test_recv2(char *buf, void *args)
 {
     ESP_LOGI(TAG, "received topic 'recv2' with data: %s", buf);
 }
+*/
 
-
+#ifdef CONFIG_MCP23017_ISR
 void test_mcp23017_isr_cb1(char *buf)
 {
     mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
@@ -186,7 +189,6 @@ void test_mcp23017_isr_cb6(char *buf)
     mcp23017_write_pin(mcp23017_h, 5, val);
 }
 
-
 void test_mcp23017_isr_cb7(char *buf)
 {
     mcp23017_handle_t mcp23017_h = (mcp23017_handle_t ) buf;
@@ -209,6 +211,8 @@ void test_mcp23017_isr_cb8(char *buf)
     ESP_LOGI(TAG, "executed callback %s %d", __func__, val);
     mcp23017_write_pin(mcp23017_h, 7, val);
 }
+
+#endif
 
 void initialize_modules()
 {
@@ -238,17 +242,28 @@ void initialize_modules()
         pcf8574_h = pcf8574_create(0x3F /*PCF8574_ADDR_DEFAULT*/ );
         pcf8574_test_task(pcf8574_h);
     #endif      
+
+    #ifdef CONFIG_SENSOR_SHT21
+        sht21_init();
+        sht21_start(5);
+    #endif
 }
 
 void initialize_modules_mqtt()
 {
-    mqtt_add_periodic_publish_callback( "test1", test1, NULL);
-    mqtt_add_periodic_publish_callback( "test2", test2, NULL);
+    //mqtt_add_periodic_publish_callback( "test1", test1, NULL);
+    //mqtt_add_periodic_publish_callback( "test2", test2, NULL);
 
-    mqtt_add_receive_callback("recv1", test_recv1, NULL);
-    mqtt_add_receive_callback("recv2", test_recv2, NULL);
+    //mqtt_add_receive_callback("recv1", test_recv1, NULL);
+    //mqtt_add_receive_callback("recv2", test_recv2, NULL);
 
+    #ifdef CONFIG_COMPONENT_MCP23017
     mcp23017_mqtt_init(mcp23017_h);
+    #endif
+
+    #ifdef CONFIG_SENSOR_SHT21
+    sht21_mqtt_init();
+    #endif     
 }
 
 void initialize_modules_http(httpd_handle_t _server)
