@@ -240,6 +240,7 @@ menu "Project config"
         config LED_CONTROL_HTTP
             bool "Channel sliders on page and HTTP GET control"
             default y
+            depends on LED_CONTROLLER
             help
                 Enable LED Control by HTTP GET and web page sliders of channels
     endmenu

@@ -1,5 +1,7 @@
 #include "ledcontrol.h"
 
+#ifdef CONFIG_LED_CONTROLLER
+
 static const char *TAG = "LEDCTRL";
 
 static ledcontrol_t *ledc = NULL;
@@ -405,3 +407,4 @@ void ledcontrol_all_fade_to_on(uint16_t duty_to, uint16_t duty_delay) {
     ledcontrol_all_fade(0, duty_to, duty_delay);
 }
 
+#endif

@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef __LEDCONTROL_H__
 #define __LEDCONTROL_H__
 
@@ -15,12 +17,12 @@
 #include "utils.h"
 #include "http_utils.h"
 
+#ifdef CONFIG_LED_CONTROLLER
+
 #define LEDCONTROL_CHANNEL_MAX 5
 #define LEDCONTROL_FREQ_MIN 100
 #define LEDCONTROL_FREQ_MAX 500
 #define MAX_DUTY 255
-
-#define MQTT_TOPIC_LEDC_CHANNEL "ledc"
 
 typedef enum {
 	TBL_NONE = 0,
@@ -166,5 +168,5 @@ to control via http get request you need add a get request handler
     ip/ledc?allon=1
     ip/ledc?alloff=1
 */
-
+#endif
 #endif
