@@ -23,7 +23,7 @@ pages:
       main - main page
       setup - auth, wifi type and auth for sta 
 */
-#define WEB_SERVER_MAX_URI_HANDLERS 40
+#define WEB_SERVER_MAX_URI_HANDLERS CONFIG_HTTP_HANDLERS_COUNT //40
 
 #define HTTP_STR_MAIN "Main"
 #define HTTP_STR_SETUP "Setup"

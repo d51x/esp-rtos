@@ -22,7 +22,7 @@
 
 
 
-#define WEB_SERVER_STACK_SIZE       1024*8*2
+#define WEB_SERVER_STACK_SIZE       CONFIG_HTTP_SERVER_STACK_SIZE //1024*8*2
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt);
 typedef esp_err_t (*httpd_uri_func)(httpd_req_t *req);
