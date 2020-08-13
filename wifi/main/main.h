@@ -32,6 +32,11 @@
 #include "i2c_http.h"
 #endif
 
+#ifdef CONFIG_COMPONENT_RELAY
+#include "relay.h"
+#include "relay_mqtt.h"
+#endif
+
 #ifdef CONFIG_SENSOR_SHT21
 #include "sht21.h"
 #include "sht21_http.h"
@@ -86,6 +91,11 @@
 httpd_handle_t http_server = NULL;
 
 extern void sntp_start();
+
+    #ifdef CONFIG_COMPONENT_RELAY
+    relay_handle_t relay_h;
+    #endif
+
     #ifdef CONFIG_COMPONENT_MCP23017
         mcp23017_handle_t mcp23017_h;
     #endif

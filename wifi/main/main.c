@@ -216,6 +216,11 @@ void test_mcp23017_isr_cb8(char *buf)
 
 void initialize_modules()
 {
+    #ifdef CONFIG_COMPONENT_RELAY
+    relay_h = relay_create( "Relay", 2, RELAY_LEVEL_LOW /* RELAY_LEVEL_HIGH*/ );
+    relay_write(relay_h,  RELAY_STATE_CLOSE);
+    #endif
+
     #ifdef CONFIG_COMPONENT_LCD2004
         lcd2004_init();
         lcd2004_test_task();
@@ -306,6 +311,10 @@ void initialize_modules_mqtt()
 
     //mqtt_add_receive_callback("recv1", test_recv1, NULL);
     //mqtt_add_receive_callback("recv2", test_recv2, NULL);
+
+    #ifdef CONFIG_COMPONENT_RELAY
+    relay_mqtt_init();
+    #endif
 
     #ifdef CONFIG_COMPONENT_MCP23017
     mcp23017_mqtt_init(mcp23017_h);

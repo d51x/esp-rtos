@@ -124,6 +124,15 @@ menu "Project config"
                 Webserver handlers count
     endmenu
         
+    menu "Relay component"
+        config COMPONENT_RELAY
+            bool "Enable Relay component"
+            default n
+            help
+                Enable Relay component
+                
+    endmenu
+
     menu "I2C Component"        
         config COMPONENT_I2C
             bool "Enable I2C driver"
