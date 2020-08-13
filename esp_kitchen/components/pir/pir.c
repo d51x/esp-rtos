@@ -213,7 +213,7 @@ static void pir_enable(pir_handle_t _pir) {
 
 	if ( pir->type == PIR_ISR  ) {
 		if ( !pir->task ) 
-			xTaskCreate( pir->task_cb, "pir_task", 1024, pir, 10, &pir->task);
+			xTaskCreate( pir->task_cb, "pir_task", 2048, pir, 10, &pir->task);
 
 		if ( !pir->taskq ) 
 			pir->taskq = xQueueCreate(1, sizeof(void *));
@@ -233,7 +233,7 @@ static void pir_enable(pir_handle_t _pir) {
 		// polling gpio task
 		// _pir->task_cb
 		if ( pir->type == PIR_POLL )
-			xTaskCreate( gpio_poll, "pir_task", 1024, pir, 10, &pir->task_poll);
+			xTaskCreate( gpio_poll, "pir_task", 2048, pir, 10, &pir->task_poll);
 	} 
 }
 

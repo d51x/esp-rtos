@@ -13,7 +13,7 @@
 #include "irrcv.h"
 #include "pir.h"
 
-#define FW_VER "1.14.38"
+#define FW_VER "1.14.39"
 #define CORE_FW_VER "1.14"
 
 ledcontrol_t *ledc;
