@@ -6,25 +6,23 @@ static const char* TAG = "RGBHTTP";
 
 extern const char *html_block_rgb_control_start ICACHE_RODATA_ATTR = 
     "<div class='group rnd'>"
-        "<h4 class='brd-btm'>Color Effects:</h4>";      
+        //"<h4 class='brd-btm'>Color Effects:</h4>";      
+        "<h4 >Color Effects:</h4>";      
 
 const char *html_block_rgb_control_end ICACHE_RODATA_ATTR = 
     "</div>";    
 
-const char *effects_data_start ICACHE_RODATA_ATTR = 
-    "<div class='ef'>"
-            "<p><span><b>HSV color:</b> %d %d %d</span></p>"
-            "<p><span><b>RGB color:</b> %d %d %d</span></p>"  
-        "<div style=\"height: 50pxfloat: right;width:  50%%;background: rgb(%d,%d,%d)\"></div>";
+const char *color_box_data_start ICACHE_RODATA_ATTR = 
+        "<div class='colors' style='background:rgb(%d,%d,%d)'></div>";
 
 const char *effects_data_select_item ICACHE_RODATA_ATTR = "</div>";
 
  #ifdef CONFIG_RGB_EFFECTS
-const char *effects_select_start ICACHE_RODATA_ATTR =         
-            "<p><span><b>Color effect:</b></span>"
-                "<select id=\"effects\" onchange=\"effects()\">";
+const char *effects_select_start ICACHE_RODATA_ATTR =  "<div class='ef'>"
+                                                            "<select id=\"effects\" onchange=\"effects()\">";
 
-const char *effects_select_end ICACHE_RODATA_ATTR = "</select></p>";
+    
+const char *effects_select_end ICACHE_RODATA_ATTR = "</select></div>";
 
 const char *effects_item ICACHE_RODATA_ATTR = "<option value=\"%d\" %s>%s</option>";
 #endif
@@ -33,6 +31,67 @@ const char *effects_item ICACHE_RODATA_ATTR = "<option value=\"%d\" %s>%s</optio
 
 const char *effects_data_end ICACHE_RODATA_ATTR = "</div>";
 
+
+static void rgbcontrol_print_color_sliders(char *data, void *args)
+{
+    rgbcontrol_t *rgb_ctrl = (rgbcontrol_t *)args;
+    
+    sprintf(data+strlen(data), html_block_led_control_start, "RGB Controller");
+
+    // print color box
+    color_rgb_t rgb;
+
+    rgb.r = rgb_ctrl->ledc->get_duty( rgb_ctrl->ledc->channels + rgb_ctrl->red.channel);
+    rgb.g = rgb_ctrl->ledc->get_duty( rgb_ctrl->ledc->channels + rgb_ctrl->green.channel);
+    rgb.b = rgb_ctrl->ledc->get_duty( rgb_ctrl->ledc->channels + rgb_ctrl->blue.channel);
+
+    sprintf(data+strlen(data), color_box_data_start
+                                , rgb.r
+                                , rgb.g
+                                , rgb.b
+                                ); 
+
+    // print sliders
+    strcpy(data+strlen(data), html_block_led_control_data_start);
+
+    rgb_to_hsv(&rgb, &rgb_ctrl->hsv);
+    ledcontrol_channel_t *ch1, *ch2, *ch3;
+    // print red channel  ( +100, чтобы не пересекатьс с уже существующими слайдерами, меняем name=ledc1 на ledc101 и т.д., и id=ledc1 на ledc=101)
+    ch1 = rgb_ctrl->ledc->channels + rgb_ctrl->red.channel;
+    sprintf( data+strlen(data), html_block_led_control_item
+                                , ch1->name  // Красный
+                                , ch1->channel + 100                                   // channel num
+                                , ch1->duty              // channel duty    
+                                , ch1->channel     // for data-uri                                  
+                                , ch1->channel  + 100                                 // channel num
+                                , ch1->duty              // channel duty
+                                );    
+    // print gree channel
+    ch2 = rgb_ctrl->ledc->channels + rgb_ctrl->green.channel;
+    sprintf( data+strlen(data), html_block_led_control_item
+                                , ch2->name  // Красный
+                                , ch2->channel + 100                                   // channel num
+                                , ch2->duty              // channel duty    
+                                , ch2->channel     // for data-uri                                  
+                                , ch2->channel + 100                                  // channel num
+                                , ch2->duty              // channel duty
+                                );   
+    // print blue channel
+    ch3 = rgb_ctrl->ledc->channels + rgb_ctrl->blue.channel;
+    sprintf( data+strlen(data), html_block_led_control_item
+                                , ch3->name  // Красный
+                                , ch3->channel  + 100                                 // channel num
+                                , ch3->duty              // channel duty    
+                                , ch3->channel     // for data-uri                                  
+                                , ch3->channel  + 100                                 // channel num
+                                , ch3->duty              // channel duty
+                                );   
+    
+
+
+    strcpy(data+strlen(data), html_block_led_control_end);
+    strcpy(data+strlen(data), html_block_led_control_end);
+}
 
 
 static void rgbcontrol_print_data(char *data, void *args)
@@ -45,28 +104,15 @@ static void rgbcontrol_print_data(char *data, void *args)
     if ( ee == NULL ) return;    
     #endif
 
-    color_rgb_t rgb;
 
-    rgb.r = rgb_ctrl->ledc->get_duty( rgb_ctrl->ledc->channels + rgb_ctrl->red.channel);
-    rgb.g = rgb_ctrl->ledc->get_duty( rgb_ctrl->ledc->channels + rgb_ctrl->green.channel);
-    rgb.b = rgb_ctrl->ledc->get_duty( rgb_ctrl->ledc->channels + rgb_ctrl->blue.channel);
 
-    color_hsv_t **hsv;
-    rgb_to_hsv(&rgb, &rgb_ctrl->hsv);
+    // print RGB sliders block with color box
+    rgbcontrol_print_color_sliders(data, args);
+    
+    // print Color effect block with select
 
 
     strcat(data, html_block_rgb_control_start);
-    sprintf(data+strlen(data), effects_data_start
-                                , rgb_ctrl->hsv.h
-                                , rgb_ctrl->hsv.s
-                                , rgb_ctrl->hsv.v
-                                , rgb.r
-                                , rgb.g
-                                , rgb.b
-                                , rgb.r
-                                , rgb.g
-                                , rgb.b
-                                ); 
 
     #ifdef CONFIG_RGB_EFFECTS
     strcat(data, effects_select_start);
@@ -82,7 +128,6 @@ static void rgbcontrol_print_data(char *data, void *args)
     effect_t *e = ee->effect + ee->effect_id;
     #endif
 
-    strcat(data, effects_data_end);
     strcat(data, html_block_rgb_control_end);
 
 }

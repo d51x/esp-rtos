@@ -21,7 +21,11 @@ typedef struct ledcontrol_group {
     uint8_t priority;
 } ledcontrol_group_t;
 
-extern const char *html_block_led_control;    
+extern const char *html_block_led_control_start;
+extern const char *html_block_led_control_end;
+extern const char *html_block_led_control_data_start;
+extern const char *html_block_led_control_item;
+
 void ledcontrol_register_http_print_data(ledcontrol_handle_t dev_h);
 void ledcontrol_register_http_handler(httpd_handle_t _server, ledcontrol_handle_t dev_h);
 void ledcontrol_http_init(httpd_handle_t _server, ledcontrol_handle_t dev_h);

@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "rgbcontrol.h"
+#include "ledcontrol_http.h"
 #include "http_handlers.h"
 #include "httpd.h"
 

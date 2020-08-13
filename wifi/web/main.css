@@ -309,3 +309,17 @@ float: right;
 .ef {
 	display: flow-root;
 }
+
+.colors{
+	height: 50px;
+    float: right;
+    width: 20%;
+    margin-top: 14px;
+    margin-right: 10px;	
+}
+
+#effects{
+	margin-top: -40px;
+    float: right;
+    margin-right: 170px;
+}

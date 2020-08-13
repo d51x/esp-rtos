@@ -291,7 +291,8 @@ void initialize_modules()
         #ifdef CONFIG_RGB_EFFECTS
         // ==== create and init rgb effects =======================
         // === setup effects to RGB controller  
-        rgbcontrol_effects_init(rgb_ledc, effects);  
+        effects = effects_init(rgb_ledc, rgb_ledc->set_color_hsv);
+        rgb_ledc->set_effects( effects );  
         #endif
     #endif
 
@@ -348,8 +349,12 @@ void initialize_modules_http(httpd_handle_t _server)
     #endif
 
     #ifdef CONFIG_LED_CONTROL_HTTP
-    ledcontrol_http_add_group(ledc_h, "RGB Controller", 1, 5);
+    //ledcontrol_http_add_group(ledc_h, "RGB Controller", 1, 5);
     //ledcontrol_http_add_group(ledc_h, "Сине-зеленая подсветка", 2, 6);
     ledcontrol_http_init(http_server, ledc_h);
+
+        #ifdef CONFIG_RGB_CONTROLLER_HTTP
+            rgbcontrol_http_init(_server, rgb_ledc );
+        #endif
     #endif        
 }
