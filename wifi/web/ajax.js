@@ -1,3 +1,5 @@
+// https://javascript-minifier.com/
+
 function ajax_request(url, callback) {
     var xhr;
     if (typeof XMLHttpRequest !== "undefined") xhr = new XMLHttpRequest();
@@ -47,9 +49,7 @@ for (var i = 0; i < inputs.length; i++) {
         ["change", "input"].forEach(function(ev) {
             on(inputs[i], ev, function(obj, ev) {
                 if (ev == "change") {
-                    ajax_request("/ledc?ch=" + obj.name.substr(4) + "&duty=" + obj.value, function() {
-                        document.getElementById(obj.name).innerHTML = obj.value;
-                    });
+
                 }
                 if (ev == "input") {
                     document.getElementById(obj.name).innerHTML = obj.value;
@@ -156,10 +156,25 @@ function btnclick(id, id2, v, st) {
 	});
 }
 
+function change_color(val, name)
+{
+	if ( name.indexOf('ledc10') >= 0) {
+		var st = document.getElementById( 'colors' ).getAttribute('style' );
+        st = st.substr(15, st.length);
+        st = st.substr(0, st.length-1);
+        var rgb = st.split(',');
+        if ( name == "ledc100") rgb[0] = val;
+        else if ( name == "ledc101") rgb[1] = val;
+        else if ( name == "ledc102") rgb[2] = val;
+        st = rgb.join();
+        st = 'background:rgb(' + st + ')';
+        document.getElementById( 'colors' ).setAttribute('style', st );
+	}
+}
+
 function slider(val, name, uri) 
 {
-	console.log('params: val = %d, name = %s, uri = %s', val, name, uri);
-	
+    change_color(val, name);
 	ajax_request(uri + val, function(res) {
 		var resp = res.responseText;	
 		var duty = document.getElementById( name );

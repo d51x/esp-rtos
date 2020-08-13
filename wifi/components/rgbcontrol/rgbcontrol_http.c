@@ -13,7 +13,7 @@ const char *html_block_rgb_control_end ICACHE_RODATA_ATTR =
     "</div>";    
 
 const char *color_box_data_start ICACHE_RODATA_ATTR = 
-        "<div class='colors' style='background:rgb(%d,%d,%d)'></div>";
+        "<div id='colors' style='background:rgb(%d,%d,%d)'></div>";
 
 const char *effects_data_select_item ICACHE_RODATA_ATTR = "</div>";
 
@@ -100,7 +100,6 @@ static void rgbcontrol_print_data(char *data, void *args)
 
     #ifdef CONFIG_RGB_EFFECTS
     effects_t *ee = rgb_ctrl->effects;
-    ESP_LOGW(TAG, "rgb_ctrl->effects %p", rgb_ctrl->effects);
     if ( ee == NULL ) return;    
     #endif
 
