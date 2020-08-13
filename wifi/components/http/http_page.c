@@ -51,7 +51,6 @@ void page_initialize_menu()
 
 void page_generate_html_start(httpd_req_t *req, const char *title)
 {
-    ESP_LOGW(TAG, __func__ );
     httpd_resp_sendstr_chunk(req, html_page_start1);
     httpd_resp_sendstr_chunk(req, title);
     httpd_resp_sendstr_chunk(req, html_page_start2);
@@ -59,7 +58,6 @@ void page_generate_html_start(httpd_req_t *req, const char *title)
 
 void page_generate_html_end(httpd_req_t *req)
 {
-    ESP_LOGW(TAG, __func__ );
     httpd_resp_sendstr_chunk(req, html_page_end1);
 
     char * buf = malloc(25);
@@ -74,8 +72,6 @@ void page_generate_html_end(httpd_req_t *req)
 
 void page_generate_top_header(httpd_req_t *req)
 {
-    ESP_LOGW(TAG, __func__ );
-
     httpd_resp_sendstr_chunk(req, html_page_top_header1);
     httpd_resp_sendstr_chunk(req, wifi_cfg->hostname);
     httpd_resp_sendstr_chunk(req, html_page_top_header2);
@@ -91,10 +87,12 @@ void page_generate_top_header(httpd_req_t *req)
     
     httpd_resp_sendstr_chunk(req, html_page_top_header4);
     httpd_resp_sendstr_chunk(req, html_page_devinfo1);
+
     char *buf_mem = malloc(8);
     itoa(esp_get_free_heap_size(), buf_mem, 10);
     httpd_resp_sendstr_chunk(req, buf_mem);
     free(buf_mem);
+
     httpd_resp_sendstr_chunk(req, html_page_devinfo2);
     char * uptime = malloc(20);
     get_uptime(uptime);
@@ -105,18 +103,14 @@ void page_generate_top_header(httpd_req_t *req)
 
 void page_generate_data(httpd_req_t *req, const char *uri)
 {
-    ESP_LOGW(TAG, __func__ );
     httpd_resp_sendstr_chunk(req, html_page_content_start);
-
     print_page_block( req, uri);
-
     httpd_resp_sendstr_chunk(req, html_page_content_end);
 }
 
 void page_show_menu(httpd_req_t *req)
 {
     for ( uint8_t i = 0; i < menu_items_count; i++) {
-        //sprintf(buf+strlen(buf), html_page_menu_item, menu_uri[i], menu_names[i]);
          httpd_resp_sendstr_chunk(req, html_page_menu_item1);
          httpd_resp_sendstr_chunk(req, http_menu[i].uri);
          httpd_resp_sendstr_chunk(req, html_page_menu_item2);
@@ -128,15 +122,9 @@ void page_show_menu(httpd_req_t *req)
 
 void generate_page(httpd_req_t *req, const char *uri, const char *title) 
 {   
-    ESP_LOGW(TAG, __func__ );
-
     page_generate_html_start(req, title);  // data with html_start
     page_generate_top_header(req);  // data with html_start + top_header
-
     page_generate_data(req, uri); 
-
-
-
     page_generate_html_end(req);  
 
     #ifdef CONFIG_CONPONENT_DEBUG
@@ -146,7 +134,6 @@ void generate_page(httpd_req_t *req, const char *uri, const char *title)
 
 void show_http_page(httpd_req_t *req)
 {
-   ESP_LOGW(TAG, __func__ );
    user_ctx_t *usr_ctx = (user_ctx_t *) req->user_ctx;
 
     if ( usr_ctx != NULL ) 
@@ -181,7 +168,6 @@ void show_http_page(httpd_req_t *req)
 
 void print_page_block(httpd_req_t *req, const char *uri)
 {
-    ESP_LOGW(TAG, __func__ );
     uint8_t (*indexes)[2] = NULL;
     uint8_t found_cnt = 0;
     uint8_t i = 0;
@@ -220,23 +206,14 @@ void print_page_block(httpd_req_t *req, const char *uri)
         uint8_t idx = indexes[i][0];
         if (strcmp(http_print_page_block[idx].uri, uri) == 0 && http_print_page_block[idx].fn_print_block != NULL) 
         {
-            ESP_LOGW(TAG, "http_print_page_block[ idx ].name = %s", http_print_page_block[ idx ].name );
-
             http_args_t *arg = http_print_page_block[ idx ].args1;
-            ESP_LOGW(TAG, "1. dev %p", arg->dev);
-            ESP_LOGW(TAG, "1. req %p", req);
-
-            
             arg->req = req;
-            ESP_LOGW(TAG, "2 dev %p", arg->dev);
-            ESP_LOGW(TAG, "2 req %p", arg->req);
             http_print_page_block[ idx ].fn_print_block(arg);       
         }
 
     }
 
     if ( strcmp(uri, PAGES_URI[ PAGE_URI_TOOLS ]) == 0 ) {
-        //sprintf( data + strlen(data), html_page_reboot_button_block);    // TODO сделать через блок и зарегистрировать
         httpd_resp_sendstr_chunk(req, html_page_reboot_button_block);
     }
 
@@ -287,13 +264,8 @@ void show_restarting_page_data(httpd_req_t *req)
 
 esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t index, func_http_print_page_block fn_print_block, http_args_t *args1, httpd_uri_func fn_cb, void *args2)
 {
-    //ESP_LOGI(TAG, "function %s started", __func__);
-
-    //ESP_LOGI(TAG, "printpage block count %d", http_print_page_block_count);
-
     for ( uint8_t i = 0; i < http_print_page_block_count; i++) 
     {
-        //ESP_LOGI(TAG, "[%d] compare registered uri %s with page uri %s", i, http_print_page_block[i].uri, uri);
         if (strcmp(http_print_page_block[i].name, name) == 0 && 
             strcmp(http_print_page_block[i].uri, uri) == 0 && 
             http_print_page_block[i].fn_print_block == fn_print_block) 

@@ -109,8 +109,6 @@ static void rgbcontrol_print_data(http_args_t *args)
     rgbcontrol_t *rgb_ctrl = (rgbcontrol_t *)arg->dev;
     httpd_req_t *req = (httpd_req_t *)arg->req;
 
-    ESP_LOGW(TAG, "3. dev %p", rgb_ctrl);
-    ESP_LOGW(TAG, "3. req %p", req);
     #ifdef CONFIG_RGB_EFFECTS
     effects_t *ee = rgb_ctrl->effects;
     if ( ee == NULL ) return;    
@@ -156,11 +154,6 @@ void rgbcontrol_register_http_print_data(rgbcontrol_handle_t dev_h)
 {
     http_args_t *p = calloc(1,sizeof(http_args_t));
     p->dev = dev_h;
-
-
-            ESP_LOGW(TAG, "0. args %p", p);
-
-
     register_print_page_block( "rgb", PAGES_URI[ PAGE_URI_ROOT], 7, rgbcontrol_print_data, p, NULL, NULL );
 }
 

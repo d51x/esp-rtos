@@ -66,11 +66,7 @@ void process_params(httpd_req_t *req)
 esp_err_t main_get_handler(httpd_req_t *req) 
 {
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
-    ESP_LOGW(TAG, __func__ );
-
     show_http_page( req );
-    
-    //httpd_resp_send(req, page, strlen(page));
     httpd_resp_send_chunk(req, NULL, 0);
 
     #ifdef CONFIG_COMPONENT_DEBUG
@@ -142,28 +138,21 @@ esp_err_t reboot_get_handler(httpd_req_t *req)
 {
 	uint8_t found = 0;
 	
-
 	if ( http_get_has_params(req) == ESP_OK) {
         uint8_t st;
         if ( http_get_key_uint8(req, "st", &st) == ESP_OK ) {
-            ESP_LOGV(TAG, "st found %d", st);
             found = (st == 1);        
         }
     } 
 
-
-    
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
 
-             
-    
     if ( found ) {  
         xTaskCreate(&systemRebootTask, "systemRebootTask", 1024, 2000, 5, NULL);
         httpd_resp_set_hdr(req, "Refresh", "5; /");
         httpd_resp_send(req, NULL, 0);
     
     } else {
-        //restart_page_data(page);  
 		httpd_resp_sendstr_chunk (req, "Please restart ESP"); 
     }
     httpd_resp_send_chunk(req, NULL, 0); 
