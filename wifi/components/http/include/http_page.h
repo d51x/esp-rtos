@@ -30,10 +30,17 @@
 #define PAGE_MAIN_BUFFER_SIZE       CONFIG_HTTP_PAGE_SIZE //1024*6
 #define PAGE_DEFAULT_BUFFER_SIZE    CONFIG_HTTP_PAGE_SIZE //1024*6
 
-typedef void (* func_http_print_page_block)(const char *data, void *args);  
+typedef struct http_args{
+    void *dev;
+    httpd_req_t *req;
+} http_args_t;
+
+typedef void (* func_http_print_page_block)(http_args_t *args);  
 typedef esp_err_t (*httpd_uri_process_fn)(httpd_req_t *req, void *args);
 
 extern uint8_t http_print_page_block_count;
+
+
 
 typedef struct {
     const char uri[HTTPD_MAX_URI_LEN + 1];
@@ -48,34 +55,35 @@ typedef struct {
 extern http_print_page_block_t *http_print_page_block;
 
 
-void show_custom_page(httpd_req_t *req, const char *uri, const char *title, char *data);
+void show_custom_page(httpd_req_t *req, const char *uri, const char *title);
 
-void show_page_main(httpd_req_t *req, const char *title, char *data);
-void show_page_setup(httpd_req_t *req,  const char *title, char *data);
-void show_page_config(httpd_req_t *req, const char *title, char *data);
-void show_page_tools(httpd_req_t *req, const char *title, char *data);
-void show_page_ota(httpd_req_t *req, const char *title, char *data);
-void show_page_debug(httpd_req_t *req, const char *title, char *data);
+void show_page_main(httpd_req_t *req, const char *title);
+void show_page_setup(httpd_req_t *req,  const char *title);
+void show_page_config(httpd_req_t *req, const char *title);
+void show_page_tools(httpd_req_t *req, const char *title);
+void show_page_ota(httpd_req_t *req, const char *title);
+void show_page_debug(httpd_req_t *req, const char *title);
 
 
-void page_generate_html_start(char *buf, const char *title);
-void page_generate_html_end(char *buf);
-void page_generate_top_header(char *buf);
-void page_show_menu(char *buf);
+void page_generate_html_start(httpd_req_t *req, const char *title);
+void page_generate_html_end(httpd_req_t *req);
+void page_generate_top_header(httpd_req_t *req);
+void page_show_menu(httpd_req_t *req);
 void page_initialize_menu();
 
-void page_generate_data(const char *uri, char *data);
+//void page_generate_data(const char *uri, char *data);
+void page_generate_data(httpd_req_t *req, const char *uri);
 
 
 
 
 
-void show_http_page(httpd_req_t *req, char *data);
+void show_http_page(httpd_req_t *req);
 
 
 
-void show_restart_page_data(httpd_req_t *req, char *data);
-void show_restarting_page_data(httpd_req_t *req, char *data);
+void show_restart_page_data(httpd_req_t *req);
+void show_restarting_page_data(httpd_req_t *req);
 
 
 
@@ -90,7 +98,7 @@ void set_redirect_header(uint8_t time, const char *uri, char *data);
 // uri - на какой странице выводить
 // index - очередность вывода
 // fn_cb - функция коллбека для формирования буфера
-esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t index, func_http_print_page_block fn_cb, void *args1, httpd_uri_func fn_cb2, void *args2);
+esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t index, func_http_print_page_block fn_cb, http_args_t *args1, httpd_uri_func fn_cb2, void *args2);
 
 
 esp_err_t register_http_page_menu(const char *uri, const char *name);

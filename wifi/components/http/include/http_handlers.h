@@ -52,7 +52,7 @@ typedef enum {
     
 } html_page_cfg_num_t;
 
-typedef void (* func_http_show_page)(httpd_req_t *req, const char *t, char *d); 
+typedef void (* func_http_show_page)(char *t, void *d); 
 
 typedef struct user_ctx {
     char title[20];

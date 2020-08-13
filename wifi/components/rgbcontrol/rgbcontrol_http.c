@@ -32,11 +32,14 @@ const char *effects_item ICACHE_RODATA_ATTR = "<option value=\"%d\" %s>%s</optio
 const char *effects_data_end ICACHE_RODATA_ATTR = "</div>";
 
 
-static void rgbcontrol_print_color_sliders(char *data, void *args)
+static void rgbcontrol_print_color_sliders(httpd_req_t *req, char *data, rgbcontrol_t *rgb_ctrl)
 {
-    rgbcontrol_t *rgb_ctrl = (rgbcontrol_t *)args;
+
     
-    sprintf(data+strlen(data), html_block_led_control_start, "RGB Controller");
+    //sprintf(data+strlen(data), html_block_led_control_start, "RGB Controller");
+    
+    sprintf(data, html_block_led_control_start, "RGB Controller");
+    httpd_resp_sendstr_chunk(req, data);
 
     // print color box
     color_rgb_t rgb;
@@ -45,20 +48,21 @@ static void rgbcontrol_print_color_sliders(char *data, void *args)
     rgb.g = rgb_ctrl->ledc->get_duty( rgb_ctrl->ledc->channels + rgb_ctrl->green.channel);
     rgb.b = rgb_ctrl->ledc->get_duty( rgb_ctrl->ledc->channels + rgb_ctrl->blue.channel);
 
-    sprintf(data+strlen(data), color_box_data_start
+    sprintf(data, color_box_data_start
                                 , rgb.r
                                 , rgb.g
                                 , rgb.b
                                 ); 
-
+httpd_resp_sendstr_chunk(req, data);
     // print sliders
-    strcpy(data+strlen(data), html_block_led_control_data_start);
+    //strcpy(data+strlen(data), html_block_led_control_data_start);
+httpd_resp_sendstr_chunk(req, html_block_led_control_data_start);
 
     rgb_to_hsv(&rgb, &rgb_ctrl->hsv);
     ledcontrol_channel_t *ch1, *ch2, *ch3;
     // print red channel  ( +100, чтобы не пересекатьс с уже существующими слайдерами, меняем name=ledc1 на ledc101 и т.д., и id=ledc1 на ledc=101)
     ch1 = rgb_ctrl->ledc->channels + rgb_ctrl->red.channel;
-    sprintf( data+strlen(data), html_block_led_control_item
+    sprintf( data, html_block_led_control_item
                                 , ch1->name  // Красный
                                 , ch1->channel + 100                                   // channel num
                                 , ch1->duty              // channel duty    
@@ -66,9 +70,10 @@ static void rgbcontrol_print_color_sliders(char *data, void *args)
                                 , ch1->channel  + 100                                 // channel num
                                 , ch1->duty              // channel duty
                                 );    
+    httpd_resp_sendstr_chunk(req, data);
     // print gree channel
     ch2 = rgb_ctrl->ledc->channels + rgb_ctrl->green.channel;
-    sprintf( data+strlen(data), html_block_led_control_item
+    sprintf( data, html_block_led_control_item
                                 , ch2->name  // Красный
                                 , ch2->channel + 100                                   // channel num
                                 , ch2->duty              // channel duty    
@@ -76,9 +81,10 @@ static void rgbcontrol_print_color_sliders(char *data, void *args)
                                 , ch2->channel + 100                                  // channel num
                                 , ch2->duty              // channel duty
                                 );   
+httpd_resp_sendstr_chunk(req, data);                                
     // print blue channel
     ch3 = rgb_ctrl->ledc->channels + rgb_ctrl->blue.channel;
-    sprintf( data+strlen(data), html_block_led_control_item
+    sprintf( data, html_block_led_control_item
                                 , ch3->name  // Красный
                                 , ch3->channel  + 100                                 // channel num
                                 , ch3->duty              // channel duty    
@@ -87,17 +93,24 @@ static void rgbcontrol_print_color_sliders(char *data, void *args)
                                 , ch3->duty              // channel duty
                                 );   
     
+httpd_resp_sendstr_chunk(req, data);
 
-
-    strcpy(data+strlen(data), html_block_led_control_end);
-    strcpy(data+strlen(data), html_block_led_control_end);
+    //strcpy(data+strlen(data), html_block_led_control_end);
+    httpd_resp_sendstr_chunk(req, html_block_led_control_end);
+    //strcpy(data+strlen(data), html_block_led_control_end);
+    httpd_resp_sendstr_chunk(req, html_block_led_control_end);
 }
 
 
-static void rgbcontrol_print_data(char *data, void *args)
+static void rgbcontrol_print_data(http_args_t *args)
 {
-    rgbcontrol_t *rgb_ctrl = (rgbcontrol_t *)args;
+    
+    http_args_t *arg = (http_args_t *)args;
+    rgbcontrol_t *rgb_ctrl = (rgbcontrol_t *)arg->dev;
+    httpd_req_t *req = (httpd_req_t *)arg->req;
 
+    ESP_LOGW(TAG, "3. dev %p", rgb_ctrl);
+    ESP_LOGW(TAG, "3. req %p", req);
     #ifdef CONFIG_RGB_EFFECTS
     effects_t *ee = rgb_ctrl->effects;
     if ( ee == NULL ) return;    
@@ -106,34 +119,49 @@ static void rgbcontrol_print_data(char *data, void *args)
 
 
     // print RGB sliders block with color box
-    rgbcontrol_print_color_sliders(data, args);
+    char *buf = calloc(1024, sizeof(char));
+    rgbcontrol_print_color_sliders(req, buf, rgb_ctrl);
+
     
     // print Color effect block with select
 
-
-    strcat(data, html_block_rgb_control_start);
+    //memset(buf, 1024, 0);
+    //strcat(data, html_block_rgb_control_start);
+    httpd_resp_sendstr_chunk(req, html_block_rgb_control_start);
 
     #ifdef CONFIG_RGB_EFFECTS
-    strcat(data, effects_select_start);
+    //strcat(data, effects_select_start);
+    httpd_resp_sendstr_chunk(req, effects_select_start);
     for (int i=0; i < COLOR_EFFECTS_MAX; i++ ) 
     {
         effect_t *e = ee->effect + i;
-        sprintf(data+strlen(data), effects_item
+        memset(buf, 0, 1024);
+        sprintf(buf, effects_item
                                         , i
                                         , (ee->effect_id == i || ( i == COLOR_EFFECTS_MAX-1 && ee->effect_id == -1) ) ? "selected=\"selected\" " : ""
                                         , e->name);
+        httpd_resp_sendstr_chunk(req, buf);
     }
-    strcat(data, effects_select_end);
+    //strcat(data, effects_select_end);
+    httpd_resp_sendstr_chunk(req, effects_select_end);
     effect_t *e = ee->effect + ee->effect_id;
     #endif
 
-    strcat(data, html_block_rgb_control_end);
-
+    //strcat(data, html_block_rgb_control_end);
+    httpd_resp_sendstr_chunk(req, html_block_rgb_control_end);
+free(buf);
 }
 
 void rgbcontrol_register_http_print_data(rgbcontrol_handle_t dev_h)
 {
-    register_print_page_block( "rgb", PAGES_URI[ PAGE_URI_ROOT], 7, rgbcontrol_print_data, dev_h, NULL, NULL );
+    http_args_t *p = calloc(1,sizeof(http_args_t));
+    p->dev = dev_h;
+
+
+            ESP_LOGW(TAG, "0. args %p", p);
+
+
+    register_print_page_block( "rgb", PAGES_URI[ PAGE_URI_ROOT], 7, rgbcontrol_print_data, p, NULL, NULL );
 }
 
 static esp_err_t http_process_rgb(httpd_req_t *req, char *param, size_t size)

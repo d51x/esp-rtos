@@ -23,7 +23,7 @@ const char *html_page_config_wifi ICACHE_RODATA_ATTR =
     "</form>"
   "</div>";
 
-static void wifi_print_options(char *data, void *args)
+static void wifi_print_options(char *data, http_args_t *args)
 {
     sprintf(data + strlen(data), html_page_config_wifi 
                     , wifi_cfg->hostname         // hostname
@@ -36,7 +36,7 @@ static void wifi_print_options(char *data, void *args)
 
 void wifi_register_http_print_data() 
 {
-    register_print_page_block( "wifi_options", PAGES_URI[ PAGE_URI_SETUP ], 1, (func_http_print_page_block) wifi_print_options, NULL, (httpd_uri_func) wifi_http_process_params, NULL );
+    register_print_page_block( "wifi_options", PAGES_URI[ PAGE_URI_SETUP ], 1, wifi_print_options, NULL, (httpd_uri_func) wifi_http_process_params, NULL );
 }
 
 void wifi_http_process_params(httpd_req_t *req, void *args)
