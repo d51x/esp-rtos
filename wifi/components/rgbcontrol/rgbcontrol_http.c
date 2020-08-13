@@ -4,30 +4,36 @@
 
 static const char* TAG = "RGBHTTP";
 
-extern const char *html_block_rgb_control ICACHE_RODATA_ATTR = "";
+extern const char *html_block_rgb_control_start ICACHE_RODATA_ATTR = 
+    "<div class='group rnd'>"
+        "<h4 class='brd-btm'>Color Effects:</h4>";      
 
-const char *effects_data ICACHE_RODATA_ATTR = 
-    "<div class=\"effect\" style=\"display: flow-root;\">"
-        "<div style=\"display: inline-block; width: 50%%;\">"
+const char *html_block_rgb_control_end ICACHE_RODATA_ATTR = 
+    "</div>";    
+
+const char *effects_data_start ICACHE_RODATA_ATTR = 
+    "<div class='ef'>"
             "<p><span><b>HSV color:</b> %d %d %d</span></p>"
             "<p><span><b>RGB color:</b> %d %d %d</span></p>"  
-        "</div>"            
-        "<div style=\"height: 50px;border: 1px solid grey;float: right;display: inline-block;width:  50%%;background: rgb(%d,%d,%d)\"></div>"
+        "<div style=\"height: 50pxfloat: right;width:  50%%;background: rgb(%d,%d,%d)\"></div>";
 
-         #ifdef CONFIG_RGB_EFFECTS
-        "<div>"
+const char *effects_data_select_item ICACHE_RODATA_ATTR = "</div>";
+
+ #ifdef CONFIG_RGB_EFFECTS
+const char *effects_select_start ICACHE_RODATA_ATTR =         
             "<p><span><b>Color effect:</b></span>"
-                "<select id=\"effects\" onchange=\"effects()\">"
-                "%s"
-                "</select>"
-            "</p>"
-        "</div>"
-        #endif
-    "</div>";
+                "<select id=\"effects\" onchange=\"effects()\">";
 
-#ifdef CONFIG_RGB_EFFECTS
+const char *effects_select_end ICACHE_RODATA_ATTR = "</select></p>";
+
 const char *effects_item ICACHE_RODATA_ATTR = "<option value=\"%d\" %s>%s</option>";
 #endif
+
+
+
+const char *effects_data_end ICACHE_RODATA_ATTR = "</div>";
+
+
 
 static void rgbcontrol_print_data(char *data, void *args)
 {
@@ -39,21 +45,6 @@ static void rgbcontrol_print_data(char *data, void *args)
     if ( ee == NULL ) return;    
     #endif
 
-    char select[600] = "";
-    
-    #ifdef CONFIG_RGB_EFFECTS
-    for (int i=0; i < COLOR_EFFECTS_MAX; i++ ) 
-    {
-        effect_t *e = ee->effect + i;
-        sprintf(select+strlen(select), effects_item
-                                        , i
-                                        , (ee->effect_id == i || ( i == COLOR_EFFECTS_MAX-1 && ee->effect_id == -1) ) ? "selected=\"selected\" " : ""
-                                        , e->name);
-    }
-
-    effect_t *e = ee->effect + ee->effect_id;
-    #endif
-
     color_rgb_t rgb;
 
     rgb.r = rgb_ctrl->ledc->get_duty( rgb_ctrl->ledc->channels + rgb_ctrl->red.channel);
@@ -63,18 +54,37 @@ static void rgbcontrol_print_data(char *data, void *args)
     color_hsv_t **hsv;
     rgb_to_hsv(&rgb, &rgb_ctrl->hsv);
 
-    sprintf(data+strlen(data), effects_data, rgb_ctrl->hsv.h
-                                           , rgb_ctrl->hsv.s
-                                           , rgb_ctrl->hsv.v
-                                           , rgb.r
-                                           , rgb.g
-                                           , rgb.b
-                                           , rgb.r, rgb.g, rgb.b  // rgb()
-                                             //(ee->effect_id == -1) ? "color" : e->name, ee->effect_id
-                                            #ifdef CONFIG_RGB_EFFECTS
-                                           , select
-                                           #endif
-    );    
+
+    strcat(data, html_block_rgb_control_start);
+    sprintf(data+strlen(data), effects_data_start
+                                , rgb_ctrl->hsv.h
+                                , rgb_ctrl->hsv.s
+                                , rgb_ctrl->hsv.v
+                                , rgb.r
+                                , rgb.g
+                                , rgb.b
+                                , rgb.r
+                                , rgb.g
+                                , rgb.b
+                                ); 
+
+    #ifdef CONFIG_RGB_EFFECTS
+    strcat(data, effects_select_start);
+    for (int i=0; i < COLOR_EFFECTS_MAX; i++ ) 
+    {
+        effect_t *e = ee->effect + i;
+        sprintf(data+strlen(data), effects_item
+                                        , i
+                                        , (ee->effect_id == i || ( i == COLOR_EFFECTS_MAX-1 && ee->effect_id == -1) ) ? "selected=\"selected\" " : ""
+                                        , e->name);
+    }
+    strcat(data, effects_select_end);
+    effect_t *e = ee->effect + ee->effect_id;
+    #endif
+
+    strcat(data, effects_data_end);
+    strcat(data, html_block_rgb_control_end);
+
 }
 
 void rgbcontrol_register_http_print_data(rgbcontrol_handle_t dev_h)

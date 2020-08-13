@@ -305,3 +305,7 @@ float: right;
     text-align: center;
     padding: 0 4px 16px 4px;
 }
+
+.ef {
+	display: flow-root;
+}
