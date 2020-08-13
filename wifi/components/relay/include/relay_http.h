@@ -1,0 +1,23 @@
+
+#pragma once
+
+#ifndef _RELAY_HTTP_H_
+#define _RELAY_HTTP_H_
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "relay.h"
+#include "http_handlers.h"
+#include "httpd.h"
+
+#ifdef CONFIG_RELAY_HTTP
+
+#define RELAY_URI "/relay"
+
+extern const char *html_block_relays;  
+
+void relay_http_init(httpd_handle_t _server);
+
+#endif
+#endif
