@@ -74,14 +74,14 @@ void mcp23017_register_http_print_data(mcp23017_handle_t dev_h)
 esp_err_t mcp23017_get_handler(httpd_req_t *req)
 {
     // check params
-    char page[512] = ""; 
+    char page[200] = ""; 
 	if ( http_get_has_params(req) == ESP_OK) 
 	{
         user_ctx_t *ctx = req->user_ctx;
         mcp23017_handle_t dev_h = (mcp23017_handle_t)ctx->args;
         mcp23017_t *dev = (mcp23017_t *) dev_h;
 
-        char param[100];
+        char param[20];
         if ( http_get_key_str(req, "st", param, sizeof(param)) == ESP_OK ) {
            
             if ( strcmp(param, "mcp") != 0 ) {

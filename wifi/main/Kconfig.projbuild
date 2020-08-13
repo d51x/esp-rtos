@@ -130,7 +130,14 @@ menu "Project config"
             default n
             help
                 Enable Relay component
-                
+
+            config RELAY_HTTP
+                bool "Enable Relay HTTP control"
+                default n
+                depends on COMPONENT_RELAY
+                help
+                    Enable Relay HTTP and web control
+                                    
     endmenu
 
     menu "I2C Component"        

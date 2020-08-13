@@ -335,6 +335,10 @@ void initialize_modules_http(httpd_handle_t _server)
     wifi_http_init( _server );
     ota_http_init( _server );
 
+    #ifdef CONFIG_RELAY_HTTP
+    relay_http_init( _server );
+    #endif
+
     #ifdef CONFIG_COMPONENT_I2C
     i2c_http_init( _server );
     #endif

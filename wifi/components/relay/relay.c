@@ -51,6 +51,10 @@ relay_handle_t relay_create(char *name, gpio_num_t pin, relay_close_level_t leve
 
 esp_err_t relay_write(relay_handle_t relay_handle, relay_state_t state)
 {
+    
+    ESP_LOGW(TAG, __func__ );
+    ESP_LOGW(TAG, "relay_handle %p", relay_handle );
+    
     relay_t* relay = (relay_t*) relay_handle;
     POINT_ASSERT(TAG, relay_handle);
 

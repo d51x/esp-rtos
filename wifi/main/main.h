@@ -35,6 +35,9 @@
 #ifdef CONFIG_COMPONENT_RELAY
 #include "relay.h"
 #include "relay_mqtt.h"
+#ifdef CONFIG_RELAY_HTTP
+#include "relay_http.h"
+#endif
 #endif
 
 #ifdef CONFIG_SENSOR_SHT21
