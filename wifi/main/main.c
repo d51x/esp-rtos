@@ -47,12 +47,12 @@ void app_main(void)
 
     // ========================================= HTTP modules initialization START
     webserver_init(&http_server);
-    initialize_modules_http( http_server );
+    
 
     // ========================================= MQTT modules initialization START
     mqtt_init();
     initialize_modules_mqtt();
-
+    initialize_modules_http( http_server );
     
     while (true) {
 
@@ -230,6 +230,20 @@ void initialize_modules()
     relay_write(relay_blue_h,  RELAY_STATE_CLOSE);    
     #endif
 
+    #ifdef CONFIG_COMPONENT_IR_RECV
+    ir_rx = irrcv_init();
+    if ( ir_rx != NULL ) {
+		//		                btn_id	  btn_code   user_ctx      callback fun
+        irrcv_add_button(ir_rx, 	 0, 0x00FF14EB, "button1", NULL /*ir_button1_press*/);
+        irrcv_add_button(ir_rx, 	 1, 0x00FF04FB, "button2", NULL /*ir_button2_press*/);   
+		
+		//Start IR Receiver to receive a code
+        irrcv_start( ir_rx );
+    } else {
+        ESP_LOGE(TAG, "failed to init ir receiver");
+    }    
+    #endif
+
     #ifdef CONFIG_COMPONENT_LCD2004
         lcd2004_init();
         lcd2004_test_task();
@@ -346,6 +360,10 @@ void initialize_modules_http(httpd_handle_t _server)
 
     #ifdef CONFIG_RELAY_HTTP
     relay_http_init( _server );
+    #endif
+
+    #ifdef CONFIG_IR_RECV_HTTP
+    irrcv_http_init( _server, ir_rx );
     #endif
 
     #ifdef CONFIG_COMPONENT_I2C

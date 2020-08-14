@@ -18,9 +18,9 @@
 
 #ifdef CONFIG_COMPONENT_I2C
 
-#define PARAM_I2C "i2c"
-#define PARAM_I2C_SDA "sda"
-#define PARAM_I2C_SCL "scl"
+const char *PARAM_I2C = "i2c";
+const char *PARAM_I2C_SDA = "sda";
+const char *PARAM_I2C_SCL = "scl";
 
 
 typedef struct {

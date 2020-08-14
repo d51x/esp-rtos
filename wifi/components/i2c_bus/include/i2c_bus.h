@@ -24,6 +24,10 @@
 #define I2C_SDA_DEFAULT 2
 #define I2C_SCL_DEFAULT 0
 
+extern const char *PARAM_I2C ICACHE_RODATA_ATTR;
+extern const char *PARAM_I2C_SDA ICACHE_RODATA_ATTR;
+extern const char *PARAM_I2C_SCL ICACHE_RODATA_ATTR;
+
 typedef void* i2c_bus_handle_t;
 
 SemaphoreHandle_t xSemaphoreI2C;

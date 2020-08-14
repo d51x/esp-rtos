@@ -40,6 +40,13 @@
 #endif
 #endif
 
+#ifdef CONFIG_COMPONENT_IR_RECV
+#include "irrcv.h"
+#ifdef CONFIG_IR_RECV_HTTP
+#include "irrcv_http.h"
+#endif
+#endif
+
 #ifdef CONFIG_SENSOR_SHT21
 #include "sht21.h"
 #include "sht21_http.h"
@@ -90,10 +97,14 @@
         #endif
     #endif
 #endif
-
+//======================== variable definitions ===================================
 httpd_handle_t http_server = NULL;
 
 extern void sntp_start();
+
+    #ifdef CONFIG_COMPONENT_IR_RECV
+        irrcv_handle_t ir_rx;
+    #endif
 
     #ifdef CONFIG_COMPONENT_RELAY
     relay_handle_t relay_h;

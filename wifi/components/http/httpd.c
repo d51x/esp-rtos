@@ -69,14 +69,6 @@ void add_uri_get_handler(httpd_handle_t _server, const char *uri, httpd_uri_func
     }
 
     esp_err_t err = httpd_register_uri_handler(_server, &my_uri);
-    
-    /*
-     if ( err == ESP_OK ) {
-         ESP_LOGI(TAG, "%s registered successfully",my_uri.uri );
-     } else {
-         ESP_LOGI(TAG, "%s not registered. Error %s", my_uri.uri, esp_err_to_name(err) );
-     }
-     */
 }
 
 
@@ -119,7 +111,6 @@ void webserver_init(httpd_handle_t* _server) {
 httpd_handle_t webserver_start(void)
 {
     ESP_LOGI(TAG, "WEB_SERVER_STACK_SIZE %d", WEB_SERVER_STACK_SIZE);
-    ESP_LOGI(TAG, "WEB_SERVER_MAX_URI_HANDLERS %d", WEB_SERVER_MAX_URI_HANDLERS);
     ESP_LOGI(TAG, "WEB_SERVER_MAX_URI_HANDLERS %d", WEB_SERVER_MAX_URI_HANDLERS);
     httpd_handle_t _server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();

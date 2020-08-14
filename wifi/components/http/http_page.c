@@ -160,6 +160,7 @@ void show_http_page(httpd_req_t *req, char *data)
         }
 
         if ( !found ) {
+            ESP_LOGW(TAG, "usr_ctx->fn %p", usr_ctx->fn);
             show_custom_page(req, _uri, usr_ctx->title, data) ;
         }
 
@@ -222,6 +223,7 @@ void print_page_block(const char *uri, char *data)
 
 void show_custom_page(httpd_req_t *req, const char *uri, const char *title, char *data)
 {
+    ESP_LOGW(TAG, "%s \t %s", __func__, uri );
     generate_page(req, uri, title, data);
 }
 
