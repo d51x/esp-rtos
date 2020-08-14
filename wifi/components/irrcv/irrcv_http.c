@@ -26,6 +26,9 @@ static void irrcv_print_data(char *data, void *args)
     irrcv_t *dev = (irrcv_t *) dev_h;    
     sprintf(data + strlen(data), html_block_data_start, IRRCV_TITLE);
      
+    // выводим настройку кнопок:
+    // кол-во + Set
+    // поля "код" + "функция имя" - нужен массив всех функций - имя, указаетль на функцию
     strcat(data, html_block_data_end);
 
 }
@@ -117,7 +120,7 @@ static void irrcv_process_param(httpd_req_t *req, void *args)
 
 static void irrcv_register_http_print_data(irrcv_handle_t irrcv) 
 {
-    register_print_page_block( block_1, IRRCV_URI, 3, irrcv_print_data, irrcv, NULL, NULL );
+    //register_print_page_block( block_1, IRRCV_URI, 3, irrcv_print_data, irrcv, NULL, NULL );
     register_print_page_block( block_2, PAGES_URI[ PAGE_URI_TOOLS ], 4, irrcv_print_cfg, irrcv, irrcv_process_param, irrcv );
     register_print_page_block( block_3, PAGES_URI[ PAGE_URI_DEBUG ], 4, irrcv_print_code, irrcv, NULL, NULL );
 }
@@ -149,7 +152,7 @@ void irrcv_http_init(httpd_handle_t _server, irrcv_handle_t irrcv)
 {
     irrcv_register_http_print_data(irrcv);  
     irrcv_register_http_handler(_server, irrcv);
-    register_http_page_menu( IRRCV_URI, "IR");
+    //register_http_page_menu( IRRCV_URI, "IR");
 }
 
 #endif
