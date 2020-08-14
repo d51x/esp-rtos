@@ -222,9 +222,6 @@ void test_mcp23017_isr_cb8(char *buf)
 void initialize_modules()
 {
     #ifdef CONFIG_COMPONENT_RELAY
-    relay_h = relay_create( "Relay2", 2, RELAY_LEVEL_HIGH /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
-    relay_write(relay_h,  RELAY_STATE_CLOSE);
-
     relay_red_h = relay_create( "Red", 15, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
     relay_write(relay_red_h,  RELAY_STATE_CLOSE);
 

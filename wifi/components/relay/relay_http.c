@@ -46,7 +46,7 @@ static void relay_register_http_print_data()
     register_print_page_block( "relay_data", PAGES_URI[ PAGE_URI_ROOT], 3, relay_print_data, NULL, NULL, NULL );
 }
 
-static esp_err_t mcp23017_get_handler(httpd_req_t *req)
+static esp_err_t relay_get_handler(httpd_req_t *req)
 {
     // check params
     char page[100] = ""; 
@@ -119,7 +119,7 @@ static esp_err_t mcp23017_get_handler(httpd_req_t *req)
 
 static void relay_register_http_handler(httpd_handle_t _server)
 {
-    add_uri_get_handler( _server, RELAY_URI, mcp23017_get_handler, NULL); 
+    add_uri_get_handler( _server, RELAY_URI, relay_get_handler, NULL); 
 }
 
 void relay_http_init(httpd_handle_t _server)

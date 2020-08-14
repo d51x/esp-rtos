@@ -69,7 +69,9 @@ esp_err_t main_get_handler(httpd_req_t *req)
 {
     char page[PAGE_MAIN_BUFFER_SIZE];  
     strcpy(page, "");
+    ESP_LOGW(TAG, "page size %d", strlen(page));
     show_http_page( req, page);
+    ESP_LOGW(TAG, "page size %d", strlen(page));
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
     httpd_resp_send(req, page, strlen(page));
 

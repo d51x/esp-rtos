@@ -156,6 +156,7 @@ void show_http_page(httpd_req_t *req, char *data)
                 found = 1;
                 if ( PAGES_HANDLER[i].show && PAGES_HANDLER[i].fn != NULL )
                 {
+                    ESP_LOGW(TAG, "title %s, page size %d", PAGES_HANDLER[i].title, strlen(data));
                     PAGES_HANDLER[i].fn(req, _title, data);
                 }
                 break;
@@ -206,6 +207,15 @@ void print_page_block(const char *uri, char *data)
         }
     }
 
+    if ( strcmp(uri, PAGES_URI[ PAGE_URI_ROOT ]) == 0 )
+    {
+        sprintf(data + strlen(data), html_block_data_start, "");
+    } 
+    else if ( strcmp(uri, PAGES_URI[ PAGE_URI_CONFIG ]) == 0)
+    {
+        sprintf(data + strlen(data), html_block_data_start, "User options");
+    }
+
     // print data
     for ( i = 0; i < found_cnt; i++) 
     {
@@ -215,6 +225,12 @@ void print_page_block(const char *uri, char *data)
             http_print_page_block[ idx ].fn_print_block(data, http_print_page_block[ idx ].args1);            
         }
 
+    }
+
+    if ( strcmp(uri, PAGES_URI[ PAGE_URI_ROOT ]) == 0 )
+    {
+        
+        strcat(data , html_block_data_end);
     }
 
     if ( strcmp(uri, PAGES_URI[ PAGE_URI_TOOLS ]) == 0 ) {
@@ -291,8 +307,13 @@ esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t i
     }    
 
     http_print_page_block_count++; // увеличим размер массива
+    ESP_LOGW(TAG, "http_print_page_block_count %d", http_print_page_block_count);
+
     http_print_page_block = (http_print_page_block_t *) realloc(http_print_page_block, http_print_page_block_count * sizeof(http_print_page_block_t));
+    ESP_LOGW(TAG, "http_print_page_block %p", http_print_page_block);
+    ESP_LOGW(TAG, "name %s", uri);
     strcpy( http_print_page_block[ http_print_page_block_count - 1 ].uri, uri); 
+    ESP_LOGW(TAG, "name %s", name);
     strcpy( http_print_page_block[ http_print_page_block_count - 1 ].name, name); 
     http_print_page_block[ http_print_page_block_count - 1 ].index = index; 
     http_print_page_block[ http_print_page_block_count - 1 ].fn_print_block = fn_print_block;
