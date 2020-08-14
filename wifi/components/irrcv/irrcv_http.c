@@ -9,9 +9,12 @@ const char *IRRCV_URI ICACHE_RODATA_ATTR = "/ir";
 const char *block_1 ICACHE_RODATA_ATTR = "ir_data1";
 const char *block_2 ICACHE_RODATA_ATTR = "ir_data2";
 const char *block_3 ICACHE_RODATA_ATTR = "ir_data3";
+
 const char *param_st ICACHE_RODATA_ATTR = "ir";
+const char *param_iren ICACHE_RODATA_ATTR = "iren";
 const char *param_irpin ICACHE_RODATA_ATTR = "irpin";
 const char *param_irdelay ICACHE_RODATA_ATTR = "irdelay";
+const char *label_ir_en ICACHE_RODATA_ATTR = "Включен";
 const char *label_ir_gpio ICACHE_RODATA_ATTR = "IR GPIO";
 const char *label_ir_delay ICACHE_RODATA_ATTR = "Rcv delay (ms)";
 
@@ -35,6 +38,12 @@ static void irrcv_print_cfg(char *data, void *args)
     strcat(data, html_block_data_form_start);
     
     // TODO:enable checkbox
+    sprintf(data + strlen(data), html_block_data_form_item_checkbox
+                                , label_ir_en // %s label
+                                , param_iren   // %s name
+                                , dev->enabled  // %d value
+                                , dev->enabled ? "checked" : ""
+                                );
     sprintf(data + strlen(data), html_block_data_form_item_label_edit
                                 , label_ir_gpio // %s label
                                 , param_irpin   // %s name
@@ -79,6 +88,12 @@ static void irrcv_process_param(httpd_req_t *req, void *args)
             }
         } 
         
+        if ( http_get_key_str(req, param_iren, param, sizeof(param)) == ESP_OK ) {
+            dev->enabled = 1;
+        }  else {
+            dev->enabled = 0;
+        }        
+
         if ( http_get_key_str(req, param_irpin, param, sizeof(param)) == ESP_OK ) {
             dev->pin = atoi(param);
         }  else {
@@ -92,9 +107,11 @@ static void irrcv_process_param(httpd_req_t *req, void *args)
         }   
 
         irrcv_save_cfg( dev_h );
-
-        //irrcv_stop(dev_h);
-        irrcv_restart(dev_h);
+        if ( dev->enabled )
+            irrcv_restart(dev_h);
+        else    
+            irrcv_stop(dev_h);
+        
     }     
 }
 

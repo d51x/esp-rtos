@@ -121,7 +121,7 @@ void irrcv_stop(irrcv_handle_t dev_h)
 {
 	if ( dev_h == NULL ) return;
 	irrcv_t *ir = (irrcv_t *) dev_h;
-	vTaskDelete(ir->task);
+	if ( ir->task != NULL ) vTaskDelete(ir->task);
 	ir_rx_disable();
 	ir_rx_deinit();
 	ir->task = NULL;

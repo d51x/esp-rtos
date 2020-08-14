@@ -100,3 +100,6 @@ const char *html_block_data_form_end  =
 
 const char *html_block_data_form_item_label_edit  = 
     "<p><label class='lf'>%s: </label><input size='20' name='%s' class='edit rh' value='%d' /></p>";
+
+const char *html_block_data_form_item_checkbox  = 
+    "<p><label class='lf'>%s: </label><input type='checkbox' name='%s' class='edit rh' value='%d' %s /></p>";

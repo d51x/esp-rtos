@@ -38,5 +38,6 @@ extern const char *html_block_data_form_submit ICACHE_RODATA_ATTR;
 extern const char *html_block_data_form_end ICACHE_RODATA_ATTR;
 
 extern const char *html_block_data_form_item_label_edit ICACHE_RODATA_ATTR;
+extern const char *html_block_data_form_item_checkbox  ICACHE_RODATA_ATTR;
 
 #endif 
