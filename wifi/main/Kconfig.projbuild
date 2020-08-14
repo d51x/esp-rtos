@@ -140,6 +140,35 @@ menu "Project config"
                                     
     endmenu
 
+    menu "IR receiver"
+        config COMPONENT_IR_RECV
+            bool "Enable IR receiver"
+            default n
+            help
+                Enable IR receiver
+
+            config IR_RECV_GPIO
+                int "IR GPIO"
+                default 4
+                depends on COMPONENT_IR_RECV
+                help
+                    IR receiver GPIO
+
+            config IR_RECV_DELAY
+                int "IR debounce delay (ms)"
+                default 100
+                depends on COMPONENT_IR_RECV
+                help
+                    IR receiver delay debounce
+
+            config IR_RECV_HTTP
+                bool "IR receiver web config"
+                default n
+                depends on COMPONENT_IR_RECV
+                help
+                    IR receiver web config                   
+    endmenu
+
     menu "I2C Component"        
         config COMPONENT_I2C
             bool "Enable I2C driver"
