@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
@@ -27,6 +29,7 @@
 #include "http_page.h"
 #include "esp_log.h"
 #include "utils.h"
+#include "user.h"
 
 #ifdef CONFIG_COMPONENT_I2C
 #include "i2c_http.h"
@@ -98,7 +101,7 @@
     #endif
 #endif
 //======================== variable definitions ===================================
-httpd_handle_t http_server = NULL;
+extern httpd_handle_t http_server;
 
 extern void sntp_start();
 

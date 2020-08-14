@@ -29,15 +29,18 @@ void page_initialize_menu()
     
     strcpy(http_menu[1].uri,    HTTP_URI_SETUP  );
     strcpy(http_menu[1].name,   HTTP_STR_SETUP  );
-    
-    strcpy(http_menu[2].uri,    HTTP_URI_TOOLS  );
-    strcpy(http_menu[2].name,   HTTP_STR_TOOLS  );   
 
-    strcpy(http_menu[3].uri,    HTTP_URI_OTA );
-    strcpy(http_menu[3].name,   HTTP_STR_OTA );
+    strcpy(http_menu[2].uri,    HTTP_URI_CONFIG  );
+    strcpy(http_menu[2].name,   HTTP_STR_CONFIG  );  
 
-    strcpy(http_menu[4].uri,    HTTP_URI_DEBUG  );
-    strcpy(http_menu[4].name,   HTTP_STR_DEBUG  );
+    strcpy(http_menu[3].uri,    HTTP_URI_TOOLS  );
+    strcpy(http_menu[3].name,   HTTP_STR_TOOLS  );   
+
+    strcpy(http_menu[4].uri,    HTTP_URI_OTA );
+    strcpy(http_menu[4].name,   HTTP_STR_OTA );
+
+    strcpy(http_menu[5].uri,    HTTP_URI_DEBUG  );
+    strcpy(http_menu[5].name,   HTTP_STR_DEBUG  );
 /*
 {
     { HTTP_URI_ROOT,   HTTP_STR_MAIN   },
@@ -237,6 +240,11 @@ void show_page_main(httpd_req_t *req, const char *title, char *data)
 void show_page_setup(httpd_req_t *req, const char *title, char *data)
 {
     generate_page(req, PAGES_URI[ PAGE_URI_SETUP ], title, data);
+}
+
+void show_page_config(httpd_req_t *req, const char *title, char *data)
+{
+    generate_page(req, PAGES_URI[ PAGE_URI_CONFIG ], title, data);
 }
 
 void show_page_tools(httpd_req_t *req, const char *title, char *data)

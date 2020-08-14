@@ -36,6 +36,7 @@ pages:
 #define HTTP_URI_ROOT "/"
 #define HTTP_URI_SETUP "/setup"
 #define HTTP_URI_TOOLS "/tools"
+#define HTTP_URI_CONFIG "/config"
 #define HTTP_URI_OTA "/update"
 #define HTTP_URI_OTAPOST "/update"
 #define HTTP_URI_DEBUG "/debug"
@@ -65,6 +66,7 @@ enum {
     PAGE_URI_ROOT = 0,
     PAGE_URI_SETUP,
     PAGE_URI_DEBUG,
+    PAGE_URI_CONFIG,
     PAGE_URI_TOOLS,
     PAGE_URI_OTA,
     PAGE_URI_REBOOT,
@@ -79,7 +81,7 @@ enum {
 extern const char *PAGES_URI[PAGE_URI_MAX];
 extern user_ctx_t PAGES_HANDLER[PAGE_URI_MAX];
 
-#define MENU_ITEM_COUNT 5
+#define MENU_ITEM_COUNT 6
 #define MENU_ITEM_LENGTH 10
 
 extern uint8_t menu_items_count;

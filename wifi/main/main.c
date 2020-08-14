@@ -20,6 +20,8 @@ void test_mcp23017_isr_cb7(char *buf);
 void test_mcp23017_isr_cb8(char *buf);
 #endif
 
+httpd_handle_t http_server = NULL;
+
 void app_main(void)
 {
 	//ESP_ERROR_CHECK(nvs_flash_init());
@@ -41,6 +43,7 @@ void app_main(void)
 	
     // ========================================= MODULES initialization START
     initialize_modules();
+    user_setup(NULL);
 
     wifi_init();
     sntp_start();
@@ -88,7 +91,9 @@ void app_main(void)
                 xSemaphoreGive( xSemaphoreLCD2004 );
             }           
         #endif
-
+        static uint32_t sec = 0;
+        user_loop(sec);
+        sec++;
         vTaskDelay(1000/ portTICK_RATE_MS);
     }
 
@@ -396,5 +401,8 @@ void initialize_modules_http(httpd_handle_t _server)
         #ifdef CONFIG_RGB_CONTROLLER_HTTP
             rgbcontrol_http_init(_server, rgb_ledc );
         #endif
-    #endif        
+    #endif   
+
+    register_print_page_block( "user1", PAGES_URI[ PAGE_URI_ROOT], 0, user_web_main, NULL, NULL, NULL  );     
+    register_print_page_block( "user2", PAGES_URI[ PAGE_URI_CONFIG], 0, user_web_options, NULL, user_process_param, NULL  ); 
 }

@@ -15,6 +15,7 @@ void register_uri_handlers(httpd_handle_t _server) {
     add_uri_get_handler( _server, PAGES_URI[PAGE_URI_ROOT], main_get_handler, &PAGES_HANDLER[PAGE_URI_ROOT]); 
     add_uri_get_handler( _server, PAGES_URI[PAGE_URI_SETUP], setup_get_handler, &PAGES_HANDLER[PAGE_URI_SETUP]); 
     add_uri_get_handler( _server, PAGES_URI[PAGE_URI_DEBUG], debug_get_handler, &PAGES_HANDLER[PAGE_URI_DEBUG]); 
+    add_uri_get_handler( _server, PAGES_URI[PAGE_URI_CONFIG], config_get_handler, &PAGES_HANDLER[PAGE_URI_CONFIG]); 
     add_uri_get_handler( _server, PAGES_URI[PAGE_URI_TOOLS], tools_get_handler, &PAGES_HANDLER[PAGE_URI_TOOLS]); 
     add_uri_get_handler( _server, PAGES_URI[PAGE_URI_OTA], update_get_handler, &PAGES_HANDLER[PAGE_URI_OTA]); 
     //add_uri_post_handler( _server, "/update", update_post_handler); 
