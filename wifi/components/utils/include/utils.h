@@ -152,5 +152,5 @@ void print_tasks_info();
 #endif
 
 char* cut_str_from_str(const char *str, const char *str2);
-
+int get_buf_size(const char* format, ...);
 #endif /* __UTILS_H__ */

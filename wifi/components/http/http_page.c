@@ -29,15 +29,18 @@ void page_initialize_menu()
     
     strcpy(http_menu[1].uri,    HTTP_URI_SETUP  );
     strcpy(http_menu[1].name,   HTTP_STR_SETUP  );
-    
-    strcpy(http_menu[2].uri,    HTTP_URI_TOOLS  );
-    strcpy(http_menu[2].name,   HTTP_STR_TOOLS  );   
 
-    strcpy(http_menu[3].uri,    HTTP_URI_OTA );
-    strcpy(http_menu[3].name,   HTTP_STR_OTA );
+    strcpy(http_menu[2].uri,    HTTP_URI_CONFIG  );
+    strcpy(http_menu[2].name,   HTTP_STR_CONFIG  );  
 
-    strcpy(http_menu[4].uri,    HTTP_URI_DEBUG  );
-    strcpy(http_menu[4].name,   HTTP_STR_DEBUG  );
+    strcpy(http_menu[3].uri,    HTTP_URI_TOOLS  );
+    strcpy(http_menu[3].name,   HTTP_STR_TOOLS  );   
+
+    strcpy(http_menu[4].uri,    HTTP_URI_OTA );
+    strcpy(http_menu[4].name,   HTTP_STR_OTA );
+
+    strcpy(http_menu[5].uri,    HTTP_URI_DEBUG  );
+    strcpy(http_menu[5].name,   HTTP_STR_DEBUG  );
 /*
 {
     { HTTP_URI_ROOT,   HTTP_STR_MAIN   },
@@ -200,6 +203,16 @@ void print_page_block(httpd_req_t *req, const char *uri)
         }
     }
 
+    
+    if ( strcmp(uri, PAGES_URI[ PAGE_URI_CONFIG ]) == 0)
+    {
+        
+        char *buf = malloc( strlen(html_block_data_start) + 20 );
+        sprintf(buf, html_block_data_start, "User options");
+        httpd_resp_sendstr_chunk(req, buf);
+        free(buf);        
+    }
+
     // print data
     for ( i = 0; i < found_cnt; i++) 
     {
@@ -208,12 +221,16 @@ void print_page_block(httpd_req_t *req, const char *uri)
         {
             http_args_t *arg = http_print_page_block[ idx ].args1;
             arg->req = req;
+            ESP_LOGW(TAG, "page req: %p", req);
+            ESP_LOGW(TAG, "arg->req req: %p", arg->req);
             http_print_page_block[ idx ].fn_print_block(arg);       
         }
 
     }
 
-    if ( strcmp(uri, PAGES_URI[ PAGE_URI_TOOLS ]) == 0 ) {
+
+    if ( strcmp(uri, PAGES_URI[ PAGE_URI_TOOLS ]) == 0 || strcmp(uri, PAGES_URI[ PAGE_URI_CONFIG ]) == 0 || strcmp(uri, PAGES_URI[ PAGE_URI_SETUP ]) == 0)
+    {
         httpd_resp_sendstr_chunk(req, html_page_reboot_button_block);
     }
 
@@ -235,6 +252,11 @@ void show_page_main(httpd_req_t *req, const char *title)
 void show_page_setup(httpd_req_t *req, const char *title)
 {
     generate_page(req, PAGES_URI[ PAGE_URI_SETUP ], title);
+}
+
+void show_page_config(httpd_req_t *req, const char *title)
+{
+    generate_page(req, PAGES_URI[ PAGE_URI_CONFIG ], title);
 }
 
 void show_page_tools(httpd_req_t *req, const char *title)
@@ -276,6 +298,8 @@ esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t i
     }    
 
     http_print_page_block_count++; // увеличим размер массива
+    ESP_LOGW(TAG, "http_print_page_block_count %d", http_print_page_block_count);
+
     http_print_page_block = (http_print_page_block_t *) realloc(http_print_page_block, http_print_page_block_count * sizeof(http_print_page_block_t));
     strcpy( http_print_page_block[ http_print_page_block_count - 1 ].uri, uri); 
     strcpy( http_print_page_block[ http_print_page_block_count - 1 ].name, name); 

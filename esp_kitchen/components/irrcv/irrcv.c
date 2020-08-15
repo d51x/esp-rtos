@@ -66,7 +66,7 @@ irrcv_handle_t irrcv_init(uint8_t pin, uint16_t delay, uint8_t btn_cnt) {
 void irrcv_start(irrcv_handle_t irrcv){
 	if ( irrcv == NULL ) return;
 	irrcv_t *ir = (irrcv_t *) irrcv;
-	xTaskCreate(ir->receive, "ir_receiver_task", 1024, ir, 10, &ir->task); 
+	xTaskCreate(ir->receive, "ir_receiver_task", 2048, ir, 10, &ir->task); 
 }
 
 void ir_receive(void *arg){

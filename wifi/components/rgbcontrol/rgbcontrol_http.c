@@ -1,4 +1,5 @@
 #include "rgbcontrol_http.h"
+#include "http_page_tpl.h"
 
 #ifdef CONFIG_RGB_CONTROLLER_HTTP
 
@@ -38,7 +39,7 @@ static void rgbcontrol_print_color_sliders(httpd_req_t *req, char *data, rgbcont
     
     //sprintf(data+strlen(data), html_block_led_control_start, "RGB Controller");
     
-    sprintf(data, html_block_led_control_start, "RGB Controller");
+    sprintf(data, html_block_data_start, "RGB Controller");
     httpd_resp_sendstr_chunk(req, data);
 
     // print color box
@@ -56,7 +57,7 @@ static void rgbcontrol_print_color_sliders(httpd_req_t *req, char *data, rgbcont
 httpd_resp_sendstr_chunk(req, data);
     // print sliders
     //strcpy(data+strlen(data), html_block_led_control_data_start);
-httpd_resp_sendstr_chunk(req, html_block_led_control_data_start);
+httpd_resp_sendstr_chunk(req, html_block_data_start);
 
     rgb_to_hsv(&rgb, &rgb_ctrl->hsv);
     ledcontrol_channel_t *ch1, *ch2, *ch3;
@@ -96,9 +97,9 @@ httpd_resp_sendstr_chunk(req, data);
 httpd_resp_sendstr_chunk(req, data);
 
     //strcpy(data+strlen(data), html_block_led_control_end);
-    httpd_resp_sendstr_chunk(req, html_block_led_control_end);
+    httpd_resp_sendstr_chunk(req, html_block_data_end);
     //strcpy(data+strlen(data), html_block_led_control_end);
-    httpd_resp_sendstr_chunk(req, html_block_led_control_end);
+    httpd_resp_sendstr_chunk(req, html_block_data_end);
 }
 
 

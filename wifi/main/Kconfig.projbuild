@@ -105,14 +105,14 @@ menu "Project config"
     menu "HTTP server"
         config HTTP_SERVER_STACK_SIZE
             int "Webserver task stack size"
-            range 4096 16384
+            range 2048 16384
             default 8192
             help
                 Webserver tasks stack size
 
         config HTTP_PAGE_SIZE
             int "Web page buffer size"
-            range 4096 8192
+            range 1024 8192
             default 4096
             help
                 Webserver page buffer size 4096 / 5120 / 6144 / 7168 / 8192
@@ -124,6 +124,51 @@ menu "Project config"
                 Webserver handlers count
     endmenu
         
+    menu "Relay component"
+        config COMPONENT_RELAY
+            bool "Enable Relay component"
+            default n
+            help
+                Enable Relay component
+
+            config RELAY_HTTP
+                bool "Enable Relay HTTP control"
+                default n
+                depends on COMPONENT_RELAY
+                help
+                    Enable Relay HTTP and web control
+                                    
+    endmenu
+
+    menu "IR receiver"
+        config COMPONENT_IR_RECV
+            bool "Enable IR receiver"
+            default n
+            help
+                Enable IR receiver
+
+            config IR_RECV_GPIO
+                int "IR GPIO"
+                default 4
+                depends on COMPONENT_IR_RECV
+                help
+                    IR receiver GPIO
+
+            config IR_RECV_DELAY
+                int "IR debounce delay (ms)"
+                default 100
+                depends on COMPONENT_IR_RECV
+                help
+                    IR receiver delay debounce
+
+            config IR_RECV_HTTP
+                bool "IR receiver web config"
+                default n
+                depends on COMPONENT_IR_RECV
+                help
+                    IR receiver web config                   
+    endmenu
+
     menu "I2C Component"        
         config COMPONENT_I2C
             bool "Enable I2C driver"

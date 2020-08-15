@@ -1,15 +1,10 @@
 #include "ledcontrol_http.h"
+#include "http_page_tpl.h"
 
 #ifdef CONFIG_LED_CONTROL_HTTP
 
-const char *html_block_led_control_start ICACHE_RODATA_ATTR = "<div class='group rnd'>"
-                                    "<h4 class='brd-btm'>%s</h4>";
 
-const char *html_block_led_control_end ICACHE_RODATA_ATTR = "</div>";
-
-const char *html_block_led_control_data_start ICACHE_RODATA_ATTR = "<div class=\"ledc\">";
-                                             
-
+const char *ledc_data ICACHE_RODATA_ATTR = "ledc_data%d";
 const char *html_block_led_control_item ICACHE_RODATA_ATTR = 
     "<p>"
         "<span class='lf'><b>%s</b></span>"                 // s - title,
@@ -41,21 +36,29 @@ static void ledcontrol_add_initial_group(ledcontrol_handle_t dev_h)
     }
 }
 
-static void ledcontrol_print_data(char *data, void *args)
+static void ledcontrol_print_data(http_args_t *args)
 {
-    ledcontrol_group_t *group = (ledcontrol_group_t *)args;
+    http_args_t *arg = (http_args_t *)args;
+    httpd_req_t *req = (httpd_req_t *)arg->req;
+
+    ledcontrol_group_t *group = (ledcontrol_group_t *)arg->dev;
     ledcontrol_handle_t ledc_h = group->dev_h;
     ledcontrol_t *ledc = (ledcontrol_t *)ledc_h;
     
-    sprintf(data+strlen(data), html_block_led_control_start, group->title);
-    strcpy(data+strlen(data), html_block_led_control_data_start);
+    size_t sz = get_buf_size(html_block_data_start, group->title);
+    char *data = malloc( sz );   
+    sprintf(data, html_block_data_start, group->title);
+    httpd_resp_sendstr_chunk(req, data);
+    httpd_resp_sendstr_chunk(req, html_block_data_start);
+
+    
 
     for (uint8_t i = 0; i < ledc->led_cnt; i++ ) 
     {   
         ledcontrol_channel_t *ch = ledc->channels + i;
         if ( group->group == ch->group)
         {        
-            sprintf( data+strlen(data), html_block_led_control_item
+            sz = get_buf_size(html_block_led_control_item
                                         , ch->name
                                         , ch->channel                                   // channel num
                                         , ch->duty              // channel duty    
@@ -63,11 +66,22 @@ static void ledcontrol_print_data(char *data, void *args)
                                         , ch->channel                                   // channel num
                                         , ch->duty              // channel duty
                                         );
+            data = realloc(data, sz );
+            sprintf( data, html_block_led_control_item
+                                        , ch->name
+                                        , ch->channel                                   // channel num
+                                        , ch->duty              // channel duty    
+                                        , ch->channel     // for data-uri                                  
+                                        , ch->channel                                   // channel num
+                                        , ch->duty              // channel duty
+                                        );
+            httpd_resp_sendstr_chunk(req, data);
         }
     }
     
-    strcpy(data+strlen(data), html_block_led_control_end);
-    strcpy(data+strlen(data), html_block_led_control_end);
+    httpd_resp_sendstr_chunk(req, html_block_data_end);
+    httpd_resp_sendstr_chunk(req, html_block_data_end);
+    free(data);
 }
 
 void ledcontrol_register_http_print_data(ledcontrol_handle_t dev_h)
@@ -89,8 +103,10 @@ void ledcontrol_register_http_print_data(ledcontrol_handle_t dev_h)
         if ( found )
         {
             char block_name[20];
-            snprintf(block_name, 20, "ledc_data%d", i);
-            register_print_page_block( block_name, PAGES_URI[ PAGE_URI_ROOT], led_groups[i].priority, ledcontrol_print_data, &led_groups[i], NULL, NULL );
+            snprintf(block_name, 20, ledc_data, i);
+            http_args_t *p = calloc(1,sizeof(http_args_t));
+            p->dev = &led_groups[i];
+            register_print_page_block( block_name, PAGES_URI[ PAGE_URI_ROOT], led_groups[i].priority, ledcontrol_print_data, p, NULL, NULL );
         }
     }
     
@@ -110,8 +126,8 @@ esp_err_t ledcontrol_get_handler(httpd_req_t *req)
     ip/ledc?all=1 - print all channels duty
 */
     esp_err_t err = ESP_FAIL;
+    httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
     // check params
-    char page[512] = ""; 
 	if ( http_get_has_params(req) == ESP_OK) 
 	{
         user_ctx_t *ctx = req->user_ctx;
@@ -127,7 +143,7 @@ esp_err_t ledcontrol_get_handler(httpd_req_t *req)
             if ( ch < 0 || ch > ledc->led_cnt /*LEDCONTROL_CHANNEL_MAX*/ ) 
             {
                 err = ESP_FAIL;
-                strcpy(page, "ERROR");
+                httpd_resp_sendstr_chunk(req, html_error);
                 goto end;
             }    
 
@@ -176,42 +192,44 @@ esp_err_t ledcontrol_get_handler(httpd_req_t *req)
 
             if ( err == ESP_OK )
             {
-                itoa( ledc->get_duty( channel), page, 10);
+                char *buf = malloc(3);
+                itoa( ledc->get_duty( channel), buf, 10);
+                httpd_resp_sendstr_chunk(req, buf);
+                free(buf);
             }
             else
-                strcpy(page, "ERROR");
+                httpd_resp_sendstr_chunk(req, html_error);
         } 
         else if ( http_get_key_str(req, "allon", param, sizeof(param)) == ESP_OK ) 
         {
             ledc->on_all();
-            strcpy(page, "OK");
+            httpd_resp_sendstr_chunk(req, "OK");
         } 
         else if ( http_get_key_str(req, "alloff", param, sizeof(param)) == ESP_OK ) 
         {
             ledc->off_all();
-            strcpy(page, "OK");
+            httpd_resp_sendstr_chunk(req, "OK");
         }            
         else if ( http_get_key_str(req, "all", param, sizeof(param)) == ESP_OK )
         {
             // print all duties and channels
-            strcpy(page, "{");
+            httpd_resp_sendstr_chunk(req, "{");
             for (uint8_t i = 0; i < ledc->led_cnt; i++ ) {             
                 char s[12];
                 
                 ledcontrol_channel_t *ch = ledc->channels + i;
                 uint8_t val = ledc->get_duty( ch );                
                 sprintf(s, "\"ch%d\": %d", i, val);
-                strcat(page, s);
+                httpd_resp_sendstr_chunk(req, s);  
                 if ( i < ledc->led_cnt-1 ) 
-                    strcat(page, ", ");                
+                    httpd_resp_sendstr_chunk(req, ", ");      
             }
-            strcpy(page+strlen(page), "}");
+            httpd_resp_sendstr_chunk(req, "}");            
         }
         
     }
 end:
-    httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
-	httpd_resp_send(req, page, strlen(page)); 
+	httpd_resp_send_chunk(req, NULL, 0);
      
     return ESP_OK;    
 }

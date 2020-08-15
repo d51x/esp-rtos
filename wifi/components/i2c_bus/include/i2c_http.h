@@ -7,12 +7,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include "http_handlers.h"
+#include "http_page_tpl.h"
 #include "httpd.h"
 #include "i2c_bus.h"
 
 #ifdef CONFIG_COMPONENT_I2C
-extern const char *html_page_tools_i2c;      
-
                                                                                                                  
 void i2c_register_http_print_data();
 void i2c_register_http_handler(httpd_handle_t _server);

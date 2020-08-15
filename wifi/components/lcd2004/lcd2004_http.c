@@ -1,76 +1,171 @@
 #include "lcd2004_http.h"
+#include "http_page_tpl.h"
 
 #ifdef CONFIG_COMPONENT_LCD2004_HTTP
 
 
-const char *html_block_lcd2004 ICACHE_RODATA_ATTR = "<div class='group rnd'>"
-                                    "<h4 class='brd-btm'>LCD2004:</h4>"
-                                       "<form method='GET'>"
-                                            "<div class='lf3'><p><label class='lf'>Address: </label><input size='20' name='lcdaddr' class='edit rh' value='0x%2X' /></p>"
-                                            "</div>"
-                                            "<div class='rh2'><p><input type='hidden' name='st' value='lcd'></p>"
-                                            "<p><input type='submit' value='Сохранить' class='button norm rht'></p>"
-                                            
-                                            "</div>"
-                                       "</form>"
-                                       
-                                       "<button id='lcd' class='button rht %s' "            // on или off - текущее состояние
-                                                        "data-class='button rht' "
-                                                        "data-uri='/lcd?st=lcd&led=' "
-                                                        "data-val='%d' "                    // 0 или 1 - нужное состояние кнопки,которое будет передано в запрос для изменения
-                                                        "data-text='%s'"                    // текст для кнопки, который подставится после нажатия, парметр замены {0}
-                                                                            //id     id2    v   st
-                                                        "onclick='btnclick(\"lcd\", \"lcd\", 0, 1)'>"     // lcd - id, v: 0 - без подстановки результата, 1 - с подстановкой в конец, 2 - с подстановкой во внутрь вместо {0}
-                                                                                                            // st: менять состояние кнопки 1, не менять состояние кнопки 0
-                                                        "%s"
-                                        "</button>" 
-                                       "<button id='lcd2' class='button rht norm' "            // 
-                                                        "data-class='button rht' "
-                                                        "data-uri='/lcd?st=lcd&clr=' "
-                                                        "data-val='1' "                    
-                                                        "data-text='%s'"                    // текст для кнопки, который подставится после нажатия, парметр замены {0}
-                                                        "onclick='btnclick(\"lcd2\", \"lcd2\", 0, 0)'>"     // lcd - id, 0 - без подстановки результата, 1 - с подстановкой в конец, 2 - с подстановкой во внутрь вместо {0}
-                                                        "%s"
-                                        "</button>"   
-                                       "<button id='lcd3' class='button rht %s' "            // on или off - текущее состояние
-                                                        "data-class='button rht' "
-                                                        "data-uri='/lcd?st=lcd&on=' "
-                                                        "data-val='%d' "                    // 0 или 1 - нужное состояние кнопки,которое будет передано в запрос для изменения
-                                                        "data-text='%s'"                    // текст для кнопки, который подставится после нажатия, парметр замены {0}
-                                                                            //id     id2    v   st
-                                                        "onclick='btnclick(\"lcd3\", \"lcd3\", 2, 1)'>"     // lcd - id, v: 0 - без подстановки результата, 1 - с подстановкой в конец, 2 - с подстановкой во внутрь вместо {0}
-                                                                                                            // st: менять состояние кнопки 1, не менять состояние кнопки 0
-                                                        "%s"
-                                        "</button>"                                                                               
-                                  "</div>"; 
+static const char *lcd2004_title ICACHE_RODATA_ATTR = "LCD2004";
+static const char *lcd2004_param_addr ICACHE_RODATA_ATTR = "lcdaddr";
+static const char *lcd2004_title_addr ICACHE_RODATA_ATTR = "Address";
+static const char *param_st_lcd ICACHE_RODATA_ATTR = "lcd";
+static const char *button_id ICACHE_RODATA_ATTR = "lcd%d";
 
-void lcd2004_print_options(char *data, void *args)
+const char *lcd2004_button_backlight_title ICACHE_RODATA_ATTR = "Подсветка";
+const char *lcd2004_button_backlight_uri ICACHE_RODATA_ATTR = "/lcd?st=lcd&led=";
+
+const char *lcd2004_button_clr_title ICACHE_RODATA_ATTR = "Очистить";
+const char *lcd2004_button_clr_uri ICACHE_RODATA_ATTR = "/lcd?st=lcd&clr=";
+
+const char *lcd2004_button_lcdon_uri ICACHE_RODATA_ATTR = "/lcd?st=lcd&on=";
+
+void lcd2004_print_options(http_args_t *args)
 {
+    http_args_t *arg = (http_args_t *)args;
+    httpd_req_t *req = (httpd_req_t *)arg->req;
+
     lcd2004_conf_t *cfg = (lcd2004_conf_t *)calloc(1, sizeof(lcd2004_conf_t));
     lcd2004_get_cfg( cfg );
 
     uint8_t state = lcd2004_backlight_state();
     uint8_t state2 = lcd2004_state();
-    sprintf(data+strlen(data), html_block_lcd2004
-                    , cfg->addr  // 0x3F // lcd2004 addr
-                    // button led
-                    , cfg->backlight ? " on" : " off"    //  подстановка в class
-                    , !cfg->backlight                     // data-val    
-                    , "Подсветка"                        // data-text = текст подстановки для кнопки
-                    , "Подсветка"                 // текст кнопки
 
-                    // button clear
-                    , "Очистить"
-                    , "Очистить"
+    size_t sz = get_buf_size(html_block_data_start, lcd2004_title);
+    char *data = malloc( sz );   
+    sprintf(data, html_block_data_start, lcd2004_title);
+    httpd_resp_sendstr_chunk(req, data);
+    httpd_resp_sendstr_chunk(req, html_block_data_form_start);
+    httpd_resp_sendstr_chunk(req, html_block_data_div_lf3);
 
-                    // button on off
-                    , cfg->state ? " on" : " off"
-                    , !cfg->state
-                    , "{0}"
-                    , cfg->state ? "ON" : "OFF"
-                    );
+    // ==========================================================================
+    char param[10];
+    sprintf(param, "0x%02X", cfg->addr);
+    sz = get_buf_size(html_block_data_form_item_label_edit_hex
+                                , lcd2004_title_addr // %s label
+                                , lcd2004_param_addr   // %s name
+                                , param  // %d value
+                                );
+    data = realloc(data, sz);
+    sprintf(data, html_block_data_form_item_label_edit_hex
+                                , lcd2004_title_addr // %s label
+                                , lcd2004_param_addr   // %s name
+                                , param  // %d value
+                                );
+    httpd_resp_sendstr_chunk(req, data);
     
+    httpd_resp_sendstr_chunk(req, html_block_data_end);
+
+    // ==========================================================================
+    sz = get_buf_size(html_block_data_form_submit
+                                , param_st_lcd // %s st
+                                );
+    data = realloc(data, sz);
+    sprintf(data, html_block_data_form_submit
+                                , param_st_lcd // %s st
+                                );
+    httpd_resp_sendstr_chunk(req, data);
+    httpd_resp_sendstr_chunk(req, html_block_data_form_end);
+        httpd_resp_sendstr_chunk(req, html_block_data_end);  
+    httpd_resp_sendstr_chunk(req, "<div class='rht'>");
+    // ==========================================================================    
+    char rht[] = "rht";
+    char *b_id = malloc( strlen(button_id) + 5);
+    sprintf(b_id, button_id, 1);
+
+    sz = get_buf_size(html_button
+                    , b_id
+                    , rht
+                    , "norm"
+                    , rht
+                    , lcd2004_button_clr_uri
+                    , !cfg->backlight
+                    , lcd2004_button_clr_title
+                    , 0
+                    , 1
+                    , lcd2004_button_clr_title
+    );
+    data = realloc(data, sz);
+    
+    sprintf(data, html_button
+                    , b_id
+                    , rht
+                    , "norm"
+                    , rht
+                    , lcd2004_button_clr_uri
+                    , !cfg->backlight
+                    , lcd2004_button_clr_title
+                    , 0
+                    , 1
+                    , lcd2004_button_clr_title
+    );
+    httpd_resp_sendstr_chunk(req, data);
+
+    // ==========================================================================    
+    sprintf(b_id, button_id, 2);
+    sz = get_buf_size( html_button
+                    , b_id
+                    , rht
+                    , cfg->backlight ? " on" : " off"
+                    , rht
+                    , lcd2004_button_backlight_uri
+                    , !cfg->backlight
+                    , lcd2004_button_backlight_title
+                    , 0
+                    , 1
+                    , lcd2004_button_backlight_title
+    );   
+    data = realloc(data, sz);
+    
+    sprintf(data, html_button
+                    , b_id
+                    , rht
+                    , cfg->backlight ? " on" : " off"
+                    , rht
+                    , lcd2004_button_backlight_uri
+                    , !cfg->backlight
+                    , lcd2004_button_backlight_title
+                    , 0
+                    , 1
+                    , lcd2004_button_backlight_title
+    );
+    httpd_resp_sendstr_chunk(req, data);
+
+    // ==========================================================================    
+    sprintf(b_id, button_id, 3);
+    sz = get_buf_size(html_button
+                    , b_id
+                    , rht
+                    , cfg->backlight ? " on" : " off"
+                    , rht
+                    , lcd2004_button_backlight_uri
+                    , !cfg->backlight
+                    , "{0}"
+                    , 2
+                    , 1
+                    , cfg->state ? "ON" : "OFF"
+    );
+    data = realloc(data, sz);
+    
+    sprintf(data, html_button
+                    , b_id
+                    , rht
+                    , cfg->backlight ? " on" : " off"
+                    , rht
+                    , lcd2004_button_backlight_uri
+                    , !cfg->backlight
+                    , "{0}"
+                    , 2
+                    , 1
+                    , cfg->state ? "ON" : "OFF"
+    );
+    httpd_resp_sendstr_chunk(req, data);
+    free(b_id);
+    free(data);
     free(cfg);
+    httpd_resp_sendstr_chunk(req, html_block_data_end); 
+    // ==========================================================================    
+   
+  
+    httpd_resp_sendstr_chunk(req, html_block_data_end);    
 }
 
 void lcd2004_http_process_params(httpd_req_t *req, void *args)
@@ -101,7 +196,8 @@ void lcd2004_http_process_params(httpd_req_t *req, void *args)
 
 void lcd2004_register_http_print_data() 
 {
-    register_print_page_block( "lcd2004_options", PAGES_URI[ PAGE_URI_TOOLS], 3, lcd2004_print_options, NULL, lcd2004_http_process_params, NULL );
+    http_args_t *p = calloc(1,sizeof(http_args_t));
+    register_print_page_block( "lcd2004_options", PAGES_URI[ PAGE_URI_TOOLS], 3, lcd2004_print_options, p, lcd2004_http_process_params, NULL );
 }
 
 esp_err_t lcd2004_get_handler(httpd_req_t *req)

@@ -18,6 +18,7 @@ const char *PAGES_URI[PAGE_URI_MAX] = {
     HTTP_URI_ROOT,                    // PAGE_URI_ROOT
     HTTP_URI_SETUP,               // PAGE_URI_SETUP
     HTTP_URI_DEBUG,               // PAGE_URI_DEBUG
+    HTTP_URI_CONFIG,               // PAGE_URI_DEBUG
     HTTP_URI_TOOLS,               // PAGE_URI_TOOLS
     HTTP_URI_OTA,              // PAGE_URI_OTA
     HTTP_URI_REBOOT,              // PAGE_URI_REBOOT
@@ -31,17 +32,13 @@ const char *PAGES_URI[PAGE_URI_MAX] = {
 
 
 user_ctx_t PAGES_HANDLER[PAGE_URI_MAX] = {
-    {HTTP_STR_MAIN,    true,   show_page_main,       NULL},
-    {HTTP_STR_SETUP,   true,   show_page_setup,      NULL},
-    {HTTP_STR_DEBUG,   true,   show_page_debug,      NULL},
-    {HTTP_STR_TOOLS,   true,   show_page_tools,      NULL},
-    {HTTP_STR_OTA,     true,   show_page_ota,     NULL},
-    {HTTP_STR_REBOOT,  false,  reboot_get_handler,   NULL},
-    {"",               false,  NULL,                 NULL},
-    {"",               false,  NULL,                 NULL},
-    {"",               false,  NULL,                 NULL},
-    {"",               false,  NULL,                 NULL},
-    {"",               false,  NULL,                 NULL}
+     {HTTP_STR_MAIN,    true,   show_page_main,       NULL}
+    ,{HTTP_STR_SETUP,   true,   show_page_setup,      NULL}
+    ,{HTTP_STR_DEBUG,   true,   show_page_debug,      NULL}
+    ,{HTTP_STR_CONFIG,   true,   show_page_config,      NULL}
+    ,{HTTP_STR_TOOLS,   true,   show_page_tools,      NULL}
+    ,{HTTP_STR_OTA,     true,   show_page_ota,     NULL}
+    ,{HTTP_STR_REBOOT,  false,  reboot_get_handler,   NULL}
 };
 
 http_menu_item_t *http_menu = NULL;
@@ -94,6 +91,25 @@ esp_err_t setup_get_handler(httpd_req_t *req){
   //show_page_setup( page );
   show_http_page( req );
   
+  httpd_resp_send_chunk(req, NULL, 0);
+  return ESP_OK;
+}
+
+esp_err_t config_get_handler(httpd_req_t *req){
+    httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
+
+  // check params
+	if ( http_get_has_params(req) == ESP_OK) 
+	{
+        process_params(req);
+
+        char *path = http_uri_clean( req );
+        make_redirect(req, 0, path);
+        free( path );
+        return ESP_OK;
+	}
+
+  show_http_page( req );
   httpd_resp_send_chunk(req, NULL, 0);
   return ESP_OK;
 }

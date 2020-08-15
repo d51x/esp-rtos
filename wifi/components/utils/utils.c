@@ -445,3 +445,12 @@ char* cut_str_from_str(const char *str, const char *str2)
     strncpy(p, str, pos);
     return p;
 }
+
+int get_buf_size(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    char buf[100];
+    int result = vsnprintf(buf, 100, format, args);
+    va_end(args);
+    return result + 1; // safe byte for \0
+}

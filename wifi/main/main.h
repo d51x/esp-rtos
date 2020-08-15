@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
@@ -27,9 +29,25 @@
 #include "http_page.h"
 #include "esp_log.h"
 #include "utils.h"
+#include "user.h"
 
 #ifdef CONFIG_COMPONENT_I2C
 #include "i2c_http.h"
+#endif
+
+#ifdef CONFIG_COMPONENT_RELAY
+#include "relay.h"
+#include "relay_mqtt.h"
+#ifdef CONFIG_RELAY_HTTP
+#include "relay_http.h"
+#endif
+#endif
+
+#ifdef CONFIG_COMPONENT_IR_RECV
+#include "irrcv.h"
+#ifdef CONFIG_IR_RECV_HTTP
+#include "irrcv_http.h"
+#endif
 #endif
 
 #ifdef CONFIG_SENSOR_SHT21
@@ -82,10 +100,21 @@
         #endif
     #endif
 #endif
-
-httpd_handle_t http_server = NULL;
+//======================== variable definitions ===================================
+extern httpd_handle_t http_server;
 
 extern void sntp_start();
+
+    #ifdef CONFIG_COMPONENT_IR_RECV
+        irrcv_handle_t ir_rx;
+    #endif
+
+    #ifdef CONFIG_COMPONENT_RELAY
+    relay_handle_t relay_red_h;
+    relay_handle_t relay_blue_h;
+    relay_handle_t relay_green_h;
+    #endif
+
     #ifdef CONFIG_COMPONENT_MCP23017
         mcp23017_handle_t mcp23017_h;
     #endif
