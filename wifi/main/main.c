@@ -222,14 +222,17 @@ void test_mcp23017_isr_cb8(char *buf)
 void initialize_modules()
 {
     #ifdef CONFIG_COMPONENT_RELAY
-    relay_red_h = relay_create( "Red", 15, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
-    relay_write(relay_red_h,  RELAY_STATE_CLOSE);
+    relay_h = relay_create( "Fan", 2, RELAY_LEVEL_HIGH /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
+    relay_write(relay_h,  RELAY_STATE_CLOSE);
 
-    relay_green_h = relay_create( "Green", 12, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
-    relay_write(relay_green_h,  RELAY_STATE_CLOSE);
+    // relay_red_h = relay_create( "Red", 15, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
+    // relay_write(relay_red_h,  RELAY_STATE_CLOSE);
 
-    relay_blue_h = relay_create( "Blue", 13, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
-    relay_write(relay_blue_h,  RELAY_STATE_CLOSE);    
+    // relay_green_h = relay_create( "Green", 12, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
+    // relay_write(relay_green_h,  RELAY_STATE_CLOSE);
+
+    // relay_blue_h = relay_create( "Blue", 13, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
+    // relay_write(relay_blue_h,  RELAY_STATE_CLOSE);    
     #endif
 
     #ifdef CONFIG_COMPONENT_IR_RECV
