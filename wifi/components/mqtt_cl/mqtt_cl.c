@@ -272,6 +272,10 @@ static void process_custom_topics(const char *_topic, const char *data)
 
 
 static void mqtt_publish_generic(const char *_topic, const char *payload) {
+    if ( !mqtt_client ) {
+        ESP_LOGE(TAG, "mqtt_client is not initialized");
+        return;
+    }
     char topic[32];
     strcpy( topic, _mqtt_dev_name /*MQTT_DEVICE*/ );
     //strcpy( topic + strlen( topic ), _topic);
