@@ -106,6 +106,8 @@ void page_generate_top_header(httpd_req_t *req)
 
 void page_generate_data(httpd_req_t *req, const char *uri)
 {
+    ESP_LOGI(TAG, "%s: %s", __func__, uri);
+    //TODO: для AP не отображаются страницы, останавливается вывод на hostname, далее пусто
     httpd_resp_sendstr_chunk(req, html_page_content_start);
     print_page_block( req, uri);
     httpd_resp_sendstr_chunk(req, html_page_content_end);
@@ -171,12 +173,14 @@ void show_http_page(httpd_req_t *req)
 
 void print_page_block(httpd_req_t *req, const char *uri)
 {
+    ESP_LOGI(TAG, "%s: %s, block count: %d", __func__, uri, http_print_page_block_count);
     uint8_t (*indexes)[2] = NULL;
     uint8_t found_cnt = 0;
     uint8_t i = 0;
 
     for ( i = 0; i < http_print_page_block_count; i++) 
     {
+        // строгое соответствие uri, параметры запроса не учитываются!
         if (strcmp(http_print_page_block[i].uri, uri) == 0 && http_print_page_block[i].fn_print_block != NULL) 
         {
             found_cnt++;
@@ -217,6 +221,7 @@ void print_page_block(httpd_req_t *req, const char *uri)
     for ( i = 0; i < found_cnt; i++) 
     {
         uint8_t idx = indexes[i][0];
+        // строгое соответствие uri, параметры запроса не учитываются
         if (strcmp(http_print_page_block[idx].uri, uri) == 0 && http_print_page_block[idx].fn_print_block != NULL) 
         {
             http_args_t *arg = http_print_page_block[ idx ].args1;
@@ -289,7 +294,7 @@ esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t i
     for ( uint8_t i = 0; i < http_print_page_block_count; i++) 
     {
         if (strcmp(http_print_page_block[i].name, name) == 0 && 
-            strcmp(http_print_page_block[i].uri, uri) == 0 && 
+            strcmp(http_print_page_block[i].uri, uri) == 0 &&       // строгое соответствие uri, параметры запроса не учитываются
             http_print_page_block[i].fn_print_block == fn_print_block) 
         {
             //ESP_LOGI(TAG, "[%d] found (%s) uri %s, return...", i, http_print_page_block[i].name, http_print_page_block[i].uri);
@@ -301,8 +306,11 @@ esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t i
     ESP_LOGW(TAG, "http_print_page_block_count %d", http_print_page_block_count);
 
     http_print_page_block = (http_print_page_block_t *) realloc(http_print_page_block, http_print_page_block_count * sizeof(http_print_page_block_t));
+
+    //TODO переделать на strncpy с указнием кол-ва байт копирования
     strcpy( http_print_page_block[ http_print_page_block_count - 1 ].uri, uri); 
-    strcpy( http_print_page_block[ http_print_page_block_count - 1 ].name, name); 
+    strcpy( http_print_page_block[ http_print_page_block_count - 1 ].name, name);
+     
     http_print_page_block[ http_print_page_block_count - 1 ].index = index; 
     http_print_page_block[ http_print_page_block_count - 1 ].fn_print_block = fn_print_block;
     http_print_page_block[ http_print_page_block_count - 1 ].args1 = args1;

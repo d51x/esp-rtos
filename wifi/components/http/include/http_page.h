@@ -43,7 +43,8 @@ extern uint8_t http_print_page_block_count;
 
 
 typedef struct {
-    const char uri[HTTPD_MAX_URI_LEN + 1];
+    //const char uri[HTTPD_MAX_URI_LEN + 1];   // TODO: уменьшить размер до 32 байта
+    const char uri[32];   // TODO: уменьшить размер до 32 байта
     uint8_t index;
     func_http_print_page_block fn_print_block;
     void *args1;
