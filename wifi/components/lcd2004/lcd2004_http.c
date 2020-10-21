@@ -8,15 +8,15 @@ static const char *lcd2004_title ICACHE_RODATA_ATTR = "LCD2004";
 static const char *lcd2004_param_addr ICACHE_RODATA_ATTR = "lcdaddr";
 static const char *lcd2004_title_addr ICACHE_RODATA_ATTR = "Address";
 static const char *param_st_lcd ICACHE_RODATA_ATTR = "lcd";
-static const char *button_id ICACHE_RODATA_ATTR = "lcd%d";
+static const char *button_id ICACHE_RODATA_ATTR = param_st_lcd "%d";
 
 const char *lcd2004_button_backlight_title ICACHE_RODATA_ATTR = "Подсветка";
-const char *lcd2004_button_backlight_uri ICACHE_RODATA_ATTR = "/lcd?st=lcd&led=";
+const char *lcd2004_button_backlight_uri ICACHE_RODATA_ATTR = LCD2004_URI "?st=" param_st_lcd "&led=";
 
 const char *lcd2004_button_clr_title ICACHE_RODATA_ATTR = "Очистить";
-const char *lcd2004_button_clr_uri ICACHE_RODATA_ATTR = "/lcd?st=lcd&clr=";
+const char *lcd2004_button_clr_uri ICACHE_RODATA_ATTR = LCD2004_URI "?st=" param_st_lcd "&clr=";
 
-const char *lcd2004_button_lcdon_uri ICACHE_RODATA_ATTR = "/lcd?st=lcd&on=";
+const char *lcd2004_button_lcdon_uri ICACHE_RODATA_ATTR = LCD2004_URI "?st=" param_st_lcd "&on=";
 
 void lcd2004_print_options(http_args_t *args)
 {
@@ -176,7 +176,7 @@ void lcd2004_http_process_params(httpd_req_t *req, void *args)
 	{
         char param[100];
         if ( http_get_key_str(req, "st", param, sizeof(param)) == ESP_OK ) {
-            if ( strcmp(param, "lcd") != 0 ) {
+            if ( strcmp(param, param_st_lcd) != 0 ) {
                 return;	
             }
         } 
@@ -209,7 +209,7 @@ esp_err_t lcd2004_get_handler(httpd_req_t *req)
         char param[100];
         if ( http_get_key_str(req, "st", param, sizeof(param)) == ESP_OK ) {
            
-            if ( strcmp(param, "lcd") != 0 ) {
+            if ( strcmp(param, param_st_lcd) != 0 ) {
                 return ESP_FAIL;	
             }
         } 
@@ -265,7 +265,7 @@ esp_err_t lcd2004_get_handler(httpd_req_t *req)
 
 void lcd2004_register_http_handler(httpd_handle_t _server)
 {
-    add_uri_get_handler( _server, "/lcd", lcd2004_get_handler, NULL); 
+    add_uri_get_handler( _server, LCD2004_URI, lcd2004_get_handler, NULL); 
 }
 
 void lcd2004_http_init(httpd_handle_t _server)

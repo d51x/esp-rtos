@@ -14,6 +14,7 @@
 #ifdef CONFIG_RELAY_HTTP
 
 #define RELAY_URI "/relay"
+#define RELAY_HANDLERS_COUNT 1
 
 extern const char *html_block_relays;  
 

@@ -13,6 +13,7 @@
 
 #ifdef CONFIG_IR_RECV_HTTP
 
+#define IR_RECV_HANDLERS_COUNT 1
 extern const char *IRRCV_URI;
 
 

@@ -14,6 +14,7 @@
 #ifdef CONFIG_MCP23017_HTTP
 
 #define MCP23017_URI "/mcp23017"
+#define MCP23017_HANDLERS_COUNT 1
 
 extern const char *html_block_mcp23107;    
 void mcp23017_register_http_print_data(mcp23017_handle_t dev_h);

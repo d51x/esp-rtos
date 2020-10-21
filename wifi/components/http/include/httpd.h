@@ -27,7 +27,7 @@
 esp_err_t _http_event_handler(esp_http_client_event_t *evt);
 typedef esp_err_t (*httpd_uri_func)(httpd_req_t *req);
 
-
+extern uint8_t http_handlers_count;
 //int uri_handlers_no = 20;
 //httpd_uri_t uri_handlers[];
 

@@ -12,7 +12,10 @@
 #include "i2c_bus.h"
 
 #ifdef CONFIG_COMPONENT_I2C
-                                                                                                                 
+
+#ifdef CONFIG_COMPONENT_I2C_SCANNER
+    #define I2C_HANDLERS_COUNT 1
+#endif
 void i2c_register_http_print_data();
 void i2c_register_http_handler(httpd_handle_t _server);
 void i2c_http_process_params(httpd_req_t *req, void *args);

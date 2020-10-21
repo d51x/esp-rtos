@@ -4,7 +4,7 @@
 
 static const char *TAG = "HTTPD";
 
-
+uint8_t http_handlers_count = PAGE_URI_MAX + 1;
 /********************* Basic Handlers Start *******************/
 
 
@@ -18,40 +18,15 @@ void register_uri_handlers(httpd_handle_t _server) {
     add_uri_get_handler( _server, PAGES_URI[PAGE_URI_CONFIG], config_get_handler, &PAGES_HANDLER[PAGE_URI_CONFIG]); 
     add_uri_get_handler( _server, PAGES_URI[PAGE_URI_TOOLS], tools_get_handler, &PAGES_HANDLER[PAGE_URI_TOOLS]); 
     add_uri_get_handler( _server, PAGES_URI[PAGE_URI_OTA], update_get_handler, &PAGES_HANDLER[PAGE_URI_OTA]); 
-    //add_uri_post_handler( _server, "/update", update_post_handler); 
 
-    
-    //add_uri_get_handler( _server, "/reboot", reboot_get_handler); 
     add_uri_get_handler( _server, PAGES_URI[PAGE_URI_REBOOT], reboot_get_handler, NULL); 
-
-    //add_uri_get_handler( _server, "/favicon.ico", favicon_get_handler); 
     add_uri_get_handler( _server, PAGES_URI[PAGE_URI_FAVICO], favicon_get_handler, NULL); 
-
-    //add_uri_get_handler( _server, "/main.css", main_css_get_handler); 
     add_uri_get_handler( _server, PAGES_URI[PAGE_URI_CSS], main_css_get_handler, NULL); 
-
-    //add_uri_get_handler( _server, "/ajax.js", main_ajax_get_handler); 
     add_uri_get_handler( _server, PAGES_URI[PAGE_URI_AJAX], main_ajax_get_handler, NULL); 
 
-
-    
-    //add_uri_get_handler( _server, "/device.png", icons_get_handler); 
-    //add_uri_get_handler( _server, "/wifi.png", icons_get_handler); 
-    //add_uri_get_handler( _server, "/memory.png", icons_get_handler); 
-    //add_uri_get_handler( _server, "/uptime.png", icons_get_handler); 
     add_uri_get_handler( _server, "/menu.png", icons_get_handler, NULL); 
     add_uri_get_handler( _server, "/menu2.png", icons_get_handler, NULL); 
 
-    
-
-/*
-    for (int i = 0; i < uri_handlers_no; i++) {
-        if (httpd_register_uri_handler(_server, &uri_handlers[i]) != ESP_OK) {
-            //ESP_LOGW(TAG, "register uri failed for %d", i);
-            return;
-        }
-    }
-*/
 }
 
 void add_uri_get_handler(httpd_handle_t _server, const char *uri, httpd_uri_func func, void *ctx) {
@@ -111,12 +86,18 @@ void webserver_init(httpd_handle_t* _server) {
 
 httpd_handle_t webserver_start(void)
 {
-    ESP_LOGI(TAG, "WEB_SERVER_STACK_SIZE %d", WEB_SERVER_STACK_SIZE);
-    ESP_LOGI(TAG, "WEB_SERVER_MAX_URI_HANDLERS %d", WEB_SERVER_MAX_URI_HANDLERS);
+    //ESP_LOGI(TAG, "PAGE_URI_MAX %d", PAGE_URI_MAX);
+    //ESP_LOGI(TAG, "WEB_SERVER_STACK_SIZE %d", WEB_SERVER_STACK_SIZE);
+    //ESP_LOGI(TAG, "WEB_SERVER_MAX_URI_HANDLERS %d", WEB_SERVER_MAX_URI_HANDLERS);
+    //ESP_LOGI(TAG, "http_handlers_count %d", http_handlers_count);
+
     httpd_handle_t _server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.stack_size = WEB_SERVER_STACK_SIZE;
-    config.max_uri_handlers = WEB_SERVER_MAX_URI_HANDLERS; //100; //uri_handlers_no; //WEB_SERVER_MAX_URI_GET_HANDLERS;
+
+    //config.max_uri_handlers = WEB_SERVER_MAX_URI_HANDLERS; //100; //uri_handlers_no; //WEB_SERVER_MAX_URI_GET_HANDLERS;
+    config.max_uri_handlers = http_handlers_count;
+
     config.recv_wait_timeout = 10;
     //        .max_uri_handlers   = 8,                        
     //    .max_resp_headers   = 8, 

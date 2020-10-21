@@ -14,6 +14,7 @@
 #ifdef CONFIG_RGB_CONTROLLER_HTTP
 
 #define RGB_CONTROL_URI "/colors"
+#define RGB_CONTROL_HANDLERS_COUNT 1
 
 extern const char *html_block_rgb_control;    
 void rgbcontrol_register_http_print_data(rgbcontrol_handle_t dev_h);

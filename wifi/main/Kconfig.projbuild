@@ -117,11 +117,6 @@ menu "Project config"
             help
                 Webserver page buffer size 4096 / 5120 / 6144 / 7168 / 8192
 
-        config HTTP_HANDLERS_COUNT
-            int "Handlers count"
-            default 40
-            help
-                Webserver handlers count
     endmenu
         
     menu "Relay component"

@@ -23,7 +23,7 @@ pages:
       main - main page
       setup - auth, wifi type and auth for sta 
 */
-#define WEB_SERVER_MAX_URI_HANDLERS CONFIG_HTTP_HANDLERS_COUNT //40
+#define WEB_SERVER_MAX_URI_HANDLERS CONFIG_HTTP_HANDLERS_COUNT // + PAGE_URI_MAX //40
 
 #define HTTP_STR_MAIN "Main"
 #define HTTP_STR_SETUP "Setup"
@@ -76,7 +76,7 @@ enum {
     PAGE_URI_ICON_MENU,
     PAGE_URI_ICON_MENU2,
     PAGE_URI_MAX
-} pages_uri_indext;
+} pages_uri_index_e;
 
 extern const char *PAGES_URI[PAGE_URI_MAX];
 extern user_ctx_t PAGES_HANDLER[PAGE_URI_MAX];
@@ -141,6 +141,7 @@ esp_err_t main_ajax_get_handler(httpd_req_t *req);
 // TODO: еще надо функцию регистрации callback'a обработчика, чтобы обработку wifi_param, mqtt_param вынести в соответствующие модули
 // uri - параметры какого uri будем обрабатывать
 // fn_cb - функция коллбека обработки данных
+
 esp_err_t register_http_process_page_data(const char *uri, httpd_uri_func fn_cb);
 
 /*

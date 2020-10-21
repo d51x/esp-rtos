@@ -62,16 +62,19 @@
 
 #ifdef CONFIG_COMPONENT_LCD2004
 #include "lcd2004.h"
+    #ifdef CONFIG_COMPONENT_LCD2004_HTTP
+    #include "lcd2004_http.h"
+    #endif
 #endif
 
-#ifdef CONFIG_COMPONENT_LCD2004_HTTP
-#include "lcd2004_http.h"
-#endif
+
 
 #ifdef CONFIG_COMPONENT_MCP23017
 #include "mcp23017.h"
 #include "mcp23017_mqtt.h"
-#include "mcp23017_http.h"
+    #ifdef CONFIG_MCP23017_HTTP
+    #include "mcp23017_http.h"
+    #endif
 #endif
 
 #ifdef CONFIG_LED_CONTROLLER

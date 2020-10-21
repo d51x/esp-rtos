@@ -232,7 +232,10 @@ void initialize_modules()
     // relay_write(relay_green_h,  RELAY_STATE_CLOSE);
 
     // relay_blue_h = relay_create( "Blue", 13, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
-    // relay_write(relay_blue_h,  RELAY_STATE_CLOSE);    
+    // relay_write(relay_blue_h,  RELAY_STATE_CLOSE);   
+        #ifdef CONFIG_RELAY_HTTP
+        http_handlers_count += RELAY_HANDLERS_COUNT;
+        #endif 
     #endif
 
     #ifdef CONFIG_COMPONENT_IR_RECV
@@ -247,11 +250,17 @@ void initialize_modules()
     } else {
         ESP_LOGE(TAG, "failed to init ir receiver");
     }    
+        #ifdef CONFIG_IR_RECV_HTTP
+        http_handlers_count += IR_RECV_HANDLERS_COUNT;
+        #endif
     #endif
 
     #ifdef CONFIG_COMPONENT_LCD2004
         lcd2004_init();
-        lcd2004_test_task();
+        lcd2004_test_task()
+        #ifdef CONFIG_COMPONENT_LCD2004_HTTP
+        http_handlers_count += LCD2004_HANDLERS_COUNT;
+        #endif
     #endif
 
     #ifdef CONFIG_COMPONENT_MCP23017
@@ -269,6 +278,11 @@ void initialize_modules()
         mcp23017_isr_handler_add(mcp23017_h, 9, 2, test_mcp23017_isr_cb2, mcp23017_h);
         mcp23017_isr_handler_add(mcp23017_h, 8, 2, test_mcp23017_isr_cb1, mcp23017_h);
         #endif
+
+        #ifdef CONFIG_MCP23017_HTTP
+        http_handlers_count += MCP23017_HANDLERS_COUNT;
+        #endif 
+        
     #endif
 
     #ifdef CONFIG_COMPONENT_PCF8574
@@ -317,9 +331,17 @@ void initialize_modules()
     // ====== initialize led controller =======================
     ledc->init();  
 
+    #ifdef CONFIG_LED_CONTROL_HTTP
+    http_handlers_count += LED_CONTROL_HANDLERS_COUNT;
+    #endif
+
     #ifdef CONFIG_RGB_CONTROLLER
         // === create and init RGB controller ================
         rgb_ledc = rgbcontrol_init(ledc, ch_red, ch_green, ch_blue);
+
+        #ifdef CONFIG_RGB_CONTROLLER_HTTP
+        http_handlers_count += RGB_CONTROL_HANDLERS_COUNT;
+        #endif 
 
         #ifdef CONFIG_RGB_EFFECTS
         // ==== create and init rgb effects =======================
@@ -329,6 +351,10 @@ void initialize_modules()
         #endif
     #endif
 
+    #endif
+
+    #ifdef I2C_HANDLERS_COUNT
+    http_handlers_count += I2C_HANDLERS_COUNT;
     #endif
 }
 

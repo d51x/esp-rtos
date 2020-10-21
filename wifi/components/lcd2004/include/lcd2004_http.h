@@ -14,6 +14,9 @@
 
 #ifdef CONFIG_COMPONENT_LCD2004_HTTP
 
+#define LCD2004_URI "/lcd"
+#define LCD2004_HANDLERS_COUNT 1
+
 extern const char *html_block_lcd2004;    
 void lcd2004_register_http_print_data(); 
 void lcd2004_register_http_handler(httpd_handle_t _server);
