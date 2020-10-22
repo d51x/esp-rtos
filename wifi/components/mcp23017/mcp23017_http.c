@@ -8,13 +8,69 @@ const char *mcp23017_uri ICACHE_RODATA_ATTR = MCP23017_URI "?st=mcp&pin=%d&val="
 
 static const char* TAG = "MCP23017HTTP";
 
+void mcp23017_print_button( mcp23017_handle_t dev_h, httpd_req_t *req, uint8_t idx)
+{
+    if ( idx > 15 ) return;
+    if ( dev_h == NULL ) return;
+    if ( req == NULL ) return;
+
+    mcp23017_t *dev = (mcp23017_t *) dev_h;
+    //uint8_t val = (BIT_CHECK(dev->pins_values, i) != 0 ) ;
+    uint16_t values;
+    mcp23017_read_io(dev_h, &values);
+    uint8_t val = (BIT_CHECK(values, idx) != 0 ) ;
+    uint8_t visible = (BIT_CHECK(dev->http_buttons, idx) != 0 ) ;
+    if ( visible ) {
+        char *btn_id = malloc( strlen(btn_id_tpl) + 2);
+        sprintf(btn_id, btn_id_tpl, idx);
+
+        char *btn_name = malloc(16);
+        snprintf(btn_name, 16, "PIN%02d", idx);
+
+        char *uri = malloc( strlen(mcp23017_uri) + 2);
+        sprintf(uri, mcp23017_uri, idx);
+
+        size_t sz;
+        sz = get_buf_size(html_button
+                                , btn_id
+                                , "lht"                        // id
+                                , val ? "on" : "off" 
+                                , "lht"       // class
+                                , uri
+                                , !val                      // data-val
+                                , ( dev->names[idx] != NULL ) ? dev->names[idx] : btn_name                  // data-text
+                                , 0                        
+                                , 1                       
+                                , ( dev->names[idx] != NULL ) ? dev->names[idx] : btn_name                  // текст кнопки
+                                );
+
+        char *buf_btn = malloc( sz );
+        sprintf(buf_btn, html_button
+                                , btn_id
+                                , "lht"                        // id
+                                , val ? "on" : "off"        // class
+                                , "lht"
+                                , uri
+                                , !val                      // data-val
+                                , ( dev->names[idx] != NULL ) ? dev->names[idx] : btn_name                  // data-text
+                                , 0                        
+                                , 1                       
+                                , ( dev->names[idx] != NULL ) ? dev->names[idx] : btn_name                  // текст кнопки
+                                );                                
+        httpd_resp_sendstr_chunk(req, buf_btn);
+        free(buf_btn);            
+        free(btn_id);
+        free(uri);
+        free(btn_name);
+    }    
+}
+
 static void mcp23017_print_data(http_args_t *args)
 {
     http_args_t *arg = (http_args_t *)args;
     httpd_req_t *req = (httpd_req_t *)arg->req;
 
     mcp23017_handle_t dev_h = (mcp23017_handle_t)arg->dev;
-    mcp23017_t *dev = (mcp23017_t *) dev_h;
 
     size_t sz = get_buf_size(html_block_data_header_start, html_block_mcp23107_title);
     char *data = malloc( sz);   
@@ -23,53 +79,7 @@ static void mcp23017_print_data(http_args_t *args)
 
     for ( uint8_t i = 0; i < 16; i++)
     {
-        //uint8_t val = (BIT_CHECK(dev->pins_values, i) != 0 ) ;
-        uint16_t values;
-        mcp23017_read_io(dev_h, &values);
-        uint8_t val = (BIT_CHECK(values, i) != 0 ) ;
-        uint8_t visible = (BIT_CHECK(dev->http_buttons, i) != 0 ) ;
-        if ( visible ) {
-            char *btn_id = malloc( strlen(btn_id_tpl) + 2);
-            sprintf(btn_id, btn_id_tpl, i);
-
-            char *btn_name = malloc(16);
-            snprintf(btn_name, 16, "PIN%02d", i);
-
-            char *uri = malloc( strlen(mcp23017_uri) + 2);
-            sprintf(uri, mcp23017_uri, i);
-
-            sz = get_buf_size(html_button
-                                    , btn_id
-                                    , "lht"                        // id
-                                    , val ? "on" : "off" 
-                                    , "lht"       // class
-                                    , uri
-                                    , !val                      // data-val
-                                    , ( dev->names[i] != NULL ) ? dev->names[i] : btn_name                  // data-text
-                                    , 0                        
-                                    , 1                       
-                                    , ( dev->names[i] != NULL ) ? dev->names[i] : btn_name                  // текст кнопки
-                                    );
-
-            char *buf_btn = malloc( sz );
-            sprintf(buf_btn, html_button
-                                    , btn_id
-                                    , "lht"                        // id
-                                    , val ? "on" : "off"        // class
-                                    , "lht"
-                                    , uri
-                                    , !val                      // data-val
-                                    , ( dev->names[i] != NULL ) ? dev->names[i] : btn_name                  // data-text
-                                    , 0                        
-                                    , 1                       
-                                    , ( dev->names[i] != NULL ) ? dev->names[i] : btn_name                  // текст кнопки
-                                    );                                
-            httpd_resp_sendstr_chunk(req, buf_btn);
-            free(buf_btn);            
-            free(btn_id);
-            free(uri);
-            free(btn_name);
-        }
+        mcp23017_print_button(dev_h, req, i);
     }
     
     httpd_resp_sendstr_chunk(req, html_block_data_end);

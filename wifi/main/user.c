@@ -23,6 +23,10 @@ void user_web_main(http_args_t *args)
     char data[20];
     sprintf(data, "<br>Temp: %2.1f", sht21_get_temp());
     httpd_resp_sendstr_chunk(req, data);
+    httpd_resp_sendstr_chunk(req, "<br>");
+
+    mcp23017_print_button(mcp23017_h, req, 13);
+
     httpd_resp_sendstr_chunk(req, html_block_data_end);
 }
 
