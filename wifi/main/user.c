@@ -26,6 +26,9 @@ void user_web_main(http_args_t *args)
     httpd_resp_sendstr_chunk(req, "<br>");
 
     mcp23017_print_button(mcp23017_h, req, 13);
+    relay_print_button(req, 1);
+    relay_print_button(req, 2);
+    relay_print_button(req, 3);
 
     httpd_resp_sendstr_chunk(req, html_block_data_end);
 }
