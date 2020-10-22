@@ -1,11 +1,13 @@
 #include "ota_http.h"
+#include "http_page_tpl.h"
 
+static const char *ota_block_title ICACHE_RODATA_ATTR = "Firmware update"; 
 
 const char *html_page_failed ICACHE_RODATA_ATTR = "OTA upgrade failed...\n";
 const char *html_page_uploaded ICACHE_RODATA_ATTR = "File uploaded, it took %d sec. Restarting....";
 
 const char *html_page_ota ICACHE_RODATA_ATTR = 
-  "<p>Выбрать Firmware</p>"
+  //"<p>Выбрать Firmware</p>"
   "<form enctype='multipart/form-data' method='post' action='"HTTP_URI_OTA"'>" 
     "<p><input type='file' name='file' class='button norm rh'  accept='.bin'/></p>" 
     "<p><div class='lf2'><input type='submit' value='Загрузить' class='button norm rht' /></p>"
@@ -18,7 +20,15 @@ static void ota_print_html(http_args_t *args)
 {
     http_args_t *arg = (http_args_t *)args;
     httpd_req_t *req = (httpd_req_t *)arg->req;
+
+    size_t sz = get_buf_size(html_block_data_start, ota_block_title);
+    char *data = malloc( sz );   
+    sprintf(data, html_block_data_start, ota_block_title);
+    httpd_resp_sendstr_chunk(req, data); 
+    free(data);
     httpd_resp_sendstr_chunk(req, html_page_ota);
+    httpd_resp_sendstr_chunk(req, html_block_data_end);  
+    httpd_resp_sendstr_chunk(req, html_block_data_end);  
 }
 
 void ota_http_get_process_params(httpd_req_t *req, void *args)

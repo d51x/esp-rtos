@@ -215,6 +215,7 @@ void print_page_block(httpd_req_t *req, const char *uri)
         sprintf(buf, html_block_data_start, "User options");
         httpd_resp_sendstr_chunk(req, buf);
         free(buf);        
+        httpd_resp_sendstr_chunk(req, html_block_data_end);  
     }
 
     // print data

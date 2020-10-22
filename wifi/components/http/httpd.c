@@ -95,7 +95,7 @@ httpd_handle_t webserver_start(void)
         page_initialize_menu();
         return _server;
     }
-
+    ESP_LOGE(TAG, LOG_FMT("server not started"));
     return NULL;
 }
 
@@ -132,7 +132,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
     return ESP_OK;
 }
 
-void make_redirect(httpd_req_t *req, uint32_t timeout, const char *path) {
+void make_redirect(httpd_req_t *req, uint8_t timeout, const char *path) {
     char t[4];
     itoa(timeout, t, 10);
     char *hdr = calloc(1, strlen(t) + 2 + strlen(path) + 1);
