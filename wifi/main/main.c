@@ -53,6 +53,7 @@ void app_main(void)
     
 
     // ========================================= MQTT modules initialization START
+    //TODO: mqtt enable config option
     mqtt_init();
     initialize_modules_mqtt();
     initialize_modules_http( http_server );

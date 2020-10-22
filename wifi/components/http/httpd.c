@@ -98,8 +98,9 @@ httpd_handle_t webserver_start(void)
     //config.max_uri_handlers = WEB_SERVER_MAX_URI_HANDLERS; //100; //uri_handlers_no; //WEB_SERVER_MAX_URI_GET_HANDLERS;
     config.max_uri_handlers = http_handlers_count;
 
-    config.recv_wait_timeout = 10;
-    //        .max_uri_handlers   = 8,                        
+    config.recv_wait_timeout = 10;   
+    config.lru_purge_enable = true;  /* If no space is available for new session, close the least recently used one */
+
     //    .max_resp_headers   = 8, 
     // Start the httpd server
     ESP_LOGD(TAG, "******** Starting server on port: '%d'", config.server_port);
