@@ -211,8 +211,8 @@ void print_page_block(httpd_req_t *req, const char *uri)
     if ( strcmp(uri, PAGES_URI[ PAGE_URI_CONFIG ]) == 0)
     {
         
-        char *buf = malloc( strlen(html_block_data_start) + 20 );
-        sprintf(buf, html_block_data_start, "User options");
+        char *buf = malloc( strlen(html_block_data_header_start) + 20 );
+        sprintf(buf, html_block_data_header_start, "User options");
         httpd_resp_sendstr_chunk(req, buf);
         free(buf);        
         httpd_resp_sendstr_chunk(req, html_block_data_end);  

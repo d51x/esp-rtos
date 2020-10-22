@@ -16,9 +16,9 @@ static void mcp23017_print_data(http_args_t *args)
     mcp23017_handle_t dev_h = (mcp23017_handle_t)arg->dev;
     mcp23017_t *dev = (mcp23017_t *) dev_h;
 
-    size_t sz = get_buf_size(html_block_data_start, html_block_mcp23107_title);
+    size_t sz = get_buf_size(html_block_data_header_start, html_block_mcp23107_title);
     char *data = malloc( sz);   
-    sprintf(data, html_block_data_start, html_block_mcp23107_title);
+    sprintf(data, html_block_data_header_start, html_block_mcp23107_title);
     httpd_resp_sendstr_chunk(req, data);
 
     for ( uint8_t i = 0; i < 16; i++)

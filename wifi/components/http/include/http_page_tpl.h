@@ -40,7 +40,8 @@ extern const char *html_page_reboot_button_block ICACHE_RODATA_ATTR;
 
 
 // ====== data block  ======================================================================
-extern const char *html_block_data_start ICACHE_RODATA_ATTR;   
+extern const char *html_block_data_header_start ICACHE_RODATA_ATTR;   
+extern const char *html_block_data_no_header_start ICACHE_RODATA_ATTR;   
 extern const char *html_block_data_end ICACHE_RODATA_ATTR;  
 
 // ====== forms  ======================================================================

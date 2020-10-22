@@ -15,9 +15,9 @@ static void sht21_print_data(http_args_t *args)
     http_args_t *arg = (http_args_t *)args;
     httpd_req_t *req = (httpd_req_t *)arg->req;
 
-    size_t sz = get_buf_size(html_block_data_start, html_block_sht21_title);
+    size_t sz = get_buf_size(html_block_data_header_start, html_block_sht21_title);
     char *data = malloc( sz );   
-    sprintf(data, html_block_data_start, html_block_sht21_title);
+    sprintf(data, html_block_data_header_start, html_block_sht21_title);
     httpd_resp_sendstr_chunk(req, data);
 
     // ==========================================================================

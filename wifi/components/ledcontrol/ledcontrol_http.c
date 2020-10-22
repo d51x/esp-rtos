@@ -45,11 +45,11 @@ static void ledcontrol_print_data(http_args_t *args)
     ledcontrol_handle_t ledc_h = group->dev_h;
     ledcontrol_t *ledc = (ledcontrol_t *)ledc_h;
     
-    size_t sz = get_buf_size(html_block_data_start, group->title);
+    size_t sz = get_buf_size(html_block_data_header_start, group->title);
     char *data = malloc( sz );   
-    sprintf(data, html_block_data_start, group->title);
+    sprintf(data, html_block_data_header_start, group->title);
     httpd_resp_sendstr_chunk(req, data);
-    httpd_resp_sendstr_chunk(req, html_block_data_start);
+    httpd_resp_sendstr_chunk(req, html_block_data_header_start);
 
     
 

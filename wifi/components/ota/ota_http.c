@@ -21,9 +21,9 @@ static void ota_print_html(http_args_t *args)
     http_args_t *arg = (http_args_t *)args;
     httpd_req_t *req = (httpd_req_t *)arg->req;
 
-    size_t sz = get_buf_size(html_block_data_start, ota_block_title);
+    size_t sz = get_buf_size(html_block_data_header_start, ota_block_title);
     char *data = malloc( sz );   
-    sprintf(data, html_block_data_start, ota_block_title);
+    sprintf(data, html_block_data_header_start, ota_block_title);
     httpd_resp_sendstr_chunk(req, data); 
     free(data);
     httpd_resp_sendstr_chunk(req, html_page_ota);

@@ -41,9 +41,9 @@ static void mqtt_print_options(http_args_t *args)
     mqtt_config_t *mqtt_cfg = malloc(sizeof(mqtt_config_t));
     mqtt_get_cfg(mqtt_cfg);
 
-    size_t sz = get_buf_size(html_block_data_start, html_page_title_mqtt);
+    size_t sz = get_buf_size(html_block_data_header_start, html_page_title_mqtt);
     char *data = malloc( sz );   
-    sprintf(data, html_block_data_start, html_page_title_mqtt);
+    sprintf(data, html_block_data_header_start, html_page_title_mqtt);
     httpd_resp_sendstr_chunk(req, data);
     httpd_resp_sendstr_chunk(req, html_block_data_form_start);
 

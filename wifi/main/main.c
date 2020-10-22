@@ -439,6 +439,7 @@ void initialize_modules_http(httpd_handle_t _server)
         #endif
     #endif   
 
-    //register_print_page_block( "user1", PAGES_URI[ PAGE_URI_ROOT], 0, user_web_main, NULL, NULL, NULL  );     
-    //register_print_page_block( "user2", PAGES_URI[ PAGE_URI_CONFIG], 0, user_web_options, NULL, user_process_param, NULL  ); 
+    http_args_t *p = calloc(1,sizeof(http_args_t));
+    register_print_page_block( "user1", PAGES_URI[ PAGE_URI_ROOT], 0, user_web_main, p, NULL, NULL  );     
+    register_print_page_block( "user2", PAGES_URI[ PAGE_URI_CONFIG], 0, user_web_options, p, user_process_param, NULL  ); 
 }

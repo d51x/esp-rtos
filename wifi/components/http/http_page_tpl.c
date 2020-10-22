@@ -105,9 +105,12 @@ const char *html_page_reboot_button_block  =
 
 
 // ====== data block  ======================================================================
-const char *html_block_data_start  = 
+const char *html_block_data_header_start  = 
 		"<div class='group rnd'>"
-				"<h4 class='brd-btm'>%s</h4>";   
+				"<h4 class='brd-btm'>%s</h4>";  
+				
+const char *html_block_data_no_header_start  = 
+		"<div class='group rnd'>";   
 
 const char *html_block_data_end  = 
 		"</div>";  

@@ -29,9 +29,9 @@ void lcd2004_print_options(http_args_t *args)
     uint8_t state = lcd2004_backlight_state();
     uint8_t state2 = lcd2004_state();
 
-    size_t sz = get_buf_size(html_block_data_start, lcd2004_title);
+    size_t sz = get_buf_size(html_block_data_header_start, lcd2004_title);
     char *data = malloc( sz );   
-    sprintf(data, html_block_data_start, lcd2004_title);
+    sprintf(data, html_block_data_header_start, lcd2004_title);
     httpd_resp_sendstr_chunk(req, data);
     httpd_resp_sendstr_chunk(req, html_block_data_form_start);
     httpd_resp_sendstr_chunk(req, html_block_data_div_lf3);

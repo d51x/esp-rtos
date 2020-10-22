@@ -28,9 +28,9 @@ void i2c_print_options(http_args_t *args)
     i2c_config_t *cfg = (i2c_config_t *) calloc(1, sizeof(i2c_config_t));
     i2c_load_cfg( cfg );
 
-    size_t sz = get_buf_size(html_block_data_start, I2C_SETTINGS__TITLE);
+    size_t sz = get_buf_size(html_block_data_header_start, I2C_SETTINGS__TITLE);
     char *data = malloc( sz );
-    sprintf(data, html_block_data_start, I2C_SETTINGS__TITLE);
+    sprintf(data, html_block_data_header_start, I2C_SETTINGS__TITLE);
     httpd_resp_sendstr_chunk(req, data);
 
     // ==========================================================================

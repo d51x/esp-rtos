@@ -29,9 +29,9 @@ static void irrcv_print_data(http_args_t *args)
     irrcv_handle_t dev_h = (irrcv_handle_t)arg->dev;
     irrcv_t *dev = (irrcv_t *) dev_h; 
 
-    size_t sz = get_buf_size(html_block_data_start, IRRCV_TITLE);
+    size_t sz = get_buf_size(html_block_data_header_start, IRRCV_TITLE);
     char *data = malloc( sz );   
-    sprintf(data, html_block_data_start, IRRCV_TITLE);
+    sprintf(data, html_block_data_header_start, IRRCV_TITLE);
     httpd_resp_sendstr_chunk(req, data);
 
     // выводим настройку кнопок:
@@ -49,9 +49,9 @@ static void irrcv_print_cfg(http_args_t *args)
     irrcv_handle_t dev_h = (irrcv_handle_t)arg->dev;
     irrcv_t *dev = (irrcv_t *) dev_h;    
 
-    size_t sz = get_buf_size(html_block_data_start, IRRCV_TITLE);
+    size_t sz = get_buf_size(html_block_data_header_start, IRRCV_TITLE);
     char *data = malloc( sz );
-    sprintf(data, html_block_data_start, IRRCV_TITLE);
+    sprintf(data, html_block_data_header_start, IRRCV_TITLE);
     httpd_resp_sendstr_chunk(req, data);
 
     httpd_resp_sendstr_chunk(req, html_block_data_form_start);

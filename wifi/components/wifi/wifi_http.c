@@ -26,9 +26,9 @@ static void wifi_print_options(http_args_t *args)
 	http_args_t *arg = (http_args_t *)args;
 	httpd_req_t *req = (httpd_req_t *)arg->req;
 
-	size_t sz = get_buf_size(html_block_data_start, html_page_config_wifi_title);
+	size_t sz = get_buf_size(html_block_data_header_start, html_page_config_wifi_title);
     char *data = malloc( sz );   
-    sprintf(data, html_block_data_start, html_page_config_wifi_title);
+    sprintf(data, html_block_data_header_start, html_page_config_wifi_title);
     httpd_resp_sendstr_chunk(req, data);
     httpd_resp_sendstr_chunk(req, html_block_data_form_start);
 
