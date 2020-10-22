@@ -63,22 +63,14 @@ void add_uri_post_handler(httpd_handle_t _server, const char *uri, httpd_uri_fun
       my_uri.user_ctx = ctx;
     }
 
-    // ESP_LOGI(TAG, __func__);
-    // ESP_LOGI(TAG, "my_uri.handler addr: %p", my_uri.handler);
-    // ESP_LOGI(TAG, "_server is %s", (_server != NULL) ? "not NULL" : "NULL");
     esp_err_t err = httpd_register_uri_handler(_server, &my_uri);
-    // if ( err == ESP_OK ) {
-    //     ESP_LOGI(TAG, "%s registered successfully",my_uri.uri );
-    // } else {
-    //     ESP_LOGI(TAG, "%s not registered. Error %s", my_uri.uri, esp_err_to_name(err) );
-    // }
+
 }
 
 void webserver_init(httpd_handle_t* _server) {
     /* Start the web server */
     if ( *_server == NULL) {
         *_server = webserver_start();
-        //ESP_LOGI(TAG, "webserver_init _server is %s", (_server != NULL) ? "not NULL" : "NULL");
     }
 }
 
@@ -99,14 +91,11 @@ httpd_handle_t webserver_start(void)
     ESP_LOGD(TAG, "******** Starting server on port: '%d'", config.server_port);
     if (httpd_start(&_server, &config) == ESP_OK) {
         // Set URI handlers
-
         register_uri_handlers(_server);
-        //ESP_LOGI(TAG, "******** start_webserver _server is %s", (_server != NULL) ? "not NULL" : "NULL");
         page_initialize_menu();
         return _server;
     }
 
-    //ESP_LOGI(TAG, "Error starting server!");
     return NULL;
 }
 
@@ -143,8 +132,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
     return ESP_OK;
 }
 
-void make_redirect(httpd_req_t *req, uint8_t timeout, const char *path) {
-    char t[3];
+void make_redirect(httpd_req_t *req, uint32_t timeout, const char *path) {
+    char t[4];
     itoa(timeout, t, 10);
     char *hdr = calloc(1, strlen(t) + 2 + strlen(path) + 1);
     strcpy(hdr, t);
