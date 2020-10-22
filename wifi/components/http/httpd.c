@@ -86,22 +86,15 @@ void webserver_init(httpd_handle_t* _server) {
 
 httpd_handle_t webserver_start(void)
 {
-    //ESP_LOGI(TAG, "PAGE_URI_MAX %d", PAGE_URI_MAX);
-    //ESP_LOGI(TAG, "WEB_SERVER_STACK_SIZE %d", WEB_SERVER_STACK_SIZE);
-    //ESP_LOGI(TAG, "WEB_SERVER_MAX_URI_HANDLERS %d", WEB_SERVER_MAX_URI_HANDLERS);
-    //ESP_LOGI(TAG, "http_handlers_count %d", http_handlers_count);
-
     httpd_handle_t _server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.stack_size = WEB_SERVER_STACK_SIZE;
 
     //config.max_uri_handlers = WEB_SERVER_MAX_URI_HANDLERS; //100; //uri_handlers_no; //WEB_SERVER_MAX_URI_GET_HANDLERS;
     config.max_uri_handlers = http_handlers_count;
-
     config.recv_wait_timeout = 10;   
     config.lru_purge_enable = true;  /* If no space is available for new session, close the least recently used one */
-
-    //    .max_resp_headers   = 8, 
+    
     // Start the httpd server
     ESP_LOGD(TAG, "******** Starting server on port: '%d'", config.server_port);
     if (httpd_start(&_server, &config) == ESP_OK) {
