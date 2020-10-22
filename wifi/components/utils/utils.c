@@ -416,7 +416,6 @@ void print_tasks_info()
             {
                 
                 ulStatsAsPercentage = ( _total_runtime > 0 ) ?  tasks_info[ i ].ulRunTimeCounter / _total_runtime : 0;
-                
                 ESP_LOGI(TAG, "---- %02d Task name: %20s, state: %c, priority: %2d (%2d), free stack: %5d, run time: %10d\t\t, percent: %lu%%", 
                             tasks_info[ i ].xTaskNumber,
                             tasks_info[ i ].pcTaskName,

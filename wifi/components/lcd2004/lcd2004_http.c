@@ -8,15 +8,15 @@ static const char *lcd2004_title ICACHE_RODATA_ATTR = "LCD2004";
 static const char *lcd2004_param_addr ICACHE_RODATA_ATTR = "lcdaddr";
 static const char *lcd2004_title_addr ICACHE_RODATA_ATTR = "Address";
 static const char *param_st_lcd ICACHE_RODATA_ATTR = "lcd";
-static const char *button_id ICACHE_RODATA_ATTR = param_st_lcd "%d";
+static const char *button_id ICACHE_RODATA_ATTR = "lcd%d";
 
 const char *lcd2004_button_backlight_title ICACHE_RODATA_ATTR = "Подсветка";
-const char *lcd2004_button_backlight_uri ICACHE_RODATA_ATTR = LCD2004_URI "?st=" param_st_lcd "&led=";
+const char *lcd2004_button_backlight_uri ICACHE_RODATA_ATTR = "/lcd?st=lcd&led=";
 
 const char *lcd2004_button_clr_title ICACHE_RODATA_ATTR = "Очистить";
-const char *lcd2004_button_clr_uri ICACHE_RODATA_ATTR = LCD2004_URI "?st=" param_st_lcd "&clr=";
+const char *lcd2004_button_clr_uri ICACHE_RODATA_ATTR = "/lcd?st=lcd&clr=";
 
-const char *lcd2004_button_lcdon_uri ICACHE_RODATA_ATTR = LCD2004_URI "?st=" param_st_lcd "&on=";
+const char *lcd2004_button_lcdon_uri ICACHE_RODATA_ATTR = "/lcd?st=lcd&on=";
 
 void lcd2004_print_options(http_args_t *args)
 {

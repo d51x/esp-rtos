@@ -258,7 +258,7 @@ void initialize_modules()
 
     #ifdef CONFIG_COMPONENT_LCD2004
         lcd2004_init();
-        lcd2004_test_task()
+        lcd2004_test_task();
         #ifdef CONFIG_COMPONENT_LCD2004_HTTP
         http_handlers_count += LCD2004_HANDLERS_COUNT;
         #endif
