@@ -38,7 +38,7 @@ static void wifi_ap_set_ip()
     esp_err_t err = ESP_FAIL;
     if ( ESP_WIFI_AP_IP_ADDR_1 != 0 ) {
         err = tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP);
-        ESP_LOGD(TAG, "tcpip_adapter_dhcps_stop err: %s", esp_err_to_name(err));  
+        ESP_LOGW(TAG, "tcpip_adapter_dhcps_stop err: %s", esp_err_to_name(err));  
 
         tcpip_adapter_ip_info_t ip_info;
         memset(&ip_info, 0, sizeof(ip_info));
@@ -47,14 +47,14 @@ static void wifi_ap_set_ip()
         IP4_ADDR(&ip_info.gw, ESP_WIFI_AP_IP_ADDR_1, ESP_WIFI_AP_IP_ADDR_2, ESP_WIFI_AP_IP_ADDR_3, ESP_WIFI_AP_IP_ADDR_4);
         
         err = tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &ip_info);
-        ESP_LOGD(TAG, "tcpip_adapter_set_ip_info err: %s", esp_err_to_name(err));  
+        ESP_LOGW(TAG, "tcpip_adapter_set_ip_info err: %s", esp_err_to_name(err));  
 
         err = tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP);
-        ESP_LOGD(TAG, "tcpip_adapter_dhcps_start err: %s", esp_err_to_name(err));  
+        ESP_LOGW(TAG, "tcpip_adapter_dhcps_start err: %s", esp_err_to_name(err));  
     }
 
         err = tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_AP, ESP_WIFI_AP_SSID);
-        ESP_LOGD(TAG, "tcpip_adapter_set_hostname err: %s", esp_err_to_name(err));     
+        ESP_LOGW(TAG, "tcpip_adapter_set_hostname err: %s", esp_err_to_name(err));     
 }
 
 static void wifi_connect(){
@@ -99,7 +99,10 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
     {
         ESP_LOGD(TAG, "WIFI EVENT: AP_START");
         wifi_ap_set_ip();
-        
+        if ( strcmp(wifi_cfg->hostname, "") == ESP_OK ) 
+        {
+            strcpy(wifi_cfg->hostname, CONFIG_LWIP_LOCAL_HOSTNAME);
+        }
     }
     /*
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STOP) 
@@ -142,7 +145,6 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
 }
 void wifi_init()
 {
-    ESP_LOGD(TAG, "function %s started", __func__);
 
     wifi_cfg = calloc(1, sizeof(wifi_cfg_t));
     wifi_cfg_load(wifi_cfg);
@@ -158,6 +160,7 @@ void wifi_init()
 
 
     if ( wifi_cfg->first) {
+        wifi_cfg->mode = WIFI_MODE_AP;
         if ( strcmp(ESP_WIFI_SSID, "") == ESP_OK ) {
             // start wifi in AP mode
             wifi_init_ap();

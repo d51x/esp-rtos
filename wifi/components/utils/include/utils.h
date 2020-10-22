@@ -34,7 +34,7 @@
 #define ERR_ASSERT(tag, param)  IOT_CHECK(tag, (param) == ESP_OK, ESP_FAIL)
 #define POINT_ASSERT(tag, param, ret)    IOT_CHECK(tag, (param) != NULL, (ret))
 
-
+#define LOG_FMT(x)      "%s: " x, __func__
 
 #define B(bit_no)         (1 << (bit_no))
 #define BIT_CLEAR(reg, bit_no)   (reg) &= ~B(bit_no)

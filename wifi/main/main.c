@@ -46,8 +46,11 @@ void app_main(void)
     user_setup(NULL);
 
     wifi_init();
-    sntp_start();
-
+    if ( wifi_cfg->mode != WIFI_MODE_AP)
+    {
+        sntp_start();
+    } else {
+    }
     // ========================================= HTTP modules initialization START
     webserver_init(&http_server);
     
@@ -55,7 +58,13 @@ void app_main(void)
     // ========================================= MQTT modules initialization START
     //TODO: mqtt enable config option
     mqtt_init();
-    initialize_modules_mqtt();
+    if ( wifi_cfg->mode != WIFI_MODE_AP)
+    {
+        mqtt_start();
+        initialize_modules_mqtt();
+    } else {
+    }
+
     initialize_modules_http( http_server );
     
     while (true) {
@@ -226,14 +235,14 @@ void initialize_modules()
     relay_h = relay_create( "Fan", 2, RELAY_LEVEL_HIGH /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
     relay_write(relay_h,  RELAY_STATE_CLOSE);
 
-    // relay_red_h = relay_create( "Red", 15, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
-    // relay_write(relay_red_h,  RELAY_STATE_CLOSE);
+    relay_red_h = relay_create( "Red", 15, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
+    relay_write(relay_red_h,  RELAY_STATE_CLOSE);
 
-    // relay_green_h = relay_create( "Green", 12, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
-    // relay_write(relay_green_h,  RELAY_STATE_CLOSE);
+    relay_green_h = relay_create( "Green", 12, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
+    relay_write(relay_green_h,  RELAY_STATE_CLOSE);
 
-    // relay_blue_h = relay_create( "Blue", 13, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
-    // relay_write(relay_blue_h,  RELAY_STATE_CLOSE);   
+    relay_blue_h = relay_create( "Blue", 13, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
+    relay_write(relay_blue_h,  RELAY_STATE_CLOSE);   
         #ifdef CONFIG_RELAY_HTTP
         http_handlers_count += RELAY_HANDLERS_COUNT;
         #endif 

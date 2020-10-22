@@ -114,9 +114,9 @@ extern void sntp_start();
 
     #ifdef CONFIG_COMPONENT_RELAY
     relay_handle_t relay_h;
-    // relay_handle_t relay_red_h;
-    // relay_handle_t relay_blue_h;
-    // relay_handle_t relay_green_h;
+    relay_handle_t relay_red_h;
+    relay_handle_t relay_blue_h;
+    relay_handle_t relay_green_h;
     #endif
 
     #ifdef CONFIG_COMPONENT_MCP23017

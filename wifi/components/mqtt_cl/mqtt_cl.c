@@ -172,7 +172,7 @@ void mqtt_init()
     //memset(mqtt_send, 0, MQTT_SEND_CB*sizeof(mqtt_send_t));
     //memset(mqtt_recv, 0, MQTT_RECV_CB*sizeof(mqtt_recv_t));
 
-    mqtt_start();
+    //mqtt_start();
 }
 
 void mqtt_start()
