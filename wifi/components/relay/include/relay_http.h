@@ -18,7 +18,7 @@
 
 extern const char *html_block_relays;  
 
-void relay_print_button(httpd_req_t *req, uint8_t idx);
+void relay_print_button(httpd_req_t *req, const char *btn_id, uint8_t idx);
 void relay_http_init(httpd_handle_t _server);
 
 #endif

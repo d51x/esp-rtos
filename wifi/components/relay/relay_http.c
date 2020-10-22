@@ -9,16 +9,13 @@ static const char *relay_block_title ICACHE_RODATA_ATTR = "Relays";
 static const char *button_id ICACHE_RODATA_ATTR = "relay%d"; 
 static const char *button_uri ICACHE_RODATA_ATTR = RELAY_URI "?pin=%d&st="; 
 
-void relay_print_button(httpd_req_t *req, uint8_t idx)
+void relay_print_button(httpd_req_t *req, const char *btn_id, uint8_t idx)
 {
-        char *b_id = malloc( strlen(button_id) + 5);
-        sprintf(b_id, button_id, relays[idx].pin );
-
         char *b_uri = malloc( strlen(button_uri) + 5);
         sprintf(b_uri, button_uri, relays[idx].pin );
         
         size_t sz = get_buf_size(       html_button
-                                , b_id
+                                , btn_id
                                 , "lht"
                                 , relays[idx].state ? "on" : "off"
                                 , "lht"
@@ -32,7 +29,7 @@ void relay_print_button(httpd_req_t *req, uint8_t idx)
 
         char *data = malloc( sz );
         sprintf(data, html_button
-                                , b_id
+                                , btn_id
                                 , "lht"
                                 , relays[idx].state ? "on" : "off"
                                 , "lht"
@@ -45,8 +42,7 @@ void relay_print_button(httpd_req_t *req, uint8_t idx)
         );
         httpd_resp_sendstr_chunk(req, data);
         free(data);
-        free(b_uri);
-        free(b_id);                                     
+        free(b_uri);                           
 }
 
 static void relay_print_data(http_args_t *args)
@@ -59,10 +55,13 @@ static void relay_print_data(http_args_t *args)
     sprintf(data, html_block_data_header_start, relay_block_title);
     httpd_resp_sendstr_chunk(req, data);    
     free(data);
-    
+
     for (uint8_t i = 0; i < relay_count; i++)
     {
-        relay_print_button(req, i);
+        char *b_id = malloc( strlen(button_id) + 5);
+        sprintf(b_id, button_id, relays[i].pin );
+        relay_print_button(req, b_id, i);
+        free(b_id);
     }
 
     

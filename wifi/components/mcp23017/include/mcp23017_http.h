@@ -17,7 +17,7 @@
 #define MCP23017_HANDLERS_COUNT 1
 
 extern const char *html_block_mcp23107;    
-void mcp23017_print_button( mcp23017_handle_t dev_h, httpd_req_t *req, uint8_t idx);
+void mcp23017_print_button( mcp23017_handle_t dev_h, httpd_req_t *req, const char *btn_id, uint8_t idx);
 void mcp23017_register_http_print_data(mcp23017_handle_t dev_h);
 void mcp23017_register_http_handler(httpd_handle_t _server, mcp23017_handle_t dev_h);
 void mcp23017_http_init(httpd_handle_t _server, mcp23017_handle_t dev_h);
