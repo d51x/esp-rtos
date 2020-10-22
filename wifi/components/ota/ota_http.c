@@ -6,8 +6,8 @@ const char *html_page_uploaded ICACHE_RODATA_ATTR = "File uploaded, it took %d s
 
 const char *html_page_ota ICACHE_RODATA_ATTR = 
   "<p>Выбрать Firmware</p>"
-  "<form enctype='multipart/form-data' method='post' action='"HTTP_URI_OTA"' accept='.bin'>" 
-    "<p><input type='file' name='file' class='button norm rh' /></p>" 
+  "<form enctype='multipart/form-data' method='post' action='"HTTP_URI_OTA"'>" 
+    "<p><input type='file' name='file' class='button norm rh'  accept='.bin'/></p>" 
     "<p><div class='lf2'><input type='submit' value='Загрузить' class='button norm rht' /></p>"
   "</form>"; 
 
