@@ -31,8 +31,14 @@ void user_web_options(http_args_t *args)
     ESP_LOGW("user", __func__ );
     http_args_t *arg = (http_args_t *)args;
     httpd_req_t *req = (httpd_req_t *)arg->req;
-
+        
+    char *buf = malloc( strlen(html_block_data_header_start) + 20 );
+    sprintf(buf, html_block_data_header_start, "User options");
+    httpd_resp_sendstr_chunk(req, buf);
+    free(buf);        
     httpd_resp_sendstr_chunk(req, "Hello User Options!");
+    httpd_resp_sendstr_chunk(req, html_block_data_end);  
+
 }
 
 void user_process_param(httpd_req_t *req, void *args)
