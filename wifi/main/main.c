@@ -60,6 +60,7 @@ void app_main(void)
     
     while (true) {
 
+        static uint32_t sec = 0;
         #ifdef CONFIG_DEBUG_PRINT_TASK_INFO
             print_tasks_info();
         #endif
@@ -92,7 +93,6 @@ void app_main(void)
                 xSemaphoreGive( xSemaphoreLCD2004 );
             }           
         #endif
-        static uint32_t sec = 0;
         user_loop(sec);
         sec++;
         vTaskDelay(1000/ portTICK_RATE_MS);
