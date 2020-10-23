@@ -20,12 +20,12 @@ void user_web_main(http_args_t *args)
     httpd_resp_sendstr_chunk(req, html_block_data_no_header_start);
     httpd_resp_sendstr_chunk(req, "Hello!");
 
-    char data[20];
-    sprintf(data, "<br>Temp: %2.1f", sht21_get_temp());
-    httpd_resp_sendstr_chunk(req, data);
-    httpd_resp_sendstr_chunk(req, "<br>");
+    //char data[20];
+    //sprintf(data, "<br>Temp: %2.1f", sht21_get_temp());
+    //httpd_resp_sendstr_chunk(req, data);
+    //httpd_resp_sendstr_chunk(req, "<br>");
 
-    mcp23017_print_button(mcp23017_h, req, "mcp13", 13);
+    //mcp23017_print_button(mcp23017_h, req, "mcp13", 13);
     relay_print_button(req, "btn1", 1);
     relay_print_button(req, "btn2", 2);
     relay_print_button(req, "btn3", 3);

@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "main.h"
+#include "http_page_tpl.h"
 
 void user_setup(void *args);
 void user_loop(uint32_t sec);
