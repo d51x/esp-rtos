@@ -374,6 +374,13 @@ void initialize_modules()
     #ifdef I2C_HANDLERS_COUNT
     http_handlers_count += I2C_HANDLERS_COUNT;
     #endif
+
+    #ifdef CONFIG_SENSOR_PZEM004_T
+    pzem_init(0);
+    PZEM_Address pzem_addr = {192, 168, 1, 1};
+    pzem_set_addr(&pzem_addr);
+    pzem_task_start(5);
+    #endif
 }
 
 void initialize_modules_mqtt()
@@ -398,6 +405,10 @@ void initialize_modules_mqtt()
 
     #ifdef CONFIG_LED_CONTROLLER
     ledcontrol_mqtt_init(ledc_h);
+    #endif
+
+    #ifdef CONFIG_SENSOR_PZEM004_T
+    pzem_mqtt_init();
     #endif
 }
 
@@ -446,6 +457,10 @@ void initialize_modules_http(httpd_handle_t _server)
             rgbcontrol_http_init(_server, rgb_ledc );
         #endif
     #endif   
+
+    #ifdef CONFIG_SENSOR_PZEM004_T_WEB
+        pzem_http_init(_server);
+    #endif
 
     http_args_t *p = calloc(1,sizeof(http_args_t));
     register_print_page_block( "user1", PAGES_URI[ PAGE_URI_ROOT], 0, user_web_main, p, NULL, NULL  );     

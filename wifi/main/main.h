@@ -109,6 +109,15 @@
         #endif
     #endif
 #endif
+
+#ifdef CONFIG_SENSOR_PZEM004_T
+    #include "pzem004t.h"
+    #include "pzem004t_mqtt.h"
+
+    #ifdef CONFIG_SENSOR_PZEM004_T_WEB
+    #include "pzem004t_http.h"
+    #endif
+#endif
 //======================== variable definitions ===================================
 extern httpd_handle_t http_server;
 

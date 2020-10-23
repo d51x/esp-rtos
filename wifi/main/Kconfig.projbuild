@@ -334,6 +334,19 @@ menu "Project config"
             depends on COMPONENT_I2C
             help 
                 Enable SHT21 sensor
+
+        config SENSOR_PZEM004_T        
+            bool "Pzem 004 t v.1"
+            default n
+            help
+                Enable PZEM 004 T v.1 energy monitor
+
+            config SENSOR_PZEM004_T_WEB
+                bool "Show PZEM data on main page in own block"
+                default y
+                depends on SENSOR_PZEM004_T
+                help
+                    Show PZEM data on main page in own block
     endmenu
 
 endmenu
