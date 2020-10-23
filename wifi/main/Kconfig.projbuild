@@ -42,6 +42,13 @@ menu "Project config"
             help
                 Active the debug control component / tasks.
 
+            config DEBUG_UART1
+                bool "Enable Debug Uart1"
+                default false
+                depends on COMPONENT_DEBUG
+                help
+                    Only tx (gpio2) available for Uart1
+                    
             config DEBUG_PRINT_TASK_INFO
                 bool "Print task info"
                 default n

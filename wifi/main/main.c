@@ -24,6 +24,11 @@ httpd_handle_t http_server = NULL;
 
 void app_main(void)
 {
+    #ifdef CONFIG_DEBUG_UART1
+        enable_debug_uart1();
+        userlog("DEBUG UART1: %s\n", __func__);
+    #endif
+
 	//ESP_ERROR_CHECK(nvs_flash_init());
 
     //Initialize NVS
@@ -70,6 +75,7 @@ void app_main(void)
     while (true) {
 
         static uint32_t sec = 0;
+
         #ifdef CONFIG_DEBUG_PRINT_TASK_INFO
             print_tasks_info();
         #endif
@@ -231,8 +237,10 @@ void test_mcp23017_isr_cb8(char *buf)
 
 void initialize_modules()
 {
+
+
     #ifdef CONFIG_COMPONENT_RELAY
-    relay_h = relay_create( "Fan", 2, RELAY_LEVEL_HIGH /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
+    relay_h = relay_create( "Fan", 16, RELAY_LEVEL_HIGH /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
     relay_write(relay_h,  RELAY_STATE_CLOSE);
 
     relay_red_h = relay_create( "Red", 15, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );

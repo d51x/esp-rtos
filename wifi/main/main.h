@@ -13,11 +13,16 @@
 #include "freertos/task.h"
 #include "freertos/portmacro.h"
 
+
 #include "esp_system.h"
 #include "esp_spi_flash.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 
+
+#ifdef CONFIG_COMPONENT_DEBUG
+    #include "iot_debug.h"
+#endif
 
 #include "wifi.h"
 #include "wifi_http.h"
@@ -30,6 +35,7 @@
 #include "esp_log.h"
 #include "utils.h"
 #include "user.h"
+
 
 #ifdef CONFIG_COMPONENT_I2C
 #include "i2c_http.h"
