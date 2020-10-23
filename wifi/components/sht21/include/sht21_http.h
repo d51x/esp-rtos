@@ -12,8 +12,6 @@
 #include <stdlib.h>
 #include "http_handlers.h"
 #include "httpd.h"
-
-#include "httpd.h"
 #include "sht21.h"
 
 #ifdef CONFIG_SENSOR_SHT21
