@@ -43,8 +43,8 @@ void app_main(void)
     esp_chip_info_t chip_info;
     esp_chip_info(&chip_info);
 	
-	ESP_LOGI(TAG, "Freemem: %d", esp_get_free_heap_size());
-	ESP_LOGI(TAG, "SDK: %s", esp_get_idf_version());
+	//ESP_LOGI(TAG, "Freemem: %d", esp_get_free_heap_size());
+	//ESP_LOGI(TAG, "SDK: %s", esp_get_idf_version());
 	
     // ========================================= MODULES initialization START
     initialize_modules();
@@ -238,19 +238,24 @@ void test_mcp23017_isr_cb8(char *buf)
 void initialize_modules()
 {
 
+    #ifdef CONFIG_SENSOR_PZEM004_T
+    pzem_init(0);
+    pzem_task_start(5);
+    #endif
 
     #ifdef CONFIG_COMPONENT_RELAY
-    relay_h = relay_create( "Fan", 16, RELAY_LEVEL_HIGH /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
-    relay_write(relay_h,  RELAY_STATE_CLOSE);
+    // relay_h = relay_create( "Fan", 0, RELAY_LEVEL_HIGH /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
+    // relay_write(relay_h,  RELAY_STATE_CLOSE);
 
-    relay_red_h = relay_create( "Red", 15, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
-    relay_write(relay_red_h,  RELAY_STATE_CLOSE);
+    // relay_red_h = relay_create( "Red", 15, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
+    // relay_write(relay_red_h,  RELAY_STATE_CLOSE);
 
-    relay_green_h = relay_create( "Green", 12, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
-    relay_write(relay_green_h,  RELAY_STATE_CLOSE);
+    // relay_green_h = relay_create( "Green", 12, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
+    // relay_write(relay_green_h,  RELAY_STATE_CLOSE);
 
-    relay_blue_h = relay_create( "Blue", 13, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
-    relay_write(relay_blue_h,  RELAY_STATE_CLOSE);   
+    // relay_blue_h = relay_create( "Blue", 13, RELAY_LEVEL_LOW /*RELAY_LEVEL_LOW*/ /* RELAY_LEVEL_HIGH*/ );
+    // relay_write(relay_blue_h,  RELAY_STATE_CLOSE);   
+
         #ifdef CONFIG_RELAY_HTTP
         http_handlers_count += RELAY_HANDLERS_COUNT;
         #endif 
@@ -375,12 +380,7 @@ void initialize_modules()
     http_handlers_count += I2C_HANDLERS_COUNT;
     #endif
 
-    #ifdef CONFIG_SENSOR_PZEM004_T
-    pzem_init(0);
-    PZEM_Address pzem_addr = {192, 168, 1, 1};
-    pzem_set_addr(&pzem_addr);
-    pzem_task_start(5);
-    #endif
+
 }
 
 void initialize_modules_mqtt()
@@ -462,7 +462,7 @@ void initialize_modules_http(httpd_handle_t _server)
         pzem_http_init(_server);
     #endif
 
-    http_args_t *p = calloc(1,sizeof(http_args_t));
-    register_print_page_block( "user1", PAGES_URI[ PAGE_URI_ROOT], 0, user_web_main, p, NULL, NULL  );     
-    register_print_page_block( "user2", PAGES_URI[ PAGE_URI_CONFIG], 0, user_web_options, p, user_process_param, NULL  ); 
+    //http_args_t *p = calloc(1,sizeof(http_args_t));
+    //register_print_page_block( "user1", PAGES_URI[ PAGE_URI_ROOT], 0, user_web_main, p, NULL, NULL  );     
+    //register_print_page_block( "user2", PAGES_URI[ PAGE_URI_CONFIG], 0, user_web_options, p, user_process_param, NULL  ); 
 }

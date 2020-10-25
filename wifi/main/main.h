@@ -3,8 +3,6 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
-
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -118,6 +116,8 @@
     #include "pzem004t_http.h"
     #endif
 #endif
+
+
 //======================== variable definitions ===================================
 extern httpd_handle_t http_server;
 
@@ -128,10 +128,10 @@ extern void sntp_start();
     #endif
 
     #ifdef CONFIG_COMPONENT_RELAY
-    relay_handle_t relay_h;
-    relay_handle_t relay_red_h;
-    relay_handle_t relay_blue_h;
-    relay_handle_t relay_green_h;
+    //relay_handle_t relay_h;
+    //relay_handle_t relay_red_h;
+    //relay_handle_t relay_blue_h;
+    //relay_handle_t relay_green_h;
     #endif
 
     #ifdef CONFIG_COMPONENT_MCP23017

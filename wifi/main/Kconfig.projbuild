@@ -341,6 +341,13 @@ menu "Project config"
             help
                 Enable PZEM 004 T v.1 energy monitor
 
+            config SENSOR_PZEM004_T_SOFTUART
+                bool "Pzem via soft uart"
+                default n
+                depends on SENSOR_PZEM004_T
+                help
+                    Enable read PZEM via soft uart
+                    
             config SENSOR_PZEM004_T_WEB
                 bool "Show PZEM data on main page in own block"
                 default y
