@@ -24,12 +24,13 @@
 #include <stdint.h>
 #include "driver/gpio.h"
 #include <stdio.h>
-
+#include <string.h>
 #include "rom/ets_sys.h"
 #include "esp_log.h"
+#include "utils.h"
 
 #define SOFTUART_DEBUG
-
+static const char *TAG = "UART";
 #ifdef SOFTUART_DEBUG
 #define debug(fmt, ...) printf("%s: " fmt "\n", "SOFTUART", ## __VA_ARGS__)
 #else
@@ -122,7 +123,7 @@ static void handle_rx(void *arg)
     ets_delay_us(uart->bit_time);
 
     // Done, reenable interrupt
-    gpio_set_intr_type(uart->rx_pin, GPIO_INTR_NEGEDGE);
+    gpio_set_intr_type(uart->rx_pin, GPIO_INTR_ANYEDGE);
     // gpio_isr_handler_add(uart->rx_pin, handle_rx, (void *)(uart->rx_pin));
 }
 
@@ -208,7 +209,7 @@ bool softuart_open(uint8_t uart_no, uint32_t baudrate, uint32_t rx_pin, uint32_t
     //install gpio isr service
     gpio_install_isr_service(0);
     // Setup the interrupt handler to get the start bit
-    gpio_set_intr_type(rx_pin, GPIO_INTR_NEGEDGE);
+    gpio_set_intr_type(rx_pin, GPIO_INTR_ANYEDGE);
     gpio_isr_handler_add(rx_pin, handle_rx, (void *)rx_pin);
 
     ets_delay_us(1000); // TODO: not sure if it really needed
@@ -238,7 +239,7 @@ bool softuart_put(uint8_t uart_no, char c)
     if (!check_uart_enabled(uart_no)) return false;
     softuart_t *uart = uarts + uart_no;
 
-    ESP_LOGW("softuart", "char put: 0x%02X", c);
+    //printf("%02X ", c);
 
     uint32_t start_time = 0x7FFFFFFF & esp_get_time();
     gpio_set_level(uart->tx_pin, 0);
@@ -267,14 +268,15 @@ bool softuart_put(uint8_t uart_no, char c)
 
 bool softuart_puts(uint8_t uart_no, const char *s)
 {
+    //printf("softuart: put: ");
     while (*s)
     {
         if (!softuart_put(uart_no, *s++)) {
-            ESP_LOGE("softuart", "error char put");
+            ESP_LOGE(TAG, "error char put");
             return false;
         }
     }
-
+    //printf("\r\n");
     return true;
 }
 
@@ -283,7 +285,7 @@ bool softuart_write_bytes(uint8_t uart_no, uint8_t *buf, uint8_t sz)
     for ( uint8_t i=0; i < sz; i++)
     {
         if (!softuart_put(uart_no, buf[i])) {
-            ESP_LOGE("softuart", "error char put");
+            ESP_LOGE(TAG, "error char put");
             return false;
         }
     }
@@ -297,7 +299,14 @@ bool softuart_available(uint8_t uart_no)
     if (!check_uart_enabled(uart_no)) return false;
     softuart_t *uart = uarts + uart_no;
 
-    return (uart->buffer.receive_buffer_tail + SOFTUART_MAX_RX_BUFF - uart->buffer.receive_buffer_head) % SOFTUART_MAX_RX_BUFF;
+    pauseTask(100);   // костыль - задержка определения доступности символа в uart порту rx
+    bool res = false;
+    //uint32_t t = millis();
+    //while (millis() - t < 1000)
+    {
+        res = (uart->buffer.receive_buffer_tail + SOFTUART_MAX_RX_BUFF - uart->buffer.receive_buffer_head) % SOFTUART_MAX_RX_BUFF;
+    }
+    return res;
 }
 
 uint8_t softuart_read(uint8_t uart_no)
@@ -306,6 +315,8 @@ uint8_t softuart_read(uint8_t uart_no)
     if (!check_uart_enabled(uart_no)) return 0;
     softuart_t *uart = uarts + uart_no;
 
+    // TODO: через какое то время (примерно час) начинается отставание, на 1ый запрос нет ответа или старый ответ
+    // на второй запрос читается ответ от предыдущего запроса
     // Empty buffer?
     if (uart->buffer.receive_buffer_head == uart->buffer.receive_buffer_tail) return 0;
 
@@ -339,5 +350,9 @@ uint8_t softuart_read_buf(uint8_t uart_no, char *buf, uint8_t max_len)
         }
     }
     //*buf++ = '\0'; // ??????
+    // TODO: костыль, очистим весь буфер uart после чтения нужного кол-ва байт
+    softuart_t *uart = uarts + uart_no;
+    memset(&uart->buffer, 0, sizeof(softuart_buffer_t));
+
     return len;
 }
