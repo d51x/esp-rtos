@@ -66,7 +66,6 @@ void pzem_init(uint8_t uart_num)
     _uart_num = uart_num;
 
 	#ifdef CONFIG_SENSOR_PZEM004_T_SOFTUART
-	//softuart_open(_uart_num, 9600, 0 /*RX*/, 2 /*TX*/);
 	softuart_open(_uart_num, 9600, 2 /*RX*/, 0 /*TX*/, UART_READ_TIMEOUT);
 	#else
     uart_config_t uart_config = {
@@ -255,7 +254,7 @@ static float pzem_energy(uint8_t *addr) {
 
 esp_err_t pzem_set_addr(PZEM_Address *_addr)
 {
-	ESP_LOGW(TAG, __func__);	
+	//ESP_LOGW(TAG, __func__);	
 	memcpy(&_pzem_addr, _addr, 4);
     uint8_t data[RESPONSE_DATA_SIZE];
     pzem_send(_pzem_addr, CMD_ADDRESS);
@@ -271,7 +270,7 @@ esp_err_t pzem_set_addr(PZEM_Address *_addr)
 
 float pzem_read_voltage()
 {
-	ESP_LOGW(TAG, __func__);
+	//ESP_LOGW(TAG, __func__);
 	float v = pzem_voltage(_pzem_addr);
 	_pzem_data.voltage = ( v == 0 || v > VOLTAGE_TRESHOLD) ? _pzem_data.voltage : v;
 
@@ -286,7 +285,7 @@ float pzem_read_voltage()
 
 float pzem_read_current()
 {
-	ESP_LOGW(TAG, __func__);
+	//ESP_LOGW(TAG, __func__);
 	float v = pzem_current(_pzem_addr);
 	_pzem_data.current = ( v == 0 || v > CURRENT_TRESHOLD) ? _pzem_data.current : v;
 
@@ -300,7 +299,7 @@ float pzem_read_current()
 
 float pzem_read_power()
 {
-	ESP_LOGW(TAG, __func__);
+	//ESP_LOGW(TAG, __func__);
 	float v = pzem_power(_pzem_addr);
 	_pzem_data.power = ( v == 0 || v > POWER_TRESHOLD) ? _pzem_data.power : v;	
 
@@ -314,7 +313,7 @@ float pzem_read_power()
 
 float pzem_read_energy()
 {
-	ESP_LOGW(TAG, __func__);
+	//ESP_LOGW(TAG, __func__);
 	float v = pzem_energy(_pzem_addr);	
 	_pzem_data.energy = ( v == 0) ? _pzem_data.energy : v;
 
