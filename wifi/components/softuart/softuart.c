@@ -1,6 +1,6 @@
 /*
  * Softuart
- *
+ * Copyright (C) 2020 d51x <dimonich110@@gmail.com>
  * Copyright (C) 2020 Ivan Belokobylskiy <belokobylskij@gmail.com>
  * Copyright (C) 2017 Ruslan V. Uss <unclerus@gmail.com>
  * Copyright (C) 2016 Bernhard Guillon <Bernhard.Guillon@web.de>
@@ -30,7 +30,7 @@
 #include "utils.h"
 
 #define SOFTUART_DEBUG
-static const char *TAG = "UART";
+static const char *TAG = "SOFTUART";
 #ifdef SOFTUART_DEBUG
 #define debug(fmt, ...) printf("%s: " fmt "\n", "SOFTUART", ## __VA_ARGS__)
 #else
@@ -253,12 +253,9 @@ bool softuart_put(uint8_t uart_no, char c)
     if (!check_uart_enabled(uart_no)) return false;
     softuart_t *uart = uarts + uart_no;
 
-    //printf("%02X ", c);
-
     uint32_t start_time = 0x7FFFFFFF & esp_get_time();
     gpio_set_level(uart->tx_pin, 0);
 
-    //for (uint8_t i = 0; i <= 8; i++)
     for (uint8_t i = 0; i < 8; i++)
     {
         while ((0x7FFFFFFF & esp_get_time()) < (start_time + (uart->bit_time * (i + 1))))
@@ -282,7 +279,6 @@ bool softuart_put(uint8_t uart_no, char c)
 
 bool softuart_puts(uint8_t uart_no, const char *s)
 {
-    //printf("softuart: put: ");
     while (*s)
     {
         if (!softuart_put(uart_no, *s++)) {
@@ -290,7 +286,6 @@ bool softuart_puts(uint8_t uart_no, const char *s)
             return false;
         }
     }
-    //printf("\r\n");
     return true;
 }
 
@@ -307,28 +302,23 @@ bool softuart_write_bytes(uint8_t uart_no, uint8_t *buf, uint8_t sz)
     return true;
 }
 
-bool softuart_available(uint8_t uart_no)
+uint8_t softuart_available(uint8_t uart_no)
 {
     if (!check_uart_no(uart_no)) return false;
     if (!check_uart_enabled(uart_no)) return false;
     softuart_t *uart = uarts + uart_no;
 
-    //pauseTask(105);   // костыль - задержка определения доступности символа в uart порту rx
-    bool res = false;
     unsigned long t = millis();
     int avail = 0;
     while ( millis() - t < uart->timeout  )
     {
-        //res = (uart->buffer.receive_buffer_tail + SOFTUART_MAX_RX_BUFF - uart->buffer.receive_buffer_head) % SOFTUART_MAX_RX_BUFF;
         avail = uart->buffer.receive_buffer_tail - uart->buffer.receive_buffer_head;
         if (avail < 0) avail += SOFTUART_MAX_RX_BUFF;     
         if ( avail > 0) break;   
-        //ets_delay_us(100);
         pauseTask(10);
     }
 
     return avail > 0;
-    //return res;
 }
 
 uint8_t softuart_read(uint8_t uart_no)
@@ -337,9 +327,6 @@ uint8_t softuart_read(uint8_t uart_no)
     if (!check_uart_enabled(uart_no)) return 0;
     softuart_t *uart = uarts + uart_no;
 
-    // TODO: через какое то время (примерно час) начинается отставание, на 1ый запрос нет ответа или старый ответ
-    // на второй запрос читается ответ от предыдущего запроса
-    // Empty buffer?
     if (uart->buffer.receive_buffer_head == uart->buffer.receive_buffer_tail) return 0;
 
     // Read from "head"
@@ -353,7 +340,7 @@ uint8_t softuart_read_buf(uint8_t uart_no, char *buf, uint8_t max_len)
     uint8_t next_char;
     uint8_t len = 0;
 
-    while ( softuart_available(uart_no) )
+    while ( softuart_available(uart_no) > 0)
     {
         next_char = softuart_read(uart_no);
 
@@ -371,8 +358,7 @@ uint8_t softuart_read_buf(uint8_t uart_no, char *buf, uint8_t max_len)
             break;
         }
     }
-    //*buf++ = '\0'; // ??????
-    // TODO: костыль, очистим весь буфер uart после чтения нужного кол-ва байт
+
     softuart_t *uart = uarts + uart_no;
     memset(&uart->buffer, 0, sizeof(softuart_buffer_t));
 

@@ -1,6 +1,7 @@
 /*
  * Softuart for esp-open-rtos
  *
+ * Copyright (C) 2020 d51x <dimonich110@@gmail.com>* 
  * Copyright (C) 2017 Ruslan V. Uss <unclerus@gmail.com>
  * Copyright (C) 2016 Bernhard Guillon <Bernhard.Guillon@web.de>
  *
@@ -42,6 +43,7 @@ extern "C"
  * @param baudrate Baudrate, e.g. 9600, 19200, etc
  * @param rx_pin GPIO pin number for RX
  * @param tx_pin GPIO pin number for TX
+ * @param timeout timeout for waiting data on rx pin
  * @return true if no errors occured otherwise false
  */
 bool softuart_open(uint8_t uart_no, uint32_t baudrate, uint32_t rx_pin, uint32_t tx_pin, uint16_t timeout);
@@ -69,12 +71,22 @@ bool softuart_put(uint8_t uart_no, char c);
  */
 bool softuart_puts(uint8_t uart_no, const char *s);
 
+
+/**
+ * Put buffer to software uart
+ * @param uart_no Software uart index, 0..SOFTUART_MAX_UARTS
+ * @param buf pointer to buffer
+ * @param sz size of buffer
+ * @return true if no errors occured otherwise false
+ */
+bool softuart_write_bytes(uint8_t uart_no, uint8_t *buf, uint8_t sz);
+
 /**
  * Check if data is available
  * @param uart_no Software uart index, 0..SOFTUART_MAX_UARTS
- * @return true if data is available otherwise false
+ * @return number of bytes if data is available otherwise 0
  */
-bool softuart_available(uint8_t uart_no);
+uint8_t softuart_available(uint8_t uart_no);
 
 /**
  * Read current byte from internal buffer if available.
@@ -85,7 +97,16 @@ bool softuart_available(uint8_t uart_no);
  * @return current byte if available otherwise 0
  */
 uint8_t softuart_read(uint8_t uart_no);
-bool softuart_write_bytes(uint8_t uart_no, uint8_t *buf, uint8_t sz);
+
+/**
+ * Read data array from internal buffer if available.
+ *
+ * NOTE: This call is non blocking.
+ * @param uart_no Software uart index, 0..SOFTUART_MAX_UARTS
+ * @param buf pointer to buffer
+ * @param max_len maximum size to read
+ * @return current byte if available otherwise 0
+ */
 uint8_t softuart_read_buf(uint8_t uart_no, char *buf, uint8_t max_len);
 
 #ifdef __cplusplus
