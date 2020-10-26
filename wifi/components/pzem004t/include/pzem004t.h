@@ -23,7 +23,6 @@
 
 #ifdef CONFIG_SENSOR_PZEM004_T
 
-#define PZEM_VER 7
 #define PZEM_ERROR_VALUE 0 //-1.0f
 
 typedef uint8_t PZEM_Address[4] ;

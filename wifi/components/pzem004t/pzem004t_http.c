@@ -13,7 +13,6 @@ const char *html_block_pzem004t_title_energy_total ICACHE_RODATA_ATTR = "Energy 
 const char *html_block_pzem004t_title_energy_today ICACHE_RODATA_ATTR = "Energy today";
 const char *html_block_pzem004t_title_energy_yesterday ICACHE_RODATA_ATTR = "Energy yesterday";
 const char *html_block_pzem004t_title_errors ICACHE_RODATA_ATTR = "Errors";
-const char *html_block_pzem004t_title_ready ICACHE_RODATA_ATTR = "Ready";
 
 static void pzem_print_data(http_args_t *args)
 {
@@ -81,19 +80,6 @@ static void pzem_print_data(http_args_t *args)
     httpd_resp_sendstr_chunk(req, data);
 
     // ==========================================================================
-    sprintf(param, "%s", (pzem_data.ready == ESP_OK) ? "Ready" : "Not ready");
-    sz = get_buf_size(html_block_data_form_item_label_label
-                                , html_block_pzem004t_title_ready // %s label
-                                , param   // %s name
-                                );
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_item_label_label
-                                , html_block_pzem004t_title_ready // %s label
-                                , param   // %s name
-                                );
-    httpd_resp_sendstr_chunk(req, data);
-
-    // ==========================================================================
     sprintf(param, "%d", pzem_data.errors);
     sz = get_buf_size(html_block_data_form_item_label_label
                                 , html_block_pzem004t_title_errors // %s label
@@ -105,12 +91,6 @@ static void pzem_print_data(http_args_t *args)
                                 , param   // %s name
                                 );
     httpd_resp_sendstr_chunk(req, data);
-
-
-    // debug
-    sprintf(param, "<br>pzem.ver %d", PZEM_VER);
-    httpd_resp_sendstr_chunk(req, param);
-
     httpd_resp_sendstr_chunk(req, html_block_data_end); 
     free(data);
 }
