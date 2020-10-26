@@ -55,7 +55,7 @@ static void pzem_print_data(http_args_t *args)
     httpd_resp_sendstr_chunk(req, data);
 
     // ==========================================================================
-    sprintf(param, "%0.2f W/h", pzem_data.power);
+    sprintf(param, "%d W/h", (uint32_t)pzem_data.power);
     sz = get_buf_size(html_block_data_form_item_label_label
                                 , html_block_pzem004t_title_power // %s label
                                 , param   // %s name
@@ -68,7 +68,7 @@ static void pzem_print_data(http_args_t *args)
     httpd_resp_sendstr_chunk(req, data);
 
     // ==========================================================================
-    sprintf(param, "%0.2f W*h", pzem_data.energy);
+    sprintf(param, "%d W*h", (uint32_t)pzem_data.energy);
     sz = get_buf_size(html_block_data_form_item_label_label
                                 , html_block_pzem004t_title_energy_total // %s label
                                 , param   // %s name

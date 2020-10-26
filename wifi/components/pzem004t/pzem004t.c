@@ -66,7 +66,8 @@ void pzem_init(uint8_t uart_num)
     _uart_num = uart_num;
 
 	#ifdef CONFIG_SENSOR_PZEM004_T_SOFTUART
-	softuart_open(_uart_num, 9600, 0 /*RX*/, 2 /*TX*/);
+	//softuart_open(_uart_num, 9600, 0 /*RX*/, 2 /*TX*/);
+	softuart_open(_uart_num, 9600, 2 /*RX*/, 0 /*TX*/);
 	#else
     uart_config_t uart_config = {
         .baud_rate = 9600,
@@ -154,6 +155,16 @@ static void pzem_send (uint8_t *addr, uint8_t cmd)
 	uint8_t *bytes = (uint8_t*)&pzem;
 	pzem.crc = pzem_crc(bytes, sizeof(PZEM_Command_t) - 1);
 	//pzem.crc = pzem_crc((uint8_t*)&pzem, sizeof(PZEM_Command_t) - 1);
+
+		char wlog[128];
+		sprintf(wlog, "%s: len %d buf: ", __func__, sizeof(PZEM_Command_t));
+		char r[8];  
+		for (uint8_t i = 0; i < sizeof(PZEM_Command_t); i++) {
+			sprintf(r, "%02X ", bytes[i]);
+			strcat(wlog + strlen(wlog), r);
+		}
+		ESP_LOGW(TAG, wlog);  
+
 	send_buffer(bytes, sizeof(PZEM_Command_t));
 	//send_buffer((uint8_t*)&pzem, sizeof(PZEM_Command_t));
 }
@@ -165,7 +176,7 @@ static esp_err_t pzem_read(uint8_t resp, uint8_t *data)
 	uint8_t len = read_buffer(buf, RESPONSE_SIZE);
 	
 
-	  #ifdef CONFIG_DEBUG_UART1
+	#ifdef CONFIG_DEBUG_UART1
 		userlog("%08d > %s: len %d\n", millis(), __func__, len);
 	  	if ( len > 0 ) {
 	  		userlog("%s: len: %d \t buf = ", __func__, len);
@@ -174,15 +185,21 @@ static esp_err_t pzem_read(uint8_t resp, uint8_t *data)
 	  		}
 	  		userlog("\n");
 	  	}
-		  #else
-		ESP_LOGW(TAG, "%s: len %d", __func__, len);
-	  	if ( len > 0 ) {
-	  		ESP_LOGW(TAG, "%s: len: %d \t buf = ", __func__, len);
+	#else
+		char wlog[128];
+		sprintf(wlog, "%s: len %d", __func__, len);
+	  	if ( len > 0 ) 
+		{
+			strcat(wlog + strlen(wlog), " buf: ");
+			char r[8];  
 	  		for (uint8_t i = 0; i < len; i++) {
-	  			ESP_LOGW(TAG, "%02X ", buf[i]);
+	  			sprintf(r, "%02X ", buf[i]);
+				strcat(wlog + strlen(wlog), r);
 	  		}
 	  	}		  
-	  #endif
+		ESP_LOGW(TAG, "%s", wlog);  
+		ESP_LOGW(TAG, " ");  
+	#endif
 
 	if ( len == 0 ) res = ESP_FAIL;
 	else 
@@ -238,6 +255,7 @@ static float pzem_energy(uint8_t *addr) {
 
 esp_err_t pzem_set_addr(PZEM_Address *_addr)
 {
+	ESP_LOGW(TAG, __func__);	
 	memcpy(&_pzem_addr, _addr, 4);
     uint8_t data[RESPONSE_DATA_SIZE];
     pzem_send(_pzem_addr, CMD_ADDRESS);
@@ -253,6 +271,7 @@ esp_err_t pzem_set_addr(PZEM_Address *_addr)
 
 float pzem_read_voltage()
 {
+	ESP_LOGW(TAG, __func__);
 	float v = pzem_voltage(_pzem_addr);
 	_pzem_data.voltage = ( v == 0 || v > VOLTAGE_TRESHOLD) ? _pzem_data.voltage : v;
 
@@ -267,6 +286,7 @@ float pzem_read_voltage()
 
 float pzem_read_current()
 {
+	ESP_LOGW(TAG, __func__);
 	float v = pzem_current(_pzem_addr);
 	_pzem_data.current = ( v == 0 || v > CURRENT_TRESHOLD) ? _pzem_data.current : v;
 
@@ -280,6 +300,7 @@ float pzem_read_current()
 
 float pzem_read_power()
 {
+	ESP_LOGW(TAG, __func__);
 	float v = pzem_power(_pzem_addr);
 	_pzem_data.power = ( v == 0 || v > POWER_TRESHOLD) ? _pzem_data.power : v;	
 
@@ -293,6 +314,7 @@ float pzem_read_power()
 
 float pzem_read_energy()
 {
+	ESP_LOGW(TAG, __func__);
 	float v = pzem_energy(_pzem_addr);	
 	_pzem_data.energy = ( v == 0) ? _pzem_data.energy : v;
 
@@ -345,14 +367,20 @@ static void pzem_periodic_task(void *arg)
 			for (i = 0; i < _strategy.voltage_read_count; i++)
 				pzem_read_voltage();
 
-			// for (i = 0; i < _strategy.current_read_count; i++)	
-			// 	pzem_read_current();
+			pauseTask(150);	
 
-			// for (i = 0; i < _strategy.power_read_count; i++)	
-			// 	pzem_read_power();
+			for (i = 0; i < _strategy.current_read_count; i++)	
+			 	pzem_read_current();
 
-			// for (i = 0; i < _strategy.energy_read_count; i++)	
-			// 	pzem_read_energy();
+			pauseTask(150);	
+
+			for (i = 0; i < _strategy.power_read_count; i++)	
+			 	pzem_read_power();
+
+			pauseTask(150);	
+
+			for (i = 0; i < _strategy.energy_read_count; i++)	
+			 	pzem_read_energy();
 
 			if ( _pzem_data.errors >= PZEM_READ_ERROR_COUNT )
 			{

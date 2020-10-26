@@ -22,13 +22,13 @@ static void pzem_mqtt_send_current(char *payload, void *args)
 static void pzem_mqtt_send_power(char *payload, void *args)
 {
     pzem_data_t pzem_data = pzem_get_data();
-    sprintf(payload, "%0.1f", pzem_data.power);
+    sprintf(payload, "%d", (uint32_t)pzem_data.power);
 }
 
 static void pzem_mqtt_send_energy(char *payload, void *args)
 {
     pzem_data_t pzem_data = pzem_get_data();
-    sprintf(payload, "%0.1f", pzem_data.energy);
+    sprintf(payload, "%d", (uint32_t)pzem_data.energy);
 }
 
 void pzem_mqtt_init()
