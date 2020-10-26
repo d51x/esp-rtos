@@ -53,6 +53,7 @@ typedef struct
     uint32_t baudrate;
     volatile softuart_buffer_t buffer;
     uint16_t bit_time;
+    uint16_t timeout;
 } softuart_t;
 
 static softuart_t uarts[SOFTUART_MAX_UARTS] = { { 0 } };
@@ -65,20 +66,9 @@ inline static int8_t find_uart_by_rx(uint8_t rx_pin)
     return -1;
 }
 
-// GPIO interrupt handler
-static void handle_rx(void *arg)
+
+static void IRAM_ATTR read_rx(softuart_t *uart)
 {
-    uint32_t gpio_num = (uint32_t) arg;
-    // find uart
-    int8_t uart_no = find_uart_by_rx(gpio_num);
-    if (uart_no < 0) return;
-
-    softuart_t *uart = uarts + uart_no;
-
-    // Disable interrupt
-    gpio_set_intr_type(gpio_num, GPIO_INTR_DISABLE);
-    // gpio_isr_handler_remove(gpio_num);
-
     // Wait till start bit is half over so we can sample the next one in the center
     ets_delay_us(uart->bit_time / 2);
 
@@ -108,7 +98,7 @@ static void handle_rx(void *arg)
     // Store byte in buffer
     // If buffer full, set the overflow flag and return
     uint8_t next = (uart->buffer.receive_buffer_tail + 1) % SOFTUART_MAX_RX_BUFF;
-    if (next != uart->buffer.receive_buffer_head)
+    if (next != uart->buffer.receive_buffer_tail)
     {
         // save new data in buffer: tail points to where byte goes
         uart->buffer.receive_buffer[uart->buffer.receive_buffer_tail] = d; // save new byte
@@ -120,10 +110,33 @@ static void handle_rx(void *arg)
     }
 
     // Wait for stop bit
-    ets_delay_us(uart->bit_time);
+    //ets_delay_us(uart->bit_time);
+
+    /* from arduino esp8266 software serial */
+    unsigned long wait = uart->bit_time;
+    while ((0x7FFFFFFF & esp_get_time()) - start_time > wait )
+    {
+        wait += uart->bit_time;
+    }    
+}
+
+// GPIO interrupt handler
+static void IRAM_ATTR handle_rx(void *arg)
+{
+    uint32_t gpio_num = (uint32_t) arg;
+    // find uart
+    int8_t uart_no = find_uart_by_rx(gpio_num);
+    if (uart_no < 0) return;
+    softuart_t *uart = uarts + uart_no;
+
+    // Disable interrupt
+    gpio_set_intr_type(gpio_num, GPIO_INTR_DISABLE);
+    // gpio_isr_handler_remove(gpio_num);
+
+    read_rx(uart);
 
     // Done, reenable interrupt
-    gpio_set_intr_type(uart->rx_pin, GPIO_INTR_ANYEDGE);
+    gpio_set_intr_type(uart->rx_pin, GPIO_INTR_NEGEDGE);
     // gpio_isr_handler_add(uart->rx_pin, handle_rx, (void *)(uart->rx_pin));
 }
 
@@ -153,7 +166,7 @@ static bool check_uart_enabled(uint8_t uart_no)
 /// Public
 ///////////////////////////////////////////////////////////////////////////////
 
-bool softuart_open(uint8_t uart_no, uint32_t baudrate, uint32_t rx_pin, uint32_t tx_pin)
+bool softuart_open(uint8_t uart_no, uint32_t baudrate, uint32_t rx_pin, uint32_t tx_pin, uint16_t timeout)
 {
     // do some checks
     if (!check_uart_no(uart_no)) return false;
@@ -177,6 +190,7 @@ bool softuart_open(uint8_t uart_no, uint32_t baudrate, uint32_t rx_pin, uint32_t
     uart->baudrate = baudrate;
     uart->rx_pin = rx_pin;
     uart->tx_pin = tx_pin;
+    uart->timeout = timeout;
 
     // Calculate bit_time
     uart->bit_time = (1000000 / baudrate);
@@ -209,7 +223,7 @@ bool softuart_open(uint8_t uart_no, uint32_t baudrate, uint32_t rx_pin, uint32_t
     //install gpio isr service
     gpio_install_isr_service(0);
     // Setup the interrupt handler to get the start bit
-    gpio_set_intr_type(rx_pin, GPIO_INTR_ANYEDGE);
+    gpio_set_intr_type(rx_pin, GPIO_INTR_NEGEDGE);
     gpio_isr_handler_add(rx_pin, handle_rx, (void *)rx_pin);
 
     ets_delay_us(1000); // TODO: not sure if it really needed
@@ -299,14 +313,22 @@ bool softuart_available(uint8_t uart_no)
     if (!check_uart_enabled(uart_no)) return false;
     softuart_t *uart = uarts + uart_no;
 
-    pauseTask(100);   // костыль - задержка определения доступности символа в uart порту rx
+    //pauseTask(105);   // костыль - задержка определения доступности символа в uart порту rx
     bool res = false;
-    //uint32_t t = millis();
-    //while (millis() - t < 1000)
+    unsigned long t = millis();
+    int avail = 0;
+    while ( millis() - t < uart->timeout  )
     {
-        res = (uart->buffer.receive_buffer_tail + SOFTUART_MAX_RX_BUFF - uart->buffer.receive_buffer_head) % SOFTUART_MAX_RX_BUFF;
+        //res = (uart->buffer.receive_buffer_tail + SOFTUART_MAX_RX_BUFF - uart->buffer.receive_buffer_head) % SOFTUART_MAX_RX_BUFF;
+        avail = uart->buffer.receive_buffer_tail - uart->buffer.receive_buffer_head;
+        if (avail < 0) avail += SOFTUART_MAX_RX_BUFF;     
+        if ( avail > 0) break;   
+        //ets_delay_us(100);
+        pauseTask(10);
     }
-    return res;
+
+    return avail > 0;
+    //return res;
 }
 
 uint8_t softuart_read(uint8_t uart_no)

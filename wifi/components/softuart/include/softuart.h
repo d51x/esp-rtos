@@ -44,7 +44,7 @@ extern "C"
  * @param tx_pin GPIO pin number for TX
  * @return true if no errors occured otherwise false
  */
-bool softuart_open(uint8_t uart_no, uint32_t baudrate, uint32_t rx_pin, uint32_t tx_pin);
+bool softuart_open(uint8_t uart_no, uint32_t baudrate, uint32_t rx_pin, uint32_t tx_pin, uint16_t timeout);
 
 /**
  * Deinitialize software uart

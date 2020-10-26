@@ -67,7 +67,7 @@ void pzem_init(uint8_t uart_num)
 
 	#ifdef CONFIG_SENSOR_PZEM004_T_SOFTUART
 	//softuart_open(_uart_num, 9600, 0 /*RX*/, 2 /*TX*/);
-	softuart_open(_uart_num, 9600, 2 /*RX*/, 0 /*TX*/);
+	softuart_open(_uart_num, 9600, 2 /*RX*/, 0 /*TX*/, UART_READ_TIMEOUT);
 	#else
     uart_config_t uart_config = {
         .baud_rate = 9600,
@@ -367,17 +367,11 @@ static void pzem_periodic_task(void *arg)
 			for (i = 0; i < _strategy.voltage_read_count; i++)
 				pzem_read_voltage();
 
-			pauseTask(150);	
-
 			for (i = 0; i < _strategy.current_read_count; i++)	
 			 	pzem_read_current();
 
-			pauseTask(150);	
-
 			for (i = 0; i < _strategy.power_read_count; i++)	
 			 	pzem_read_power();
-
-			pauseTask(150);	
 
 			for (i = 0; i < _strategy.energy_read_count; i++)	
 			 	pzem_read_energy();
