@@ -17,6 +17,8 @@
 #include "driver/uart.h"
 #endif
 
+#include "nvsparam.h"
+
 #ifdef CONFIG_DEBUG_UART1
 #include "iot_debug.h"
 #endif
@@ -28,12 +30,32 @@
 typedef uint8_t PZEM_Address[4] ;
 
 typedef struct {
+    uint32_t prev_midnight;
+    uint32_t today_midnight;
+    uint32_t prev_t1;
+    uint32_t prev_t2;
+    uint32_t today_t1;
+    uint32_t today_t2;
+} pzem_energy_t;
+
+typedef struct {
+    uint16_t today_total;
+    uint16_t prev_total;
+    uint16_t today_day;
+    uint16_t prev_day;
+    uint16_t today_night;
+    uint16_t prev_night;
+} pzem_consumption_t;
+
+typedef struct {
     float voltage;
     float current;
     float power;
     float energy;
     uint16_t errors;
     esp_err_t ready;
+    pzem_energy_t energy_values;
+    pzem_consumption_t consumption;
 } pzem_data_t;
 
 typedef struct {

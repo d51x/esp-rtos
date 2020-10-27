@@ -30,7 +30,15 @@ static const char *TAG = "PZEM";
 #define TX_BUF_SIZE UART_FIFO_LEN + 1
 
 #define PZEM_PERIODIC_TASK_PRIORITY 13
-#define PZEM_PERIODIC_TASK_STACK_DEPTH 2048
+#define PZEM_PERIODIC_TASK_STACK_DEPTH 1025 + 512
+
+#define PZEM_ENERGY_PERIODIC_DELAY 1 // sec
+
+#define PZEM_ENERGY_ZONE_T1_HOUR 7
+#define PZEM_ENERGY_ZONE_T2_HOUR 23
+
+#define PZEM_NVS_SECTION "pzem"
+#define PZEM_NVS_PARAM_ENERGY "energy"
 
 #ifdef CONFIG_SENSOR_PZEM004_T_SOFTUART
 uint8_t _uart_num = 0;
@@ -58,6 +66,11 @@ static volatile pzem_data_t _pzem_data;
 pzem_read_strategy_t _strategy;
 
 #define PZEM_READ_ERROR_COUNT 20
+
+static void pzem_nvs_save()
+{
+	nvs_param_save(PZEM_NVS_SECTION, PZEM_NVS_PARAM_ENERGY, &_pzem_data.energy_values, sizeof(pzem_energy_t));
+}
 
 //UART_NUM_0
 void pzem_init(uint8_t uart_num)
@@ -95,6 +108,12 @@ void pzem_init(uint8_t uart_num)
 	_strategy.power_read_count = 1;
 	_strategy.energy_read_count = 1;
 	_pzem_data.ready = ESP_FAIL;
+
+	if ( nvs_param_load(PZEM_NVS_SECTION, PZEM_NVS_PARAM_ENERGY, &_pzem_data.energy_values) != ESP_OK )
+	{
+		memset(&_pzem_data.energy_values, 0, sizeof(pzem_energy_t));
+		pzem_nvs_save();
+	}
 
 }
 
@@ -335,6 +354,81 @@ void pzem_set_read_strategy(pzem_read_strategy_t strategy)
 	_strategy = strategy;
 }
 
+
+static void calc_energy_values(void *arg)
+{
+	uint32_t delay = (uint32_t)arg;
+	uint32_t energy;
+	struct tm timeinfo;
+
+    while (1) 
+	{
+		energy = (uint32_t)_pzem_data.energy;
+		if ( _pzem_data.energy_values.today_midnight == 0) _pzem_data.energy_values.today_midnight = energy;
+		if ( _pzem_data.energy_values.today_t1 == 0) _pzem_data.energy_values.today_t1 = energy;
+		if ( _pzem_data.energy_values.today_t2 == 0) _pzem_data.energy_values.today_t2 = energy;
+
+		if ( _pzem_data.energy_values.prev_midnight == 0) _pzem_data.energy_values.prev_midnight = energy;
+		if ( _pzem_data.energy_values.prev_t1 == 0) _pzem_data.energy_values.prev_t1 = energy;
+		if ( _pzem_data.energy_values.prev_t2 == 0) _pzem_data.energy_values.prev_t2 = energy;
+
+		get_timeinfo(&timeinfo);
+
+		// в полночь обнуляем счетчик
+		if ( timeinfo.tm_hour == 0 && timeinfo.tm_min ==0 && timeinfo.tm_sec == 0 
+			&& timeinfo.tm_year > 2000 // реальная дата
+			) 
+		{
+			_pzem_data.energy_values.prev_midnight = _pzem_data.energy_values.today_midnight; 
+			_pzem_data.energy_values.today_midnight = energy;
+			pzem_nvs_save();
+		}
+		// в 7 утра
+		else if ( timeinfo.tm_hour == PZEM_ENERGY_ZONE_T1_HOUR && timeinfo.tm_min ==0 && timeinfo.tm_sec == 0 )
+		{
+			_pzem_data.energy_values.prev_t1 = _pzem_data.energy_values.today_t1;
+			_pzem_data.energy_values.today_t1 = energy;
+			pzem_nvs_save();
+		}
+		// в 23 вечера
+		else if ( timeinfo.tm_hour == PZEM_ENERGY_ZONE_T2_HOUR && timeinfo.tm_min ==0 && timeinfo.tm_sec == 0 )
+		{
+			_pzem_data.energy_values.prev_t2 = _pzem_data.energy_values.today_t2;
+			_pzem_data.energy_values.today_t2 = energy;		
+			pzem_nvs_save();
+		}
+
+		// TODO: сохраняем значения только в определенный час, если в этот момент esp ребутнулось, то данные по реальному расходу будут не актуальные
+
+		// расччет реального потребления
+		_pzem_data.consumption.today_total = energy - _pzem_data.energy_values.today_midnight;
+		_pzem_data.consumption.prev_total = _pzem_data.energy_values.today_midnight - _pzem_data.energy_values.prev_midnight;
+		_pzem_data.consumption.prev_night = _pzem_data.energy_values.prev_t1 - _pzem_data.energy_values.prev_midnight +   // с 00 до 07
+                         					_pzem_data.energy_values.today_midnight - _pzem_data.energy_values.prev_t2;   // с 23 до 00
+		_pzem_data.consumption.prev_day = _pzem_data.energy_values.prev_t2 - _pzem_data.energy_values.prev_t1;
+
+		if ( timeinfo.tm_hour < PZEM_ENERGY_ZONE_T1_HOUR)
+		{
+			_pzem_data.consumption.today_night = energy - _pzem_data.energy_values.today_midnight;
+			_pzem_data.consumption.today_day = 0;
+		}
+		else if ( timeinfo.tm_hour < PZEM_ENERGY_ZONE_T2_HOUR )
+		{
+			_pzem_data.consumption.today_night = _pzem_data.energy_values.today_t1  - _pzem_data.energy_values.today_midnight;
+			_pzem_data.consumption.today_day = energy - _pzem_data.energy_values.today_t1;
+		}
+		else if ( timeinfo.tm_hour >= PZEM_ENERGY_ZONE_T2_HOUR )
+		{
+			_pzem_data.consumption.today_night = _pzem_data.energy_values.today_t1  - _pzem_data.energy_values.today_midnight + energy - _pzem_data.energy_values.today_t2;
+			_pzem_data.consumption.today_day = _pzem_data.energy_values.today_t2 - _pzem_data.energy_values.today_t1;
+		}
+
+		pauseTask(delay * 1000);
+	}
+
+ 	vTaskDelete( NULL );
+}
+
 static void pzem_periodic_task(void *arg)
 {
 	uint32_t delay = (uint32_t)arg;
@@ -381,7 +475,6 @@ static void pzem_periodic_task(void *arg)
 				//esp_restart();
 				pauseTask(1000);
 			}
-			
 			pauseTask(delay * 1000);
 		}
     }
@@ -392,6 +485,7 @@ static void pzem_periodic_task(void *arg)
 void pzem_task_start(uint32_t delay_sec)
 {
 	xTaskCreate(pzem_periodic_task, "pzem_task", PZEM_PERIODIC_TASK_STACK_DEPTH, delay_sec, PZEM_PERIODIC_TASK_PRIORITY, &xPzemHandle);
+	xTaskCreate(calc_energy_values, "pzem_enrg", PZEM_PERIODIC_TASK_STACK_DEPTH, PZEM_ENERGY_PERIODIC_DELAY, PZEM_PERIODIC_TASK_PRIORITY, NULL);
 }
 
 #endif
