@@ -147,6 +147,15 @@ void get_localtime(char* buf){
     //return buf;
 }
 
+void get_timeinfo(struct tm *_timeinfo)
+{
+    time_t now;
+    setenv("TZ", "UTC-3", 1);
+    tzset();    
+    time(&now);
+    localtime_r(&now, _timeinfo);
+}
+
 uint32_t get_time(char* f){
     time_t now;
     struct tm timeinfo;

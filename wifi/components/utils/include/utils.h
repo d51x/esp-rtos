@@ -132,6 +132,7 @@ uint32_t get_chip_id(uint8_t *mac);
 void get_uptime(char*  buf);
 void get_localtime(char*  buf);
 
+void get_timeinfo(struct tm *_timeinfo);
 uint32_t get_time(char* f);
 
 void trim(char *s);
