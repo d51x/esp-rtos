@@ -173,6 +173,7 @@ void mqtt_init()
     //memset(mqtt_recv, 0, MQTT_RECV_CB*sizeof(mqtt_recv_t));
 
     //mqtt_start();
+    mqtt_add_receive_callback("restart", esp_restart, NULL);
 }
 
 void mqtt_start()
