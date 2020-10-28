@@ -347,7 +347,30 @@ menu "Project config"
                 depends on SENSOR_PZEM004_T
                 help
                     Enable read PZEM via soft uart
-                    
+            
+            config SENSOR_PZEM004_T_CALC_CONSUMPTION
+                bool "PZEM calculate energy consumption"
+                default y
+                depends on SENSOR_PZEM004_T
+                help
+                    Calculating energy consumption of yesterday and today
+
+            config SENSOR_PZEM004_T_CONSUMPTION_T1
+                int "T1 Hour (day start)"
+                range 0 23
+                default 7
+                depends on SENSOR_PZEM004_T_CALC_CONSUMPTION
+                help
+                    T1 Hour (day start) for calculate consumption
+
+            config SENSOR_PZEM004_T_CONSUMPTION_T2
+                int "T2 Hour (night start)"
+                range 0 23
+                default 23
+                depends on SENSOR_PZEM004_T_CALC_CONSUMPTION
+                help
+                    T2 Hour (night start) for calculate consumption
+
             config SENSOR_PZEM004_T_WEB
                 bool "Show PZEM data on main page in own block"
                 default y

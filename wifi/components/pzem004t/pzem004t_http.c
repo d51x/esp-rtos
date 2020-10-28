@@ -14,11 +14,13 @@ const char *html_block_pzem004t_title_energy_today ICACHE_RODATA_ATTR = "Energy 
 const char *html_block_pzem004t_title_energy_yesterday ICACHE_RODATA_ATTR = "Energy yesterday";
 const char *html_block_pzem004t_title_errors ICACHE_RODATA_ATTR = "Errors";
 
-const char *html_block_pzem004t_title_consump_today ICACHE_RODATA_ATTR = "Расход сегодня:";
-const char *html_block_pzem004t_title_consump_prev ICACHE_RODATA_ATTR = "Расход вчера:";
+#ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
+const char *html_block_pzem004t_title_consump_today ICACHE_RODATA_ATTR = "Расход сегодня";
+const char *html_block_pzem004t_title_consump_prev ICACHE_RODATA_ATTR = "Расход вчера";
 
-const char *html_block_pzem004t_title_consump_day ICACHE_RODATA_ATTR = "день:";
-const char *html_block_pzem004t_title_consump_night ICACHE_RODATA_ATTR = "ночь:";
+const char *html_block_pzem004t_title_consump_day ICACHE_RODATA_ATTR = "день";
+const char *html_block_pzem004t_title_consump_night ICACHE_RODATA_ATTR = "ночь";
+#endif
 
 static void pzem_print_data(http_args_t *args)
 {
@@ -98,9 +100,10 @@ static void pzem_print_data(http_args_t *args)
                                 );
     httpd_resp_sendstr_chunk(req, data);
 
+    #ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
     // ==========================================================================
     // расход вчера: общий
-    sprintf(param, "%d", pzem_data.consumption.prev_total);
+    sprintf(param, "%d W*h", pzem_data.consumption.prev_total);
     sz = get_buf_size(html_block_data_form_item_label_label
                                 , html_block_pzem004t_title_consump_prev // %s label
                                 , param   // %s name
@@ -112,37 +115,39 @@ static void pzem_print_data(http_args_t *args)
                                 );
     httpd_resp_sendstr_chunk(req, data);
 
-    // расход вчера: ночь
-    sprintf(param, "%d", pzem_data.consumption.prev_night);
-    sz = get_buf_size(html_block_data_form_item_label_label
-                                , html_block_pzem004t_title_consump_night // %s label
-                                , param   // %s name
-                                );
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_item_label_label
-                                , html_block_pzem004t_title_consump_night // %s label
-                                , param   // %s name
-                                );
-    httpd_resp_sendstr_chunk(req, data);
+    if ( PZEM_ENERGY_ZONE_T1_HOUR > 0 && PZEM_ENERGY_ZONE_T2_HOUR > 0 )
+    {
+        // расход вчера: ночь
+        sprintf(param, "%d W*h", pzem_data.consumption.prev_night);
+        sz = get_buf_size(html_block_data_form_item_label_label
+                                    , html_block_pzem004t_title_consump_night // %s label
+                                    , param   // %s name
+                                    );
+        data = realloc(data, sz);
+        sprintf(data, html_block_data_form_item_label_label
+                                    , html_block_pzem004t_title_consump_night // %s label
+                                    , param   // %s name
+                                    );
+        httpd_resp_sendstr_chunk(req, data);
 
 
-    // расход вчера: день
-    sprintf(param, "%d", pzem_data.consumption.prev_day );
-    sz = get_buf_size(html_block_data_form_item_label_label
-                                , html_block_pzem004t_title_consump_day // %s label
-                                , param   // %s name
-                                );
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_item_label_label
-                                , html_block_pzem004t_title_consump_day // %s label
-                                , param   // %s name
-                                );
-    httpd_resp_sendstr_chunk(req, data);
-
+        // расход вчера: день
+        sprintf(param, "%d W*h", pzem_data.consumption.prev_day );
+        sz = get_buf_size(html_block_data_form_item_label_label
+                                    , html_block_pzem004t_title_consump_day // %s label
+                                    , param   // %s name
+                                    );
+        data = realloc(data, sz);
+        sprintf(data, html_block_data_form_item_label_label
+                                    , html_block_pzem004t_title_consump_day // %s label
+                                    , param   // %s name
+                                    );
+        httpd_resp_sendstr_chunk(req, data);
+    }
 
     // ==========================================================================
     // расход сегодня: общий
-    sprintf(param, "%d", pzem_data.consumption.today_total);
+    sprintf(param, "%d W*h", pzem_data.consumption.today_total);
     sz = get_buf_size(html_block_data_form_item_label_label
                                 , html_block_pzem004t_title_consump_today // %s label
                                 , param   // %s name
@@ -154,34 +159,38 @@ static void pzem_print_data(http_args_t *args)
                                 );
     httpd_resp_sendstr_chunk(req, data);
 
-    // расход сегодня: ночь
-    uint32_t today_consump = 0;
-    sprintf(param, "%d", pzem_data.consumption.today_night);
-    sz = get_buf_size(html_block_data_form_item_label_label
-                                , html_block_pzem004t_title_consump_night // %s label
-                                , param   // %s name
-                                );
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_item_label_label
-                                , html_block_pzem004t_title_consump_night // %s label
-                                , param   // %s name
-                                );
-    httpd_resp_sendstr_chunk(req, data);
+    if ( PZEM_ENERGY_ZONE_T1_HOUR > 0 && PZEM_ENERGY_ZONE_T2_HOUR > 0 )
+    {
+        // расход сегодня: ночь
+        uint32_t today_consump = 0;
+        sprintf(param, "%d W*h", pzem_data.consumption.today_night);
+        sz = get_buf_size(html_block_data_form_item_label_label
+                                    , html_block_pzem004t_title_consump_night // %s label
+                                    , param   // %s name
+                                    );
+        data = realloc(data, sz);
+        sprintf(data, html_block_data_form_item_label_label
+                                    , html_block_pzem004t_title_consump_night // %s label
+                                    , param   // %s name
+                                    );
+        httpd_resp_sendstr_chunk(req, data);
 
 
-    // расход сегодня: день
-    sprintf(param, "%d", pzem_data.consumption.today_day );
-    sz = get_buf_size(html_block_data_form_item_label_label
-                                , html_block_pzem004t_title_consump_day // %s label
-                                , param   // %s name
-                                );
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_item_label_label
-                                , html_block_pzem004t_title_consump_day // %s label
-                                , param   // %s name
-                                );
-    httpd_resp_sendstr_chunk(req, data);
-    
+        // расход сегодня: день
+        sprintf(param, "%d W*h", pzem_data.consumption.today_day );
+        sz = get_buf_size(html_block_data_form_item_label_label
+                                    , html_block_pzem004t_title_consump_day // %s label
+                                    , param   // %s name
+                                    );
+        data = realloc(data, sz);
+        sprintf(data, html_block_data_form_item_label_label
+                                    , html_block_pzem004t_title_consump_day // %s label
+                                    , param   // %s name
+                                    );
+        httpd_resp_sendstr_chunk(req, data);
+    }
+    #endif
+
     httpd_resp_sendstr_chunk(req, html_block_data_end); 
     free(data);
 }

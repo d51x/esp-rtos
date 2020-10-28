@@ -32,13 +32,11 @@ static const char *TAG = "PZEM";
 #define PZEM_PERIODIC_TASK_PRIORITY 13
 #define PZEM_PERIODIC_TASK_STACK_DEPTH 1025 + 512
 
-#define PZEM_ENERGY_PERIODIC_DELAY 1 // sec
-
-#define PZEM_ENERGY_ZONE_T1_HOUR 7
-#define PZEM_ENERGY_ZONE_T2_HOUR 23
-
-#define PZEM_NVS_SECTION "pzem"
-#define PZEM_NVS_PARAM_ENERGY "energy"
+#ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
+	#define PZEM_ENERGY_PERIODIC_DELAY 1 // sec
+	#define PZEM_NVS_SECTION "pzem"
+	#define PZEM_NVS_PARAM_ENERGY "energy"
+#endif
 
 #ifdef CONFIG_SENSOR_PZEM004_T_SOFTUART
 uint8_t _uart_num = 0;
@@ -67,10 +65,12 @@ pzem_read_strategy_t _strategy;
 
 #define PZEM_READ_ERROR_COUNT 20
 
+#ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
 static void pzem_nvs_save()
 {
 	nvs_param_save(PZEM_NVS_SECTION, PZEM_NVS_PARAM_ENERGY, &_pzem_data.energy_values, sizeof(pzem_energy_t));
 }
+#endif
 
 //UART_NUM_0
 void pzem_init(uint8_t uart_num)
@@ -109,12 +109,13 @@ void pzem_init(uint8_t uart_num)
 	_strategy.energy_read_count = 1;
 	_pzem_data.ready = ESP_FAIL;
 
+	#ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
 	if ( nvs_param_load(PZEM_NVS_SECTION, PZEM_NVS_PARAM_ENERGY, &_pzem_data.energy_values) != ESP_OK )
 	{
 		memset(&_pzem_data.energy_values, 0, sizeof(pzem_energy_t));
 		pzem_nvs_save();
 	}
-
+	#endif
 }
 
 static void send_buffer(const uint8_t *buffer, uint8_t len)
@@ -354,7 +355,7 @@ void pzem_set_read_strategy(pzem_read_strategy_t strategy)
 	_strategy = strategy;
 }
 
-
+#ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
 static void calc_energy_values(void *arg)
 {
 	uint32_t delay = (uint32_t)arg;
@@ -428,6 +429,7 @@ static void calc_energy_values(void *arg)
 
  	vTaskDelete( NULL );
 }
+#endif
 
 static void pzem_periodic_task(void *arg)
 {
@@ -485,7 +487,9 @@ static void pzem_periodic_task(void *arg)
 void pzem_task_start(uint32_t delay_sec)
 {
 	xTaskCreate(pzem_periodic_task, "pzem_task", PZEM_PERIODIC_TASK_STACK_DEPTH, delay_sec, PZEM_PERIODIC_TASK_PRIORITY, &xPzemHandle);
+	#ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
 	xTaskCreate(calc_energy_values, "pzem_enrg", PZEM_PERIODIC_TASK_STACK_DEPTH, PZEM_ENERGY_PERIODIC_DELAY, PZEM_PERIODIC_TASK_PRIORITY, NULL);
+	#endif
 }
 
 #endif
