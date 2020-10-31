@@ -88,6 +88,9 @@ float pzem_read_energy();
 // функции получения уже прочитанных данных из устройства
 pzem_data_t pzem_get_data();
 
+// обнулить счетчики потребления ээ за вчера и сегодня (today = true)
+void pzem_reset_consumption(bool today);
+
 #endif
 
 #endif 

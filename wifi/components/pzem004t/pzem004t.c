@@ -350,6 +350,22 @@ pzem_data_t pzem_get_data()
 	return _pzem_data;
 }
 
+void pzem_reset_consumption(bool today)
+{
+	if ( today ) 
+	{
+		_pzem_data.energy_values.today_midnight = 0;
+		_pzem_data.energy_values.today_t1 = 0;
+		_pzem_data.energy_values.today_t2 = 0;
+	}
+
+	_pzem_data.energy_values.prev_midnight = 0;
+	_pzem_data.energy_values.prev_t1 = 0;
+	_pzem_data.energy_values.prev_t2 = 0;
+
+	pzem_nvs_save();
+}
+
 void pzem_set_read_strategy(pzem_read_strategy_t strategy)
 {
 	_strategy = strategy;
@@ -401,12 +417,24 @@ static void calc_energy_values(void *arg)
 
 		// TODO: сохраняем значения только в определенный час, если в этот момент esp ребутнулось, то данные по реальному расходу будут не актуальные
 
+		if ( _pzem_data.energy_values.prev_t1 < _pzem_data.energy_values.prev_midnight) _pzem_data.energy_values.prev_t1 = _pzem_data.energy_values.prev_midnight;
+		if ( _pzem_data.energy_values.today_midnight < _pzem_data.energy_values.prev_t2) _pzem_data.energy_values.prev_t2 = _pzem_data.energy_values.today_midnight;
+
 		// расччет реального потребления
 		_pzem_data.consumption.today_total = energy - _pzem_data.energy_values.today_midnight;
-		_pzem_data.consumption.prev_total = _pzem_data.energy_values.today_midnight - _pzem_data.energy_values.prev_midnight;
+
+		if ( _pzem_data.energy_values.today_midnight < _pzem_data.energy_values.prev_midnight)
+			_pzem_data.consumption.prev_total = 0;
+		else
+			_pzem_data.consumption.prev_total = _pzem_data.energy_values.today_midnight - _pzem_data.energy_values.prev_midnight;
+
 		_pzem_data.consumption.prev_night = _pzem_data.energy_values.prev_t1 - _pzem_data.energy_values.prev_midnight +   // с 00 до 07
                          					_pzem_data.energy_values.today_midnight - _pzem_data.energy_values.prev_t2;   // с 23 до 00
-		_pzem_data.consumption.prev_day = _pzem_data.energy_values.prev_t2 - _pzem_data.energy_values.prev_t1;
+
+		if ( _pzem_data.energy_values.prev_t2 > _pzem_data.energy_values.prev_t1)
+			_pzem_data.consumption.prev_day = _pzem_data.energy_values.prev_t2 - _pzem_data.energy_values.prev_t1;
+		else	
+			_pzem_data.consumption.prev_day = 0;
 
 		if ( timeinfo.tm_hour < PZEM_ENERGY_ZONE_T1_HOUR)
 		{

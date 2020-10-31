@@ -22,6 +22,8 @@ const char *html_block_pzem004t_title_consump_day ICACHE_RODATA_ATTR = "день
 const char *html_block_pzem004t_title_consump_night ICACHE_RODATA_ATTR = "ночь";
 #endif
 
+#define PZEM_URI "/pzem"
+
 static void pzem_print_data(http_args_t *args)
 {
     http_args_t *arg = (http_args_t *)args;
@@ -201,9 +203,44 @@ void pzem_register_http_print_data()
     register_print_page_block( "pzem_data", PAGES_URI[ PAGE_URI_ROOT], 3, pzem_print_data, p, NULL, NULL);    
 }
 
+static esp_err_t pzem_get_handler(httpd_req_t *req)
+{
+    // check params
+    char page[10] = ""; 
+	if ( http_get_has_params(req) == ESP_OK) 
+	{
+        char param[20];
+        //  /pzem?reset=1&prev=1
+        if ( http_get_key_str(req, "reset", param, sizeof(param)) == ESP_OK ) {
+            uint8_t state = atoi(param);
+            if ( state ) {
+                state = 0;
+                if ( http_get_key_str(req, "today", param, sizeof(param)) == ESP_OK ) {
+                    state = atoi(param);
+                }
+                pzem_reset_consumption(state);
+                strcpy(page, "OK");
+            }
+        } else {
+            strcpy(page, "ERROR");
+        }
+    }
+    httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
+	httpd_resp_send(req, page, strlen(page)); 
+     
+    return ESP_OK;    
+}
+
+static void pzem_register_http_handler(httpd_handle_t _server)
+{
+    add_uri_get_handler( _server, PZEM_URI, pzem_get_handler, NULL); 
+}
+
 void pzem_http_init(httpd_handle_t _server)
 {
+    
     pzem_register_http_print_data();    
+    pzem_register_http_handler(_server);
 }
 
 
