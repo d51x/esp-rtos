@@ -328,6 +328,12 @@ menu "Project config"
     endmenu
 
     menu "Sensors"
+        config SENSORS_GET
+            bool "Sensors data by HTTP-GET"
+            default y
+            help
+                Response sensors data on /sensors page
+                
         config SENSOR_SHT21
             bool "SHT21 sensor"
             default n

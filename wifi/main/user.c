@@ -12,6 +12,9 @@ void user_setup(void *args)
     // } else {
     //     ESP_LOGE(TAG, "SoftUart0 open ERROR" );
     // }
+    ESP_LOGW(TAG, "http_handlers_count = %d", http_handlers_count );
+    http_handlers_count++;
+    ESP_LOGW(TAG, "http_handlers_count = %d", http_handlers_count );
 }
 
 void user_loop(uint32_t sec)
@@ -92,4 +95,54 @@ void user_process_param(httpd_req_t *req, void *args)
 {
     ESP_LOGW("user", __func__ );
     ESP_LOGW("user", "Hello User process param!");
+}
+
+void sensors_print(http_args_t *args)
+{
+    ESP_LOGW(TAG, __func__ );
+    http_args_t *arg = (http_args_t *)args;
+    httpd_req_t *req = (httpd_req_t *)arg->req;
+        
+      
+    
+}
+
+esp_err_t sensors_get_handler(httpd_req_t *req)
+{
+    httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
+        //hostname:septic;dsw1:3.4;dsw2:4.1;dsw3:6.6;
+    char *buf = malloc( 200 );
+    sprintf(buf, "hostname:%s;", wifi_cfg->hostname);
+    //httpd_resp_sendstr_chunk(req, buf);
+
+    static uint32_t fv = 0;
+    fv += 1;
+    pzem_data_t pzem_data = pzem_get_data();
+    //sprintf(buf+strlen(buf), "pmv:%.1f;", pzem_data.voltage);
+    //sprintf(buf+strlen(buf), "pmv:%d;", fv);
+    sprintf(buf+strlen(buf), "dsw1:%2.1f;", (float)fv);
+    //httpd_resp_sendstr_chunk(req, buf);
+
+    static float fc = 0.0;
+    fc += 0.2;
+    //sprintf(buf+strlen(buf), "pmc:%.1f;", pzem_data.current);
+    sprintf(buf+strlen(buf), "pmc:%.1f;", fc);
+    //httpd_resp_sendstr_chunk(req, buf);
+
+    sprintf(buf+strlen(buf), "pmw:%d;", (uint32_t)pzem_data.power);
+    //httpd_resp_sendstr_chunk(req, buf);
+
+    static uint32_t fe = 0;
+    fe += 100;
+    //sprintf(buf+strlen(buf), "pmwh:%d;", (uint32_t)pzem_data.energy);
+    sprintf(buf+strlen(buf), "pmwh:%d;", fe);
+    //httpd_resp_sendstr_chunk(req, buf);
+    
+    
+
+    httpd_resp_end(req);
+    
+    free(buf);  
+
+    return ESP_OK;
 }

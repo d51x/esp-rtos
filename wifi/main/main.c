@@ -241,6 +241,8 @@ void initialize_modules()
     #ifdef CONFIG_SENSOR_PZEM004_T
     pzem_init(0);
     pzem_task_start(5);
+
+        http_handlers_count += 1;
     #endif
 
     #ifdef CONFIG_COMPONENT_RELAY
@@ -462,7 +464,9 @@ void initialize_modules_http(httpd_handle_t _server)
         pzem_http_init(_server);
     #endif
 
-    //http_args_t *p = calloc(1,sizeof(http_args_t));
+    http_args_t *p = calloc(1,sizeof(http_args_t));
     //register_print_page_block( "user1", PAGES_URI[ PAGE_URI_ROOT], 0, user_web_main, p, NULL, NULL  );     
-    //register_print_page_block( "user2", PAGES_URI[ PAGE_URI_CONFIG], 0, user_web_options, p, user_process_param, NULL  ); 
+    //register_print_page_block( "user1", PAGES_URI[ PAGE_URI_ROOT], 0, user_web_main, p, NULL, NULL  );     
+    //register_print_page_block( "sensors", "/sensors", 0, sensors_print, p, NULL, NULL  ); 
+    add_uri_get_handler( _server, "/sensors", sensors_get_handler, NULL); 
 }
