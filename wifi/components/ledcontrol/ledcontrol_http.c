@@ -229,8 +229,8 @@ esp_err_t ledcontrol_get_handler(httpd_req_t *req)
         
     }
 end:
-	httpd_resp_send_chunk(req, NULL, 0);
-     
+	//httpd_resp_send_chunk(req, NULL, 0);
+    httpd_resp_end(req);
     return ESP_OK;    
 }
 

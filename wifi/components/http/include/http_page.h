@@ -88,7 +88,7 @@ void show_restarting_page_data(httpd_req_t *req);
 
 
 void httpd_resp_sendstr_chunk(httpd_req_t *req, const char *buf);
-
+void httpd_resp_end(httpd_req_t *req);
 
 
 

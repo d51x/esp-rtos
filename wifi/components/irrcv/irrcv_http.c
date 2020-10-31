@@ -193,8 +193,8 @@ static esp_err_t irrcv_get_handler(httpd_req_t *req)
     show_http_page( req );
 
     
-	httpd_resp_send_chunk(req, NULL, 0); 
-     
+	//httpd_resp_send_chunk(req, NULL, 0); 
+    httpd_resp_end(req);
     return ESP_OK;   
 }
 

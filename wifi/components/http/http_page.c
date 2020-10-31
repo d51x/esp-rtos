@@ -19,6 +19,13 @@ void httpd_resp_sendstr_chunk(httpd_req_t *req, const char *buf){
 }
 
 
+void httpd_resp_end(httpd_req_t *req)
+{
+
+    httpd_resp_set_hdr(req, "Connection", "close");
+    httpd_resp_set_hdr(req, "Pragma", "no-cache");
+    httpd_resp_send_chunk(req, NULL, 0);
+}
 
 void page_initialize_menu()
 {

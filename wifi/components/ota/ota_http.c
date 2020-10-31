@@ -59,7 +59,8 @@ void ota_http_post_process_params(httpd_req_t *req, void *args)
         httpd_resp_sendstr_chunk(req, err_text);
     }
     
-    httpd_resp_send_chunk(req, NULL, 0);
+    //httpd_resp_send_chunk(req, NULL, 0);
+    httpd_resp_end(req);
     return ESP_OK;
 }
 

@@ -64,7 +64,8 @@ esp_err_t main_get_handler(httpd_req_t *req)
 {
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
     show_http_page( req );
-    httpd_resp_send_chunk(req, NULL, 0);
+    //httpd_resp_send_chunk(req, NULL, 0);
+    httpd_resp_end(req);
 
     #ifdef CONFIG_COMPONENT_DEBUG
         print_task_stack_depth(TAG, "httpd task");
@@ -91,7 +92,8 @@ esp_err_t setup_get_handler(httpd_req_t *req){
   //show_page_setup( page );
   show_http_page( req );
   
-  httpd_resp_send_chunk(req, NULL, 0);
+  //httpd_resp_send_chunk(req, NULL, 0);
+  httpd_resp_end(req);
   return ESP_OK;
 }
 
@@ -110,7 +112,8 @@ esp_err_t config_get_handler(httpd_req_t *req){
 	}
 
   show_http_page( req );
-  httpd_resp_send_chunk(req, NULL, 0);
+  //httpd_resp_send_chunk(req, NULL, 0);
+  httpd_resp_end(req);
   return ESP_OK;
 }
 
@@ -124,7 +127,8 @@ esp_err_t tools_get_handler(httpd_req_t *req){
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
   show_http_page( req );
   
-  httpd_resp_send_chunk(req, NULL, 0);
+  //httpd_resp_send_chunk(req, NULL, 0);
+  httpd_resp_end(req);
   return ESP_OK;
 }
 
@@ -138,7 +142,8 @@ esp_err_t update_get_handler(httpd_req_t *req){
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
   show_http_page( req );
 
-   httpd_resp_send_chunk(req, NULL, 0);
+  //httpd_resp_send_chunk(req, NULL, 0);
+  httpd_resp_end(req);
   return ESP_OK;
 }
 
@@ -146,7 +151,8 @@ esp_err_t debug_get_handler(httpd_req_t *req){
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
   show_http_page( req );
 
-  httpd_resp_send_chunk(req, NULL, 0);
+  //httpd_resp_send_chunk(req, NULL, 0);
+  httpd_resp_end(req);
   return ESP_OK;
 }
 
@@ -171,7 +177,8 @@ esp_err_t reboot_get_handler(httpd_req_t *req)
     } else {
 		httpd_resp_sendstr_chunk (req, "Please restart ESP"); 
     }
-    httpd_resp_send_chunk(req, NULL, 0); 
+    //httpd_resp_send_chunk(req, NULL, 0); 
+    httpd_resp_end(req);
     return ESP_OK;
 }
 
