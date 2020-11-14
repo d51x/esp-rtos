@@ -109,39 +109,42 @@ void sensors_print(http_args_t *args)
 
 esp_err_t sensors_get_handler(httpd_req_t *req)
 {
-    httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
-        //hostname:septic;dsw1:3.4;dsw2:4.1;dsw3:6.6;
+    bool vsens = false;
+    //if ( http_get_has_params(req) == ESP_OK) 
+	//{
+    char param[2];
+    vsens = ( http_get_key_str(req, "m", param, sizeof(param)) == ESP_OK );
+    //}
+    if ( !vsens )
+    {
+        httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
+    }
+
+
     char *buf = malloc( 200 );
     sprintf(buf, "hostname:%s;", wifi_cfg->hostname);
     //httpd_resp_sendstr_chunk(req, buf);
 
-    static uint32_t fv = 0;
-    fv += 1;
     pzem_data_t pzem_data = pzem_get_data();
-    //sprintf(buf+strlen(buf), "pmv:%.1f;", pzem_data.voltage);
-    //sprintf(buf+strlen(buf), "pmv:%d;", fv);
-    sprintf(buf+strlen(buf), "dsw1:%2.1f;", (float)fv);
+    sprintf(buf+strlen(buf), "pmv:%.1f;", pzem_data.voltage);
     //httpd_resp_sendstr_chunk(req, buf);
 
-    static float fc = 0.0;
-    fc += 0.2;
-    //sprintf(buf+strlen(buf), "pmc:%.1f;", pzem_data.current);
-    sprintf(buf+strlen(buf), "pmc:%.1f;", fc);
+    sprintf(buf+strlen(buf), "pmc:%.1f;", pzem_data.current);
     //httpd_resp_sendstr_chunk(req, buf);
 
     sprintf(buf+strlen(buf), "pmw:%d;", (uint32_t)pzem_data.power);
     //httpd_resp_sendstr_chunk(req, buf);
 
-    static uint32_t fe = 0;
-    fe += 100;
-    //sprintf(buf+strlen(buf), "pmwh:%d;", (uint32_t)pzem_data.energy);
-    sprintf(buf+strlen(buf), "pmwh:%d;", fe);
+    sprintf(buf+strlen(buf), "pmwh:%d;", (uint32_t)pzem_data.energy);
     //httpd_resp_sendstr_chunk(req, buf);
     
+    if ( vsens )
+        httpd_send(req, buf, strlen(buf));
+    else
+        httpd_resp_send(req, buf, strlen(buf));
     
+    //httpd_resp_end(req);
 
-    httpd_resp_end(req);
-    
     free(buf);  
 
     return ESP_OK;
