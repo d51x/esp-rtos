@@ -49,6 +49,8 @@
 
 #define pauseTask(delay)  (vTaskDelay(delay / portTICK_PERIOD_MS))
 
+#define TM_YEAR_BASE 1900
+
 #define UPTIME2STR "%d days %02dh %02dm %02ds"
 #define UPTIMESTRLENMAX 20
 

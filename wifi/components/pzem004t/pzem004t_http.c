@@ -4,6 +4,7 @@
 #ifdef CONFIG_SENSOR_PZEM004_T_WEB
 
     static const char *TAG = "PZEM";
+#define PZEM_FLOAT_DIVIDER 1000.0f
 
 const char *html_block_pzem004t_title ICACHE_RODATA_ATTR = "PZEM-004T";
 const char *html_block_pzem004t_title_voltage ICACHE_RODATA_ATTR = "Voltage";
@@ -20,6 +21,15 @@ const char *html_block_pzem004t_title_consump_prev ICACHE_RODATA_ATTR = "Рас�
 
 const char *html_block_pzem004t_title_consump_day ICACHE_RODATA_ATTR = "день";
 const char *html_block_pzem004t_title_consump_night ICACHE_RODATA_ATTR = "ночь";
+
+const char *html_block_pzem004t_title_energy_now ICACHE_RODATA_ATTR = "Сейчас";
+const char *html_block_pzem004t_title_energy_midnight_today ICACHE_RODATA_ATTR = "Сегодня в 00:00";
+const char *html_block_pzem004t_title_energy_t1_today ICACHE_RODATA_ATTR = "Сегодня в 07:00";
+const char *html_block_pzem004t_title_energy_t2_today ICACHE_RODATA_ATTR = "Сегодня в 23:00";
+const char *html_block_pzem004t_title_energy_midnight_prev ICACHE_RODATA_ATTR = "Вчера в 00:00";
+const char *html_block_pzem004t_title_energy_t1_prev ICACHE_RODATA_ATTR = "Вчера в 07:00";
+const char *html_block_pzem004t_title_energy_t2_prev ICACHE_RODATA_ATTR = "Вчера в 23:00";
+
 #endif
 
 #define PZEM_URI "/pzem"
@@ -64,7 +74,7 @@ static void pzem_print_data(http_args_t *args)
     httpd_resp_sendstr_chunk(req, data);
 
     // ==========================================================================
-    sprintf(param, "%d W/h", (uint32_t)pzem_data.power);
+    sprintf(param, "%0.2f kW/h", pzem_data.power / PZEM_FLOAT_DIVIDER);
     sz = get_buf_size(html_block_data_form_item_label_label
                                 , html_block_pzem004t_title_power // %s label
                                 , param   // %s name
@@ -77,7 +87,7 @@ static void pzem_print_data(http_args_t *args)
     httpd_resp_sendstr_chunk(req, data);
 
     // ==========================================================================
-    sprintf(param, "%d W*h", (uint32_t)pzem_data.energy);
+    sprintf(param, "%0.2f kW*h", pzem_data.energy / PZEM_FLOAT_DIVIDER);
     sz = get_buf_size(html_block_data_form_item_label_label
                                 , html_block_pzem004t_title_energy_total // %s label
                                 , param   // %s name
@@ -105,7 +115,7 @@ static void pzem_print_data(http_args_t *args)
     #ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
     // ==========================================================================
     // расход вчера: общий
-    sprintf(param, "%d W*h", pzem_data.consumption.prev_total);
+    sprintf(param, "%0.2f kW*h", pzem_data.consumption.prev_total / PZEM_FLOAT_DIVIDER);
     sz = get_buf_size(html_block_data_form_item_label_label
                                 , html_block_pzem004t_title_consump_prev // %s label
                                 , param   // %s name
@@ -120,7 +130,7 @@ static void pzem_print_data(http_args_t *args)
     if ( PZEM_ENERGY_ZONE_T1_HOUR > 0 && PZEM_ENERGY_ZONE_T2_HOUR > 0 )
     {
         // расход вчера: ночь
-        sprintf(param, "%d W*h", pzem_data.consumption.prev_night);
+        sprintf(param, "%0.2f kW*h", pzem_data.consumption.prev_night / PZEM_FLOAT_DIVIDER);
         sz = get_buf_size(html_block_data_form_item_label_label
                                     , html_block_pzem004t_title_consump_night // %s label
                                     , param   // %s name
@@ -134,7 +144,7 @@ static void pzem_print_data(http_args_t *args)
 
 
         // расход вчера: день
-        sprintf(param, "%d W*h", pzem_data.consumption.prev_day );
+        sprintf(param, "%0.2f kW*h", pzem_data.consumption.prev_day / PZEM_FLOAT_DIVIDER);
         sz = get_buf_size(html_block_data_form_item_label_label
                                     , html_block_pzem004t_title_consump_day // %s label
                                     , param   // %s name
@@ -149,7 +159,7 @@ static void pzem_print_data(http_args_t *args)
 
     // ==========================================================================
     // расход сегодня: общий
-    sprintf(param, "%d W*h", pzem_data.consumption.today_total);
+    sprintf(param, "%0.2f kW*h", pzem_data.consumption.today_total / PZEM_FLOAT_DIVIDER);
     sz = get_buf_size(html_block_data_form_item_label_label
                                 , html_block_pzem004t_title_consump_today // %s label
                                 , param   // %s name
@@ -165,7 +175,7 @@ static void pzem_print_data(http_args_t *args)
     {
         // расход сегодня: ночь
         uint32_t today_consump = 0;
-        sprintf(param, "%d W*h", pzem_data.consumption.today_night);
+        sprintf(param, "%0.2f kW*h", pzem_data.consumption.today_night / PZEM_FLOAT_DIVIDER);
         sz = get_buf_size(html_block_data_form_item_label_label
                                     , html_block_pzem004t_title_consump_night // %s label
                                     , param   // %s name
@@ -179,7 +189,7 @@ static void pzem_print_data(http_args_t *args)
 
 
         // расход сегодня: день
-        sprintf(param, "%d W*h", pzem_data.consumption.today_day );
+        sprintf(param, "%0.2f kW*h", pzem_data.consumption.today_day / PZEM_FLOAT_DIVIDER);
         sz = get_buf_size(html_block_data_form_item_label_label
                                     , html_block_pzem004t_title_consump_day // %s label
                                     , param   // %s name
@@ -191,6 +201,104 @@ static void pzem_print_data(http_args_t *args)
                                     );
         httpd_resp_sendstr_chunk(req, data);
     }
+
+    
+    // ==========================================================================
+    strcpy(data, "<hr>");
+    httpd_resp_sendstr_chunk(req, data);
+
+    // показания по зонам
+    //сегодня сейчас
+    sprintf(param, "%d", (uint32_t)pzem_data.energy);
+    sz = get_buf_size(html_block_data_form_item_label_label
+                                , html_block_pzem004t_title_energy_now // %s label
+                                , param   // %s name
+                                );
+    data = realloc(data, sz);
+    sprintf(data, html_block_data_form_item_label_label
+                                , html_block_pzem004t_title_energy_now // %s label
+                                , param   // %s name
+                                );
+    httpd_resp_sendstr_chunk(req, data);
+
+    //сегодня 0:00
+    sprintf(param, "%d", pzem_data.energy_values.today_midnight);
+    sz = get_buf_size(html_block_data_form_item_label_label
+                                , html_block_pzem004t_title_energy_midnight_today // %s label
+                                , param   // %s name
+                                );
+    data = realloc(data, sz);
+    sprintf(data, html_block_data_form_item_label_label
+                                , html_block_pzem004t_title_energy_midnight_today // %s label
+                                , param   // %s name
+                                );
+    httpd_resp_sendstr_chunk(req, data);
+
+    //сегодня 07:00
+    sprintf(param, "%d", pzem_data.energy_values.today_t1);
+    sz = get_buf_size(html_block_data_form_item_label_label
+                                , html_block_pzem004t_title_energy_t1_today // %s label
+                                , param   // %s name
+                                );
+    data = realloc(data, sz);
+    sprintf(data, html_block_data_form_item_label_label
+                                , html_block_pzem004t_title_energy_t1_today // %s label
+                                , param   // %s name
+                                );
+    httpd_resp_sendstr_chunk(req, data);
+
+    //сегодня 23:00
+    sprintf(param, "%d", pzem_data.energy_values.today_t2);
+    sz = get_buf_size(html_block_data_form_item_label_label
+                                , html_block_pzem004t_title_energy_t2_today // %s label
+                                , param   // %s name
+                                );
+    data = realloc(data, sz);
+    sprintf(data, html_block_data_form_item_label_label
+                                , html_block_pzem004t_title_energy_t2_today // %s label
+                                , param   // %s name
+                                );
+    httpd_resp_sendstr_chunk(req, data);
+
+    //вчера 00:00
+    sprintf(param, "%d", pzem_data.energy_values.prev_midnight);
+    sz = get_buf_size(html_block_data_form_item_label_label
+                                , html_block_pzem004t_title_energy_midnight_prev // %s label
+                                , param   // %s name
+                                );
+    data = realloc(data, sz);
+    sprintf(data, html_block_data_form_item_label_label
+                                , html_block_pzem004t_title_energy_midnight_prev // %s label
+                                , param   // %s name
+                                );
+    httpd_resp_sendstr_chunk(req, data);
+
+    //вчера 07:00
+    sprintf(param, "%d", pzem_data.energy_values.prev_t1);
+    sz = get_buf_size(html_block_data_form_item_label_label
+                                , html_block_pzem004t_title_energy_t1_prev // %s label
+                                , param   // %s name
+                                );
+    data = realloc(data, sz);
+    sprintf(data, html_block_data_form_item_label_label
+                                , html_block_pzem004t_title_energy_t1_prev // %s label
+                                , param   // %s name
+                                );
+    httpd_resp_sendstr_chunk(req, data);    
+
+    //вчера 23:00
+    sprintf(param, "%d", pzem_data.energy_values.prev_t2);
+    sz = get_buf_size(html_block_data_form_item_label_label
+                                , html_block_pzem004t_title_energy_t2_prev // %s label
+                                , param   // %s name
+                                );
+    data = realloc(data, sz);
+    sprintf(data, html_block_data_form_item_label_label
+                                , html_block_pzem004t_title_energy_t2_prev // %s label
+                                , param   // %s name
+                                );
+    httpd_resp_sendstr_chunk(req, data); 
+
     #endif
 
     httpd_resp_sendstr_chunk(req, html_block_data_end); 

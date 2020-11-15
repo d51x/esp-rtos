@@ -378,6 +378,7 @@ static void calc_energy_values(void *arg)
 	uint32_t energy;
 	struct tm timeinfo;
 
+	// task started 
     while (1) 
 	{
 		energy = (uint32_t)_pzem_data.energy;
@@ -393,7 +394,7 @@ static void calc_energy_values(void *arg)
 
 		// в полночь обнуляем счетчик
 		if ( timeinfo.tm_hour == 0 && timeinfo.tm_min ==0 && timeinfo.tm_sec == 0 
-			&& timeinfo.tm_year > 2000 // реальная дата
+			&& timeinfo.tm_year >  (2016 - 1900) // реальная дата
 			) 
 		{
 			_pzem_data.energy_values.prev_midnight = _pzem_data.energy_values.today_midnight; 
@@ -416,37 +417,44 @@ static void calc_energy_values(void *arg)
 		}
 
 		// TODO: сохраняем значения только в определенный час, если в этот момент esp ребутнулось, то данные по реальному расходу будут не актуальные
-
+		// вчера: midnight --> t1 --> t2 --> сегодня : midnight --> t1 --> t2
 		if ( _pzem_data.energy_values.prev_t1 < _pzem_data.energy_values.prev_midnight) _pzem_data.energy_values.prev_t1 = _pzem_data.energy_values.prev_midnight;
-		if ( _pzem_data.energy_values.today_midnight < _pzem_data.energy_values.prev_t2) _pzem_data.energy_values.prev_t2 = _pzem_data.energy_values.today_midnight;
+		if ( _pzem_data.energy_values.prev_t2 < _pzem_data.energy_values.prev_midnight) _pzem_data.energy_values.prev_t2 = _pzem_data.energy_values.prev_midnight;
+		if ( _pzem_data.energy_values.prev_t2 < _pzem_data.energy_values.prev_t1) _pzem_data.energy_values.prev_t2 = _pzem_data.energy_values.prev_t1;
+		//if ( _pzem_data.energy_values.today_midnight < _pzem_data.energy_values.prev_t2) _pzem_data.energy_values.prev_t2 = _pzem_data.energy_values.today_midnight;
 
-		// расччет реального потребления
+		// расчет реального потребления
+		// за сегодня (полный день, до текущего момента)
 		_pzem_data.consumption.today_total = energy - _pzem_data.energy_values.today_midnight;
 
-		if ( _pzem_data.energy_values.today_midnight < _pzem_data.energy_values.prev_midnight)
+		// за вчера (полный день)
+		if ( _pzem_data.energy_values.today_midnight <= _pzem_data.energy_values.prev_midnight)
 			_pzem_data.consumption.prev_total = 0;
 		else
 			_pzem_data.consumption.prev_total = _pzem_data.energy_values.today_midnight - _pzem_data.energy_values.prev_midnight;
 
+		//предыдущая ночь 0:00 - 7:00 + 23:00 - 23:59:59
 		_pzem_data.consumption.prev_night = _pzem_data.energy_values.prev_t1 - _pzem_data.energy_values.prev_midnight +   // с 00 до 07
                          					_pzem_data.energy_values.today_midnight - _pzem_data.energy_values.prev_t2;   // с 23 до 00
 
+		// предыдущий день 7:00 - 23:00
 		if ( _pzem_data.energy_values.prev_t2 > _pzem_data.energy_values.prev_t1)
 			_pzem_data.consumption.prev_day = _pzem_data.energy_values.prev_t2 - _pzem_data.energy_values.prev_t1;
 		else	
 			_pzem_data.consumption.prev_day = 0;
 
-		if ( timeinfo.tm_hour < PZEM_ENERGY_ZONE_T1_HOUR)
+		// сегодня ночью 0:00 - 7:00
+		if ( timeinfo.tm_hour < PZEM_ENERGY_ZONE_T1_HOUR && timeinfo.tm_year >  (2016 - 1900) )
 		{
 			_pzem_data.consumption.today_night = energy - _pzem_data.energy_values.today_midnight;
 			_pzem_data.consumption.today_day = 0;
 		}
-		else if ( timeinfo.tm_hour < PZEM_ENERGY_ZONE_T2_HOUR )
+		else if ( timeinfo.tm_hour < PZEM_ENERGY_ZONE_T2_HOUR && timeinfo.tm_year >  (2016 - 1900) )
 		{
 			_pzem_data.consumption.today_night = _pzem_data.energy_values.today_t1  - _pzem_data.energy_values.today_midnight;
 			_pzem_data.consumption.today_day = energy - _pzem_data.energy_values.today_t1;
 		}
-		else if ( timeinfo.tm_hour >= PZEM_ENERGY_ZONE_T2_HOUR )
+		else if ( timeinfo.tm_hour >= PZEM_ENERGY_ZONE_T2_HOUR && timeinfo.tm_year >  (2016 - 1900))
 		{
 			_pzem_data.consumption.today_night = _pzem_data.energy_values.today_t1  - _pzem_data.energy_values.today_midnight + energy - _pzem_data.energy_values.today_t2;
 			_pzem_data.consumption.today_day = _pzem_data.energy_values.today_t2 - _pzem_data.energy_values.today_t1;
