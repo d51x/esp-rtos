@@ -377,12 +377,14 @@ static void mqtt_subscribe_topics(esp_mqtt_client_handle_t client)
 
 static void mqtt_publish_custom_registered_topics()
 {
-    char payload[10];
     for ( uint8_t i = 0; i < mqtt_send_cnt; i++ ) {
         if ( strlen(mqtt_send[i].topic) > 0 ) {
-            memset(payload, 0, 10);
+            uint16_t payload_size = mqtt_send[i].args ? mqtt_send[i].args : MQTT_PAYLOAD_SIZE_DEFAULT;
+            char *payload = malloc( payload_size );
+            memset(payload, 0, payload_size);
             mqtt_send[i].fn_cb(payload, mqtt_send[i].args) ;
             mqtt_publish_generic( mqtt_send[i].topic, payload); 
+            free(payload);
         }
     }
 }

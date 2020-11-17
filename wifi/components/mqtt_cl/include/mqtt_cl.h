@@ -18,6 +18,7 @@
 #define MQTT_BROKER_URL CONFIG_MQTT_URL //"mqtt://192.168.2.63:1883"
 #define MQTT_SEND_INTERVAL 60  // sec
 
+#define MQTT_PAYLOAD_SIZE_DEFAULT 10
 #define MQTT_CLIENT_ID_MASK "ESP_%2X%2X%2X"
 
 #define MQTT_DEVICE_UPTIME          "uptime"

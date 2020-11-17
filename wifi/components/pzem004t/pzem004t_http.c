@@ -4,7 +4,7 @@
 #ifdef CONFIG_SENSOR_PZEM004_T_WEB
 
     static const char *TAG = "PZEM";
-#define PZEM_FLOAT_DIVIDER 1000.0f
+
 
 const char *html_block_pzem004t_title ICACHE_RODATA_ATTR = "PZEM-004T";
 const char *html_block_pzem004t_title_voltage ICACHE_RODATA_ATTR = "Voltage";

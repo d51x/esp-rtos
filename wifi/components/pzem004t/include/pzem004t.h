@@ -25,6 +25,8 @@
 
 #ifdef CONFIG_SENSOR_PZEM004_T
 
+#define PZEM_FLOAT_DIVIDER 1000.0f
+
 #define PZEM_ERROR_VALUE 0 //-1.0f
 
 typedef uint8_t PZEM_Address[4] ;

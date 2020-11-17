@@ -7,6 +7,12 @@
 #define POWER_MQTT_TOPIC_PARAM		"pmw"
 #define ENERGY_MQTT_TOPIC_PARAM		"pmwh"
 
+#ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
+#define ENERGY_CONSUMPTION_MQTT_TOPIC_PARAM		"pme"
+#endif
+
+static const char *TAG = "PZEM";
+
 static void pzem_mqtt_send_voltage(char *payload, void *args)
 {
     pzem_data_t pzem_data = pzem_get_data();
@@ -31,11 +37,30 @@ static void pzem_mqtt_send_energy(char *payload, void *args)
     sprintf(payload, "%d", (uint32_t)pzem_data.energy);
 }
 
+#ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
+static void pzem_mqtt_send_consunption(char *payload, void *args)
+{
+    pzem_data_t pzem_data = pzem_get_data();
+    snprintf(payload, 140, "{\"today\":{\"total\":%0.2f,\"night\":%0.2f,\"day\":%0.2f},\"yesterday\":{\"total\":%0.2f,\"night\":%0.2f,\"day\":%0.2f}}"
+                    , pzem_data.consumption.today_total / PZEM_FLOAT_DIVIDER
+                    , pzem_data.consumption.today_night / PZEM_FLOAT_DIVIDER
+                    , pzem_data.consumption.today_day / PZEM_FLOAT_DIVIDER
+                    , pzem_data.consumption.prev_total / PZEM_FLOAT_DIVIDER
+                    , pzem_data.consumption.prev_night / PZEM_FLOAT_DIVIDER
+                    , pzem_data.consumption.prev_day / PZEM_FLOAT_DIVIDER
+    );
+}
+#endif
+
 void pzem_mqtt_init()
 {
     mqtt_add_periodic_publish_callback( VOLTAGE_MQTT_TOPIC_PARAM, pzem_mqtt_send_voltage, NULL );
     mqtt_add_periodic_publish_callback( CURRENT_MQTT_TOPIC_PARAM, pzem_mqtt_send_current, NULL  );    
     mqtt_add_periodic_publish_callback( POWER_MQTT_TOPIC_PARAM, pzem_mqtt_send_power, NULL  );    
     mqtt_add_periodic_publish_callback( ENERGY_MQTT_TOPIC_PARAM, pzem_mqtt_send_energy, NULL  );    
+
+#ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION    
+    mqtt_add_periodic_publish_callback( ENERGY_CONSUMPTION_MQTT_TOPIC_PARAM, pzem_mqtt_send_consunption, 140  );    
+#endif    
 }
 #endif
