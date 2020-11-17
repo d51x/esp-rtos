@@ -77,7 +77,7 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
 
             err = esp_ota_write(ota_handle, (const void *)body_start_p, body_part_len);
             if ( err != ESP_OK) {
-                strcpy(err_text, "OTA write failed");
+                strcpy(err_text, "ERROR 1: OTA write failed");
                 ESP_LOGE(TAG, err_text);
                 return err;
             }    
@@ -85,7 +85,7 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
             // Write OTA data
             err = esp_ota_write(ota_handle, (const void *)upgrade_data_buf, recv_len);
             if ( err != ESP_OK ) {
-                strcpy(err_text, "OTA write failed");
+                strcpy(err_text, "ERROR 2: OTA write failed");
                 ESP_LOGE(TAG, err_text);
                 return err;
             }    
@@ -111,13 +111,13 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
 
 
         } else {
-            strcpy(err_text, "OTA upgrading failed. Flashed Error!");
+            strcpy(err_text, "ERROR1: OTA upgrading failed. Flashed Error!");
             ESP_LOGE(TAG, err_text);
 
             return ESP_ERR_FLASH_OP_FAIL;
         }
     } else {
-        strcpy(err_text, "OTA upgrading failed. Flashed Error!");
+        strcpy(err_text, "ERROR2: OTA upgrading failed. Flashed Error!");
         ESP_LOGE(TAG, err_text);
 
         return ESP_ERR_FLASH_OP_FAIL;
