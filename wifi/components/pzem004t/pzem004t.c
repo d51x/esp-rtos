@@ -399,6 +399,8 @@ static void calc_energy_values(void *arg)
 		{
 			_pzem_data.energy_values.prev_midnight = _pzem_data.energy_values.today_midnight; 
 			_pzem_data.energy_values.today_midnight = energy;
+			_pzem_data.energy_values.prev_t1 = _pzem_data.energy_values.today_t1;
+			_pzem_data.energy_values.prev_t2 = _pzem_data.energy_values.today_t2;
 			pzem_nvs_save();
 		}
 		// в 7 утра
