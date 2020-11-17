@@ -52,7 +52,7 @@ static void rgbcontrol_mqtt_recv_queue_cb(void *arg)
     }    
 }
 
-static void rgbcontrol_mqtt_periodic_send_color_int_cb(char *buf, void *args)
+static void rgbcontrol_mqtt_periodic_send_color_int_cb(char **buf, void *args)
 {
     rgbcontrol_t *rgb_ctrl = (rgbcontrol_t *)args;
 
@@ -60,24 +60,24 @@ static void rgbcontrol_mqtt_periodic_send_color_int_cb(char *buf, void *args)
     color_rgb_t *rgb = malloc(sizeof(color_rgb_t));
     hsv_to_rgb(rgb, rgb_ctrl->hsv);
     rgb_to_int(rgb, &color32);
-    itoa( color32, buf, 10);
+    itoa( color32, *buf, 10);
     free(rgb);
 }
 
 
 #ifdef CONFIG_RGB_EFFECTS
-static void rgbcontrol_mqtt_periodic_send_effect_id_cb(char *buf, void *args)
+static void rgbcontrol_mqtt_periodic_send_effect_id_cb(char **buf, void *args)
 {
     rgbcontrol_t *rgb_ctrl = (rgbcontrol_t *)args;
     effects_t *ef = (effects_t *) rgb_ctrl->effects;
-    itoa(ef->effect_id, buf, 10);
+    itoa(ef->effect_id, *buf, 10);
 }
 
-static void rgbcontrol_mqtt_periodic_send_effect_name_cb(char *buf, void *args)
+static void rgbcontrol_mqtt_periodic_send_effect_name_cb(char **buf, void *args)
 {
     rgbcontrol_t *rgb_ctrl = (rgbcontrol_t *)args;
     effects_t *ef = (effects_t *) rgb_ctrl->effects;    
-    strcpy(buf, ef->effect->name);
+    strcpy(*buf, ef->effect->name);
 }
 #endif
 

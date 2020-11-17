@@ -6,7 +6,7 @@ static const char* TAG = "LEDCMQTT";
 
 ledcontrol_handle_t _dev_h;
 
-void ledcontrol_mqtt_periodic_send_cb(char *buf, void *args)
+void ledcontrol_mqtt_periodic_send_cb(char **buf, void *args)
 {
     // для отправки в buf положить значение пина
     ledcontrol_mqtt_t *p = (ledcontrol_mqtt_t *)args;
@@ -16,7 +16,7 @@ void ledcontrol_mqtt_periodic_send_cb(char *buf, void *args)
 
     uint8_t value = 0;
     value = ledc->get_duty( ch );
-    itoa(value, buf, 10);
+    itoa(value, *buf, 10);
 }
 
 void ledcontrol_mqtt_recv_cb(char *buf, void *args)

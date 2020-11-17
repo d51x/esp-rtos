@@ -6,14 +6,14 @@ static const char* TAG = "MCP23017";
 mcp23017_handle_t _dev_h;
 
 //mqtt_add_periodic_publish_callback( const char *topic, func_mqtt_send_cb fn_cb);
-void mcp23017_mqtt_periodic_send_cb(char *buf, void *args)
+void mcp23017_mqtt_periodic_send_cb(char **buf, void *args)
 {
     // для отправки в buf положить значение пина
     mcp23017_mqtt_t *p = (mcp23017_mqtt_t *)args;
     uint8_t value = 0;
     mcp23017_read_pin( p->dev_h, p->pin, &value);
     value = (value != 0);
-    itoa(value, buf, 10);
+    itoa(value, *buf, 10);
 }
 
 // void mqtt_add_receive_callback( const char *topic, func_mqtt_recv_cb fn_cb); 

@@ -1,14 +1,14 @@
 #include "sht21_mqtt.h"
 
 #ifdef CONFIG_SENSOR_SHT21
-static void sht21_mqtt_send_temp(char *payload, void *args)
+static void sht21_mqtt_send_temp(char **payload, void *args)
 {
-    sprintf(payload, "%0.2f", sht21_get_temp());
+    sprintf(*payload, "%0.2f", sht21_get_temp());
 }
 
-static void sht21_mqtt_send_hum(char *payload, void *args)
+static void sht21_mqtt_send_hum(char **payload, void *args)
 {
-    sprintf(payload, "%0.2f", sht21_get_hum());
+    sprintf(*payload, "%0.2f", sht21_get_hum());
 }
 
 

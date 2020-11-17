@@ -42,7 +42,7 @@ uint32_t mqtt_error_count;
 uint32_t mqtt_reconnects;
 uint8_t mqtt_state;
 
-typedef void (* func_mqtt_send_cb)(char *payload, void *args);  
+typedef void (* func_mqtt_send_cb)(char **payload, void *args);  
 typedef void (* func_mqtt_recv_cb)(const char *payload, void *args);  
 // typedef void (*func_mqtt_send_cb)(const char *topic, const char *payload);
 

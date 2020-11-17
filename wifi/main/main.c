@@ -119,14 +119,14 @@ void app_main(void)
 //mqtt_add_periodic_publish_callback( const char *topic, func_mqtt_send_cb fn_cb);
 // void mqtt_add_receive_callback( const char *topic, func_mqtt_recv_cb fn_cb); -
 /*
-void test1(char *buf, void *args) {
+void test1(char **buf, void *args) {
     static uint32_t cnt = 0;
-    itoa(cnt++, buf, 10);
+    itoa(cnt++, *buf, 10);
 }
 
-void test2(char *buf, void *args){
+void test2(char **buf, void *args){
     static uint32_t cnt = 1000000;
-    sprintf(buf, "%d", cnt);
+    sprintf(*buf, "%d", cnt);
     cnt -= 10;
     if ( cnt == 0) cnt = 1000000;
 }

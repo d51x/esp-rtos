@@ -4,11 +4,11 @@
 
 static const char* TAG = "RELAY";
 
-static void relay_mqtt_periodic_send_cb(char *buf, void *args)
+static void relay_mqtt_periodic_send_cb(char **buf, void *args)
 {
     // для отправки в buf положить значение пина
     relay_t *p = (relay_t *)args;
-    itoa(p->state, buf, 10);
+    itoa(p->state, *buf, 10);
 }
 
 void relay_mqtt_recv_cb(char *buf, void *args)
