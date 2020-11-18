@@ -126,7 +126,7 @@ typedef struct {
     uint32_t vdd33;
 } system_info_t;
 
-
+extern const char *RESET_REASONS[ESP_RST_SDIO+1];
 
 m_wifi_info_t wifi_info;
 
@@ -169,4 +169,6 @@ void print_tasks_info();
 
 char* cut_str_from_str(const char *str, const char *str2);
 int get_buf_size(const char* format, ...);
+
+
 #endif /* __UTILS_H__ */

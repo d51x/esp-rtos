@@ -487,6 +487,7 @@ static void main_debug_print(http_args_t *args)
     system_info_t *sys_info = malloc(sizeof(system_info_t));
     get_system_info(sys_info);
 
+    sys_info->chip_info.chip_id = get_chip_id((uint8_t *)wifi_get_mac());
 
     httpd_resp_sendstr_chunk(req, "CHIP INFO<br>");
     httpd_resp_sendstr_chunk_fmt(req, "Model: %s rev.%d<br>ChipID: %d<br>"
@@ -496,11 +497,11 @@ static void main_debug_print(http_args_t *args)
         );
 
     httpd_resp_sendstr_chunk_fmt(req, 
-    "<br>Flash: %d<br>"
+    "<br>Flash: %s<br>"
     "SPI Flash Size: %d Mb<br>"
     "Compile Size: %d Mb<br>"
-    , sys_info->chip_info.features
-    //, sys_info->chip_info.features & CHIP_FEATURE_EMB_FLASH ? "Embedded" : "External"
+    //, sys_info->chip_info.features
+    , sys_info->chip_info.features & CHIP_FEATURE_EMB_FLASH ? "Embedded" : "External"
     , sys_info->mem_info.flash_size_map
     , sys_info->mem_info.flash_size / 0x100000 // 1024*1024
     );
@@ -510,6 +511,9 @@ static void main_debug_print(http_args_t *args)
 
     free(sys_info);
     
+    esp_reset_reason_t reason = esp_reset_reason();
+    httpd_resp_sendstr_chunk_fmt(req, "<br>Reset reason: %d (0x%02X) %s"
+                , reason, reason, RESET_REASONS[reason]);
 }
 
 void debug_register_http_print_data()

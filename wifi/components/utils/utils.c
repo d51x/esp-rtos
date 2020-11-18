@@ -4,6 +4,21 @@
 
 static const char *TAG = "utils";
 
+ 
+const char *RESET_REASONS[ESP_RST_SDIO+1] = {
+    "undetermined",
+    "due to power-on event",
+    "by external pin (not applicable for ESP8266)",
+    "Software reset via esp_restart",
+    "Software reset due to exception/panic",
+    "due to interrupt watchdog",
+    "due to task watchdog",
+    "due to other watchdogs",
+    "after exiting deep sleep mode",
+    "Brownout reset (software or hardware)",
+    "Reset over SDIO",
+};
+
 uint16_t get_adc() {
     uint16_t adc = 0;
     adc_config_t adc_cfg;
@@ -31,8 +46,10 @@ void get_system_info(system_info_t *sys_info) {
 
     m_chip_info_t m_chip_info;
     m_chip_info.chip_id = get_chip_id(wifi_info.mac);
+    //m_chip_info.chip_id = get_chip_id(wifi_get_mac());
     m_chip_info.chip_model = chip_info.model;
     m_chip_info.chip_revision = chip_info.revision;
+    m_chip_info.features = chip_info.features;
     memcpy(&sys_info->chip_info, &m_chip_info, sizeof(m_chip_info_t)); 
 
     m_mem_info_t m_mem_info;
