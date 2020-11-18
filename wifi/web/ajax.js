@@ -1,4 +1,5 @@
-// https://javascript-minifier.com/
+// https://javascript-minifier.com/  ???
+// https://jsminify.org/
 
 function ajax_request(url, callback) {
     var xhr;
@@ -122,9 +123,11 @@ function btnclick(id, id2, v, st) {
 	var uri = btn.getAttribute("data-uri");
 	var value = btn.getAttribute("data-val");
 	
-	console.log('params: id = %s, id2 = %s, v = %d, st = %d', id, id2, v, st);
-	
-	ajax_request(uri + value, function(res) {
+    //console.log('params: id = %s, id2 = %s, v = %d, st = %d', id, id2, v, st);
+    var new_uri = uri;
+	if ( value > -1 ) new_uri = uri + value;
+
+	ajax_request(new_uri, function(res) {
 		
 		if ( st == 1 ) {
 			var vnew = 0;
@@ -141,8 +144,8 @@ function btnclick(id, id2, v, st) {
 			btn.setAttribute("class", cls + snew);
 			btn.setAttribute("data-val", 1 - vnew); 
 			
-			console.log('resp = %s, vnew = %d, !vnew = %d', resp, vnew, 1 - vnew);
-		}
+			//console.log('resp = %s, vnew = %d, !vnew = %d', resp, vnew, 1 - vnew);
+		} 
 		var elem = document.getElementById( id2 )
 		if ( v == 1 ) {
 			elem.innerHTML = btn.getAttribute("data-text") + res.responseText;	
