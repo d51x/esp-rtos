@@ -31,9 +31,42 @@ const char *html_block_pzem004t_title_energy_midnight_prev ICACHE_RODATA_ATTR = 
 const char *html_block_pzem004t_title_energy_t1_prev ICACHE_RODATA_ATTR = "Вчера в 07:00";
 const char *html_block_pzem004t_title_energy_t2_prev ICACHE_RODATA_ATTR = "Вчера в 23:00";
 
+#define PZEM_URI "/pzem"
+const char *pzem_reset_uri ICACHE_RODATA_ATTR = PZEM_URI"?reset=1";
+const char *pzem_reset_today_uri ICACHE_RODATA_ATTR = PZEM_URI"?reset=1&today=1";
+const char *pzem_reset_title ICACHE_RODATA_ATTR = "Сброс расхода";
+
 #endif
 
-#define PZEM_URI "/pzem"
+
+
+static void pzem_print_options(http_args_t *args)
+{
+    http_args_t *arg = (http_args_t *)args;
+    httpd_req_t *req = (httpd_req_t *)arg->req;
+
+    size_t sz = get_buf_size(html_block_data_header_start, html_block_pzem004t_title);
+    char *data = malloc( sz );   
+    sprintf(data, html_block_data_header_start, html_block_pzem004t_title);
+    httpd_resp_sendstr_chunk(req, data);
+    free(data);
+
+    // httpd_resp_sendstr_chunk(req, html_block_data_form_start);
+    // httpd_resp_sendstr_chunk(req, html_block_data_div_lf3);
+    httpd_resp_sendstr_chunk(req, "<div class='rht'>");
+    // ==============================================
+    // print page block data here
+    // ==============================================
+    char rht[] = "rht";
+    char *b_id = "pzemrst";
+    
+    http_print_button(req, b_id, rht, "norm", pzem_reset_uri, -1, pzem_reset_title, 0, 0);
+
+    // ==============================================
+    
+    httpd_resp_sendstr_chunk(req, html_block_data_end); 
+    httpd_resp_sendstr_chunk(req, html_block_data_end);   
+}
 
 static void pzem_print_data(http_args_t *args)
 {
@@ -99,10 +132,27 @@ static void pzem_print_data(http_args_t *args)
     httpd_resp_sendstr_chunk(req, html_block_data_end); 
 }
 
+static void pzem_http_process_params(httpd_req_t *req, void *args)
+{
+   // check params
+	if ( http_get_has_params(req) == ESP_OK) 
+	{
+        char param[100];
+        if ( http_get_key_str(req, "st", param, sizeof(param)) == ESP_OK ) {
+            //if ( strcmp(param, param_st_lcd) != 0 ) {
+            //    return;	
+            //}
+        } 
+        // TODO: обработать принятые данные  
+
+    } 
+}
+
 void pzem_register_http_print_data()
 {
     http_args_t *p = calloc(1,sizeof(http_args_t));
     register_print_page_block( "pzem_data", PAGES_URI[ PAGE_URI_ROOT], 3, pzem_print_data, p, NULL, NULL);    
+    register_print_page_block( "pzem_tools", PAGES_URI[ PAGE_URI_TOOLS], 3, pzem_print_options, p, pzem_http_process_params, NULL);    
 }
 
 static esp_err_t pzem_get_handler(httpd_req_t *req)
@@ -112,7 +162,7 @@ static esp_err_t pzem_get_handler(httpd_req_t *req)
 	if ( http_get_has_params(req) == ESP_OK) 
 	{
         char param[20];
-        //  /pzem?reset=1&prev=1
+        //  /pzem?reset=1&today=1
         if ( http_get_key_str(req, "reset", param, sizeof(param)) == ESP_OK ) {
             uint8_t state = atoi(param);
             if ( state ) {
