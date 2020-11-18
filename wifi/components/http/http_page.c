@@ -228,8 +228,6 @@ void print_page_block(httpd_req_t *req, const char *uri)
         {
             http_args_t *arg = http_print_page_block[ idx ].args1;
             arg->req = req;
-            ESP_LOGW(TAG, "page req: %p", req);
-            ESP_LOGW(TAG, "arg->req req: %p", arg->req);
             http_print_page_block[ idx ].fn_print_block(arg);       
         }
 
