@@ -18,6 +18,24 @@ void httpd_resp_sendstr_chunk(httpd_req_t *req, const char *buf){
     httpd_resp_send_chunk(req, buf, strlen(buf));
 }
 
+void httpd_resp_sendstr_chunk_fmt(httpd_req_t *req, const char *fmt, ...){
+    char *str = (char *) malloc(100);
+    memset(str, 0, 100);
+
+    va_list args;
+    va_start(args, fmt);
+    int len = vsnprintf(str, 100, fmt, args);
+    va_end(args);
+
+    str = (char *) realloc(str, len + 1);
+    memset(str, 0, len + 1);
+    len = vsnprintf(str, len + 1, fmt, args);
+
+    httpd_resp_send_chunk(req, str, len + 1);
+
+    free(str);
+	str = NULL;
+}
 
 void httpd_resp_end(httpd_req_t *req)
 {
@@ -116,7 +134,17 @@ void page_generate_data(httpd_req_t *req, const char *uri)
     ESP_LOGI(TAG, "%s: %s", __func__, uri);
     //TODO: для AP не отображаются страницы, останавливается вывод на hostname, далее пусто
     httpd_resp_sendstr_chunk(req, html_page_content_start);
+    
+    if ( strcmp(uri, PAGES_URI[PAGE_URI_DEBUG]) == 0) {
+        httpd_resp_sendstr_chunk(req, html_block_data_no_header_start);
+    }
+
     print_page_block( req, uri);
+
+    if ( strcmp(uri, PAGES_URI[PAGE_URI_DEBUG]) == 0) {
+        httpd_resp_sendstr_chunk(req, html_block_data_end);
+    }
+
     httpd_resp_sendstr_chunk(req, html_page_content_end);
 }
 
@@ -185,7 +213,7 @@ void show_http_page(httpd_req_t *req)
 
 void print_page_block(httpd_req_t *req, const char *uri)
 {
-    ESP_LOGI(TAG, "%s: %s, block count: %d", __func__, uri, http_print_page_block_count);
+    //ESP_LOGI(TAG, "%s: %s, block count: %d", __func__, uri, http_print_page_block_count);
     uint8_t (*indexes)[2] = NULL;
     uint8_t found_cnt = 0;
     uint8_t i = 0;
@@ -303,7 +331,7 @@ esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t i
     }    
 
     http_print_page_block_count++; // увеличим размер массива
-    ESP_LOGW(TAG, "http_print_page_block_count %d", http_print_page_block_count);
+    //ESP_LOGW(TAG, "http_print_page_block_count %d", http_print_page_block_count);
 
     http_print_page_block = (http_print_page_block_t *) realloc(http_print_page_block, http_print_page_block_count * sizeof(http_print_page_block_t));
 

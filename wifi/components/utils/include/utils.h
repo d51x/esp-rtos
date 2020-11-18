@@ -101,6 +101,7 @@ typedef struct {
     uint32_t chip_id;
     esp_chip_model_t chip_model;
     uint8_t chip_revision;
+    uint32_t features;
 } m_chip_info_t;
 
 typedef struct {
@@ -121,7 +122,7 @@ typedef struct {
 typedef struct {
     m_chip_info_t chip_info;
     m_mem_info_t mem_info;
-    char sdk_version[20];
+    char sdk_version[30];
     uint32_t vdd33;
 } system_info_t;
 

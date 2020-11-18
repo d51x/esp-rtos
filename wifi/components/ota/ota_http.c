@@ -31,6 +31,42 @@ static void ota_print_html(http_args_t *args)
     httpd_resp_sendstr_chunk(req, html_block_data_end);  
 }
 
+static void ota_debug_print(http_args_t *args)
+{
+    http_args_t *arg = (http_args_t *)args;
+    httpd_req_t *req = (httpd_req_t *)arg->req;
+
+    esp_app_desc_t *app_desc = esp_ota_get_app_description();
+    const esp_partition_t* esp_part = esp_ota_get_running_partition();
+
+    ota_firm_t *fw = malloc( sizeof(ota_firm_t));
+    ota_load_nvs(fw);
+
+    httpd_resp_sendstr_chunk_fmt(req, 
+    "<br>Firmware (OTA): <br>"
+    "name: %s<br>"
+    "version: %s<br>"
+    "idf_ver: %s<br>"
+    "file: %s<br>"
+    "fw size: %d<br>"
+    "updated: %s<br>"
+    "compiled: %s %s<br>"
+    "running partition: %s (%d bytes)<br>"
+    , app_desc->project_name
+    , app_desc->version
+    , app_desc->idf_ver
+    , fw->fname
+    , fw->size
+    , fw->dt
+    , app_desc->date
+    , app_desc->time
+    , esp_part->label
+    , esp_part->size
+    );
+    free(app_desc);
+    free(fw);
+}
+
 void ota_http_get_process_params(httpd_req_t *req, void *args)
 {
     // TODO
@@ -73,6 +109,8 @@ void ota_register_http_print_data()
 {
     http_args_t *p = calloc(1,sizeof(http_args_t));
     register_print_page_block( "ota", PAGES_URI[ PAGE_URI_OTA ], 1, ota_print_html, p, ota_http_get_process_params, NULL );
+    register_print_page_block( "debug", PAGES_URI[ PAGE_URI_DEBUG], 2, ota_debug_print, p, NULL, NULL  ); 
+
 }
 
 void ota_http_init(httpd_handle_t _server)

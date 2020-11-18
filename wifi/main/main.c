@@ -3,6 +3,8 @@
 
 static const char *TAG = "MAIN";
 
+static void debug_register_http_print_data();
+
 void test1(char *buf, void *args);
 void test2(char *buf, void *args);
 
@@ -416,7 +418,7 @@ void initialize_modules_mqtt()
 
 void initialize_modules_http(httpd_handle_t _server)
 {
-
+    debug_register_http_print_data();
     wifi_http_init( _server );
     ota_http_init( _server );
 
@@ -469,4 +471,49 @@ void initialize_modules_http(httpd_handle_t _server)
     //register_print_page_block( "user1", PAGES_URI[ PAGE_URI_ROOT], 0, user_web_main, p, NULL, NULL  );     
     //register_print_page_block( "sensors", "/sensors", 0, sensors_print, p, NULL, NULL  ); 
     add_uri_get_handler( _server, "/sensors", sensors_get_handler, NULL); 
+
+
+}
+
+static void main_debug_print(http_args_t *args)
+{
+    //ESP_LOGW(TAG, __func__ );
+    http_args_t *arg = (http_args_t *)args;
+    httpd_req_t *req = (httpd_req_t *)arg->req;
+
+    // esp_chip_info_t chip_info;
+    // esp_chip_info(&chip_info);
+
+    system_info_t *sys_info = malloc(sizeof(system_info_t));
+    get_system_info(sys_info);
+
+
+    httpd_resp_sendstr_chunk(req, "CHIP INFO<br>");
+    httpd_resp_sendstr_chunk_fmt(req, "Model: %s rev.%d<br>ChipID: %d<br>"
+        , (sys_info->chip_info.chip_model == 0) ? "esp8266" : "esp32"
+        , sys_info->chip_info.chip_revision
+        , sys_info->chip_info.chip_id        
+        );
+
+    httpd_resp_sendstr_chunk_fmt(req, 
+    "<br>Flash: %d<br>"
+    "SPI Flash Size: %d Mb<br>"
+    "Compile Size: %d Mb<br>"
+    , sys_info->chip_info.features
+    //, sys_info->chip_info.features & CHIP_FEATURE_EMB_FLASH ? "Embedded" : "External"
+    , sys_info->mem_info.flash_size_map
+    , sys_info->mem_info.flash_size / 0x100000 // 1024*1024
+    );
+
+    httpd_resp_sendstr_chunk_fmt(req, "Free Heap: %d<br>", sys_info->mem_info.free_heap_size);
+    //httpd_resp_sendstr_chunk_fmt(req, "IDF Ver: %s<br>", sys_info->sdk_version);
+
+    free(sys_info);
+    
+}
+
+void debug_register_http_print_data()
+{
+    http_args_t *p = calloc(1,sizeof(http_args_t));
+    register_print_page_block( "debug", PAGES_URI[ PAGE_URI_DEBUG], 0, main_debug_print, p, NULL, NULL  ); 
 }

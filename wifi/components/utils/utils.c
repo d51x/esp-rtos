@@ -49,7 +49,8 @@ void get_system_info(system_info_t *sys_info) {
 
     //char *sdk_version = malloc(20);
     //sdk_version = esp_get_idf_version();
-    memcpy(&sys_info->sdk_version, esp_get_idf_version(), 20);
+    memset(&sys_info->sdk_version, 0, 30);
+    memcpy(&sys_info->sdk_version, esp_get_idf_version(), 30);
     //free(sdk_version);
 
     uint32_t vdd33 = esp_wifi_get_vdd33();

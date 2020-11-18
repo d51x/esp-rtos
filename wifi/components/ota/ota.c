@@ -1,13 +1,34 @@
 #include "ota.h"
+#include "nvsparam.h"
 
 static const char *TAG = "OTA";
 
+#define OTA_NVS_SECTION "ota"
+#define OTA_NVS_KEY "fw"
 
+static void ota_save_nvs(ota_firm_t *fw)
+{
+    esp_err_t err = nvs_param_save(OTA_NVS_SECTION, OTA_NVS_KEY, fw, sizeof(ota_firm_t));
+    if ( err != ESP_OK ) {
+        ESP_LOGE(TAG, "%s: %s", __func__, esp_err_to_name(err));
+    }
+}
+
+esp_err_t ota_load_nvs(ota_firm_t *fw)
+{
+    esp_err_t err = nvs_param_load(OTA_NVS_SECTION, OTA_NVS_KEY, fw);
+    if ( err != ESP_OK ) {
+        ESP_LOGE(TAG, "%s: %s", __func__, esp_err_to_name(err));
+    }
+    return err;
+}
 
 esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
-    ESP_LOGI(TAG, "Starting OTA...");
+    ESP_LOGW(TAG, "Starting OTA...");
     
     int total_len = req->content_len;
+    int file_len = total_len;
+    char fname[32];
     int recv_len;           // принято за раз
     int remain = total_len;  // осталось загрузить
     int received = 0;  // загружено
@@ -29,14 +50,16 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
         return ESP_ERR_NO_MEM;
     }
 
-    ESP_LOGI(TAG, "Start uploading firmware, size %d", total_len);        
-    ESP_LOGI(TAG, "upload buffer size is %d", buf_size);        
+    ESP_LOGW(TAG, "Start uploading firmware, size %d", total_len);        
+    ESP_LOGW(TAG, "upload buffer size is %d", buf_size);        
 
 
     esp_err_t err = esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &ota_handle);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Error With OTA Begin, Cancelling OTA");
-        strcpy(err_text, "Error With OTA Begin, Cancelling OTA");
+        ESP_LOGE(TAG, esp_err_to_name(err));
+        strcpy(err_text, esp_err_to_name(err));
+        strcpy(err_text+strlen(err_text), "Error With OTA Begin, Cancelling OTA");
         ESP_LOGE(TAG, err_text);
         return ESP_ERR_FLASH_OP_FAIL;               
     } 
@@ -69,15 +92,29 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
             ESP_LOGD(TAG, "Writing first block to OTA partition");
             
             // Lets find out where the actual data staers after the header info	
+            
             char *body_start_p = strstr(upgrade_data_buf, "\r\n\r\n") + 4;
-            ESP_LOGD(TAG, "body_start_p = %02X", body_start_p - upgrade_data_buf + 1);
+            //ESP_LOGW(TAG, "body_start_p = 0x%02X", body_start_p - upgrade_data_buf + 1);
+
+            char *post_data = malloc(body_start_p - upgrade_data_buf + 1);
+            memset(post_data, 0 , body_start_p - upgrade_data_buf + 1);
+            memcpy(post_data, upgrade_data_buf, body_start_p - upgrade_data_buf);
+            //ESP_LOGW(TAG, "%s", post_data);
+            post_data = strstr(post_data, "filename=") + 10;
+            post_data = cut_str_from_str(post_data, "\"");
+            strncpy(fname, post_data, 32);
+            //file_len = body_start_p - upgrade_data_buf;
+            file_len = total_len - 196;
+            ESP_LOGW(TAG, "%s (%d)", fname, file_len);
+            free(post_data);
 
             int body_part_len = recv_len - (body_start_p - upgrade_data_buf); 
-            ESP_LOGD(TAG, "body_part_len = %d", body_part_len);
+            //ESP_LOGW(TAG, "body_part_len = %d", body_part_len);
 
             err = esp_ota_write(ota_handle, (const void *)body_start_p, body_part_len);
             if ( err != ESP_OK) {
-                strcpy(err_text, "ERROR 1: OTA write failed");
+                strcpy(err_text, esp_err_to_name(err));
+                strcpy(err_text+strlen(err_text), "ERROR 1: OTA write failed");
                 ESP_LOGE(TAG, err_text);
                 return err;
             }    
@@ -85,7 +122,8 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
             // Write OTA data
             err = esp_ota_write(ota_handle, (const void *)upgrade_data_buf, recv_len);
             if ( err != ESP_OK ) {
-                strcpy(err_text, "ERROR 2: OTA write failed");
+                strcpy(err_text, esp_err_to_name(err));
+                strcpy(err_text+strlen(err_text), "ERROR 2: OTA write failed");
                 ESP_LOGE(TAG, err_text);
                 return err;
             }    
@@ -109,7 +147,13 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
             ESP_LOGI("OTA", "Next boot partition subtype %d at offset 0x%x", boot_partition->subtype, boot_partition->address);
             ESP_LOGI("OTA", "Please Restart System...");
 
-
+            // save to nvs firmware data: updated datetime, filesize, filename
+            ota_firm_t *fw = malloc( sizeof(ota_firm_t));
+            strcpy(fw->fname, fname);
+            fw->size = file_len; //total_len;
+            get_localtime(&fw->dt);
+            ota_save_nvs(fw);
+            free(fw);
         } else {
             strcpy(err_text, "ERROR1: OTA upgrading failed. Flashed Error!");
             ESP_LOGE(TAG, err_text);
@@ -117,7 +161,8 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
             return ESP_ERR_FLASH_OP_FAIL;
         }
     } else {
-        strcpy(err_text, "ERROR2: OTA upgrading failed. Flashed Error!");
+        strcpy(err_text, esp_err_to_name(err));
+        strcpy(err_text+strlen(err_text), "ERROR2: OTA upgrading failed. Flashed Error!");
         ESP_LOGE(TAG, err_text);
 
         return ESP_ERR_FLASH_OP_FAIL;
