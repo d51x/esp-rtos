@@ -104,5 +104,6 @@ esp_err_t register_print_page_block(const char *name, const char *uri, uint8_t i
 esp_err_t register_http_page_menu(const char *uri, const char *name);
 
 void http_print_value(httpd_req_t *req, const char *html_label, const char *title, const char *fmt, type_e type, void *value);
+void http_print_button(httpd_req_t *req, const char *b_id, const char *class, const char *st_class, const char *uri, int value, const char *text, int st, int v);
 
 #endif 

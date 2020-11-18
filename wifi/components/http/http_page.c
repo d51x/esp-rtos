@@ -22,8 +22,8 @@ void httpd_resp_sendstr_chunk(httpd_req_t *req, const char *buf){
 void httpd_resp_end(httpd_req_t *req)
 {
 
-    httpd_resp_set_hdr(req, "Connection", "close");
-    httpd_resp_set_hdr(req, "Pragma", "no-cache");
+    // httpd_resp_set_hdr(req, "Connection", "close");
+    // httpd_resp_set_hdr(req, "Pragma", "no-cache");
     httpd_resp_send_chunk(req, NULL, 0);
 }
 
@@ -134,6 +134,11 @@ void page_show_menu(httpd_req_t *req)
 
 void generate_page(httpd_req_t *req, const char *uri, const char *title) 
 {   
+    //ESP_LOGW(TAG, "%s: %s", __func__, uri);
+    httpd_resp_set_hdr(req, "Connection", "close");
+    httpd_resp_set_hdr(req, "Pragma", "no-cache");
+    httpd_resp_set_hdr(req, "Cache-control", "no-cache");
+
     page_generate_html_start(req, title);  // data with html_start
     page_generate_top_header(req);  // data with html_start + top_header
     page_generate_data(req, uri); 
@@ -333,6 +338,7 @@ esp_err_t register_http_page_menu(const char *uri, const char *name)
     strcpy(http_menu[menu_items_count - 1].name, name);
     return ESP_OK;
 }
+
 void http_print_value(httpd_req_t *req, const char *html_label, const char *title, const char *fmt, type_e type, void *value)
 {
     char param[10];
@@ -373,3 +379,34 @@ void http_print_value(httpd_req_t *req, const char *html_label, const char *titl
     free(data);     
 }
 
+void http_print_button(httpd_req_t *req, const char *b_id, const char *class, const char *st_class, const char *uri, int value, const char *text, int st, int v)
+{
+    size_t sz = get_buf_size(html_button
+                    , b_id
+                    , class
+                    , st_class
+                    , class
+                    , uri                // TODO: use checkbox to reset today consumption, otherwise will reset only yesterday consumption
+                    , value
+                    , text
+                    , st
+                    , 0
+                    , text
+    );
+    char *data = malloc(sz);
+    
+    sprintf(data, html_button
+                    , b_id
+                    , class
+                    , st_class
+                    , class
+                    , uri
+                    , value
+                    , text
+                    , st
+                    , v
+                    , text
+    );
+    httpd_resp_sendstr_chunk(req, data);      
+    free(data);
+}

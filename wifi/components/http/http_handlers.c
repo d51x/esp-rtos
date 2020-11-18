@@ -123,8 +123,14 @@ esp_err_t tools_get_handler(httpd_req_t *req){
 	if ( http_get_has_params(req) == ESP_OK) 
 	{
         process_params(req);
+
+        char *path = http_uri_clean( req );
+        make_redirect(req, 0, path);
+        free( path );
+        return ESP_OK;        
 	}
-    httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
+  
+  httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
   show_http_page( req );
   
   //httpd_resp_send_chunk(req, NULL, 0);
@@ -220,6 +226,11 @@ esp_err_t main_css_get_handler(httpd_req_t *req)
     extern const unsigned char main_css_start[] asm("_binary_main_min_css_start");
     extern const unsigned char main_css_end[]   asm("_binary_main_min_css_end");
     const size_t main_css_size = (main_css_end - main_css_start);
+    
+    httpd_resp_set_hdr(req, "Connection", "close");
+    httpd_resp_set_hdr(req, "Pragma", "no-cache");
+    httpd_resp_set_hdr(req, "Cache-control", "no-cache");
+
     httpd_resp_set_type(req, "text/css");
     httpd_resp_send(req, (const char *)main_css_start, main_css_size);
     return ESP_OK;
