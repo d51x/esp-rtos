@@ -129,7 +129,8 @@ void lcd2004_print_options(http_args_t *args)
     );
     httpd_resp_sendstr_chunk(req, data);
 
-    // ==========================================================================    
+    // ==========================================================================
+    // TODO: переделать вывод кнопок через функцию   
     sprintf(b_id, button_id, 3);
     sz = get_buf_size(html_button
                     , b_id
