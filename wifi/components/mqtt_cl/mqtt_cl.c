@@ -382,10 +382,10 @@ static void mqtt_publish_custom_registered_topics()
             //uint16_t payload_size = mqtt_send[i].args ? mqtt_send[i].args : MQTT_PAYLOAD_SIZE_DEFAULT;
             char *payload = malloc( MQTT_PAYLOAD_SIZE_DEFAULT );
             memset(payload, 0, MQTT_PAYLOAD_SIZE_DEFAULT);
+
             mqtt_send[i].fn_cb(&payload, mqtt_send[i].args) ;
-            ESP_LOGE(TAG, "payload size = %d", strlen(payload));
-            ESP_LOGE(TAG, "payload  = %s", payload);
             mqtt_publish_generic( mqtt_send[i].topic, payload); 
+
             free(payload);
         }
     }

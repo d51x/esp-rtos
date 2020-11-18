@@ -41,7 +41,8 @@ static void pzem_mqtt_send_energy(char **payload, void *args)
 static void pzem_mqtt_send_consunption(char **payload, void *args)
 {
     pzem_data_t pzem_data = pzem_get_data();
-    *payload = (char *) realloc(payload, 140);
+    *payload = (char *) realloc(*payload, 140);
+
     memset(*payload, 0, 140);
     snprintf(*payload, 140, "{\"today\":{\"total\":%0.2f,\"night\":%0.2f,\"day\":%0.2f},\"yesterday\":{\"total\":%0.2f,\"night\":%0.2f,\"day\":%0.2f}}"
                     , pzem_data.consumption.today_total / PZEM_FLOAT_DIVIDER
