@@ -175,14 +175,14 @@ static void pzem_send (uint8_t *addr, uint8_t cmd)
 	pzem.crc = pzem_crc(bytes, sizeof(PZEM_Command_t) - 1);
 	//pzem.crc = pzem_crc((uint8_t*)&pzem, sizeof(PZEM_Command_t) - 1);
 
-		char wlog[128];
-		sprintf(wlog, "%s: len %d buf: ", __func__, sizeof(PZEM_Command_t));
-		char r[8];  
-		for (uint8_t i = 0; i < sizeof(PZEM_Command_t); i++) {
-			sprintf(r, "%02X ", bytes[i]);
-			strcat(wlog + strlen(wlog), r);
-		}
-		ESP_LOGW(TAG, wlog);  
+		// char wlog[128];
+		// sprintf(wlog, "%s: len %d buf: ", __func__, sizeof(PZEM_Command_t));
+		// char r[8];  
+		// for (uint8_t i = 0; i < sizeof(PZEM_Command_t); i++) {
+		// 	sprintf(r, "%02X ", bytes[i]);
+		// 	strcat(wlog + strlen(wlog), r);
+		// }
+		// ESP_LOGW(TAG, wlog);  
 
 	send_buffer(bytes, sizeof(PZEM_Command_t));
 	//send_buffer((uint8_t*)&pzem, sizeof(PZEM_Command_t));
@@ -205,19 +205,19 @@ static esp_err_t pzem_read(uint8_t resp, uint8_t *data)
 	  		userlog("\n");
 	  	}
 	#else
-		char wlog[128];
-		sprintf(wlog, "%s: len %d", __func__, len);
-	  	if ( len > 0 ) 
-		{
-			strcat(wlog + strlen(wlog), " buf: ");
-			char r[8];  
-	  		for (uint8_t i = 0; i < len; i++) {
-	  			sprintf(r, "%02X ", buf[i]);
-				strcat(wlog + strlen(wlog), r);
-	  		}
-	  	}		  
-		ESP_LOGW(TAG, "%s", wlog);  
-		ESP_LOGW(TAG, " ");  
+		// char wlog[128];
+		// sprintf(wlog, "%s: len %d", __func__, len);
+	  	// if ( len > 0 ) 
+		// {
+		// 	strcat(wlog + strlen(wlog), " buf: ");
+		// 	char r[8];  
+	  	// 	for (uint8_t i = 0; i < len; i++) {
+	  	// 		sprintf(r, "%02X ", buf[i]);
+		// 		strcat(wlog + strlen(wlog), r);
+	  	// 	}
+	  	// }		  
+		// ESP_LOGW(TAG, "%s", wlog);  
+		// ESP_LOGW(TAG, " ");  
 	#endif
 
 	if ( len == 0 ) res = ESP_FAIL;

@@ -333,5 +333,43 @@ esp_err_t register_http_page_menu(const char *uri, const char *name)
     strcpy(http_menu[menu_items_count - 1].name, name);
     return ESP_OK;
 }
-
+void http_print_value(httpd_req_t *req, const char *html_label, const char *title, const char *fmt, type_e type, void *value)
+{
+    char param[10];
+    //sprintf(param, fmt, (char *)value); // TODO: через макрос лучше, чтобы сам тип понял
+    switch (type) {
+        case UINT8_T:
+            sprintf(param, fmt, *(uint8_t *)value);
+            break;
+        case UINT16_T:
+            sprintf(param, fmt, *(uint16_t *)value);
+            break;     
+        case UINT32_T:
+            sprintf(param, fmt, *(uint32_t *)value);
+            break;                   
+        case INT8_T:
+            sprintf(param, fmt, *(int8_t *)value);
+            break;   
+        case INT16_T:
+            sprintf(param, fmt, *(int16_t *)value);
+            break;                
+        case INT32_T:
+            sprintf(param, fmt, *(int32_t *)value);
+            break;  
+        case FLOAT:
+                sprintf(param, fmt, *(float *)value);
+                break;      
+        case STRING:
+            sprintf(param, fmt, (char *)value);
+            break;   
+        default:
+            sprintf(param, fmt, (char *)value);
+            break;           
+    }
+    size_t sz = get_buf_size(html_label, title , param );
+    char *data = malloc( sz );
+    sprintf(data, html_label, title, param);  
+    httpd_resp_sendstr_chunk(req, data);
+    free(data);     
+}
 

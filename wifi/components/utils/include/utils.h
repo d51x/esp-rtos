@@ -86,6 +86,17 @@ typedef enum {
 } str2int_errno;
 */
 
+typedef enum {
+    UINT8_T,
+    UINT16_T,
+    UINT32_T,
+    INT8_T,
+    INT16_T,
+    INT32_T,
+    FLOAT,
+    STRING
+} type_e;
+
 typedef struct {
     uint32_t chip_id;
     esp_chip_model_t chip_model;
@@ -139,7 +150,7 @@ uint32_t get_time(char* f);
 
 void trim(char *s);
 
-void systemRebootTask(void * parameter);
+void systemRebootTask(void *arg);
 int url_decode(const char *s, char *dec);
 
 long map(long x, long in_min, long in_max, long out_min, long out_max);

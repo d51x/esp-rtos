@@ -295,7 +295,7 @@ long map(long x, long in_min, long in_max, long out_min, long out_max) {
 }
 
 
-void systemRebootTask(void * parameter)
+void systemRebootTask(void *arg)
 {
 
 	// Init the event group
@@ -313,8 +313,9 @@ void systemRebootTask(void * parameter)
 		// Did portMAX_DELAY ever timeout, not sure so lets just check to be sure
 		//if ((staBits & REBOOT_BIT) != 0)
 		//{
-			ESP_LOGI("OTA", "Reboot Command, Restarting within %d", (int)parameter);
-			vTaskDelay((int)parameter / portTICK_PERIOD_MS);
+			uint32_t delay = (uint32_t)arg;
+            ESP_LOGE("OTA", "Reboot Command, Restarting within %d", delay);
+			vTaskDelay(delay / portTICK_PERIOD_MS);
 
 			esp_restart();
 		//}

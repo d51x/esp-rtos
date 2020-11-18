@@ -170,7 +170,7 @@ esp_err_t reboot_get_handler(httpd_req_t *req)
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
 
     if ( found ) {  
-        xTaskCreate(&systemRebootTask, "systemRebootTask", 1024, 2000, 5, NULL);
+        xTaskCreate(systemRebootTask, "systemRebootTask", 1024, 2000, 5, NULL);
         httpd_resp_set_hdr(req, "Refresh", "5; /");
         httpd_resp_send(req, NULL, 0);
     

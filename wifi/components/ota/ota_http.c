@@ -44,15 +44,20 @@ void ota_http_post_process_params(httpd_req_t *req, void *args)
 
     if ( ota_task_upgrade_from_web(req, err_text) == ESP_OK ) {
         // upgrading is OK, restart esp and redirect to main page in 10
-        char header[40] = "";
-        set_redirect_header(10, "/", header);
+        //char header[40] = "";
+        //set_redirect_header(10, "/", header);
         httpd_resp_set_hdr(req, "Refresh", "10; /");
-        httpd_resp_sendstr_chunk(req, header);
+        //httpd_resp_sendstr_chunk(req, header);
+
         char *buf = malloc( strlen(html_page_uploaded) + 10);
         sprintf(buf, html_page_uploaded, (uint32_t)(millis()-start_time)/1000);
         httpd_resp_sendstr_chunk(req, buf);
         free(buf);
-        xTaskCreate(&systemRebootTask, "systemRebootTask", 1024, (int *)3000, 5, NULL);  
+        
+
+        ESP_LOGW("OTAHTTP", "Create Restart Task...");
+        xTaskCreate(systemRebootTask, "sysreboot", 1024, 5000, 5, NULL); 
+        ESP_LOGW("OTAHTTP", "Restart...");
     } else {
         httpd_resp_set_status(req, HTTPD_500);
         httpd_resp_sendstr_chunk(req, html_page_failed);
