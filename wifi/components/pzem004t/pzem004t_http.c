@@ -68,6 +68,15 @@ static void pzem_print_options(http_args_t *args)
     httpd_resp_sendstr_chunk(req, html_block_data_end);   
 }
 
+static void pzem_print_debug(http_args_t *args)
+{
+    http_args_t *arg = (http_args_t *)args;
+    httpd_req_t *req = (httpd_req_t *)arg->req;
+    pzem_data_t pzem_data = pzem_get_data();
+    httpd_resp_sendstr_chunk_fmt(req, "PZEM %s: %d", html_block_pzem004t_title_errors, pzem_data.errors);
+    //http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_errors, "%d", UINT16_T, (void *)&pzem_data.errors);
+}
+
 static void pzem_print_data(http_args_t *args)
 {
     http_args_t *arg = (http_args_t *)args;
@@ -90,8 +99,6 @@ static void pzem_print_data(http_args_t *args)
 
     t = pzem_data.energy / PZEM_FLOAT_DIVIDER;
     http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_energy_total, "%0.2f kW*h", FLOAT, (void *)&t);
-
-    http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_errors, "%d", UINT16_T, (void *)&pzem_data.errors);
 
     #ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
     // ==========================================================================
@@ -153,6 +160,7 @@ void pzem_register_http_print_data()
     http_args_t *p = calloc(1,sizeof(http_args_t));
     register_print_page_block( "pzem_data", PAGES_URI[ PAGE_URI_ROOT], 3, pzem_print_data, p, NULL, NULL);    
     register_print_page_block( "pzem_tools", PAGES_URI[ PAGE_URI_TOOLS], 3, pzem_print_options, p, pzem_http_process_params, NULL);    
+    register_print_page_block( "pzem_debug", PAGES_URI[ PAGE_URI_DEBUG], 3, pzem_print_debug, p, NULL, NULL);    
 }
 
 static esp_err_t pzem_get_handler(httpd_req_t *req)
