@@ -13,6 +13,8 @@
 #include "esp_wifi_types.h"
 #include "esp_log.h"
 #include "nvsparam.h"
+#include "lwip/netif.h"
+#include "lwip/dhcp.h"
 
 #define ESP_WIFI_SSID      "" //"DmintyIot"
 #define ESP_WIFI_PASS      "12346578"
@@ -38,6 +40,7 @@ typedef struct {
     wifi_mode_t mode;
     char hostname[TCPIP_HOSTNAME_MAX_SIZE];
     uint8_t first;
+    char ip[16];
 } wifi_cfg_t;
 
 wifi_cfg_t *wifi_cfg;
@@ -51,11 +54,13 @@ void wifi_init_sta(void);
 void wifi_init_ap(void);
 
 int8_t wifi_get_rssi();
-char *wifi_get_mac();
+void wifi_get_mac(char *mac);
 
 bool isWiFiConnected();
 
 void wifi_cfg_load(wifi_cfg_t *cfg);
 void wifi_cfg_save(const wifi_cfg_t *cfg);
+
+uint32_t wifi_get_reconnect_count();
 
 #endif /* __WIFI_H__ */

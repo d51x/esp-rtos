@@ -98,11 +98,32 @@ static void wifi_print_options(http_args_t *args)
 	free(data);
 }
 
+static void wifi_print_debug(http_args_t *args)
+{
+    http_args_t *arg = (http_args_t *)args;
+    httpd_req_t *req = (httpd_req_t *)arg->req;
+
+    httpd_resp_sendstr_chunk_fmt(req, "<br>WIFI: <BR>"
+	"mode: %s<br>"
+	"IP address: %s<br>"
+	"status: %s<br>"
+	"reconnects: %d<br>"
+	, wifi_cfg->mode == WIFI_MODE_STA ? "STA" : ( wifi_cfg->mode == WIFI_MODE_AP ? "AP" : "UNKNOWN")
+	, wifi_cfg->ip
+	, isWiFiConnected() ? "connected" : "disconnected"
+	, wifi_get_reconnect_count()
+	);
+
+    //http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_errors, "%d", UINT16_T, (void *)&pzem_data.errors);
+}
+
 void wifi_register_http_print_data() 
 {
 	http_args_t *p = calloc(1,sizeof(http_args_t));
 	register_print_page_block( "wifi_options", PAGES_URI[ PAGE_URI_SETUP ], 1, wifi_print_options, p, (httpd_uri_func) wifi_http_process_params, NULL );
+	register_print_page_block( "wifi_dbg", PAGES_URI[ PAGE_URI_DEBUG ], 1, wifi_print_debug, p, NULL, NULL );
 }
+
 
 void wifi_http_process_params(httpd_req_t *req, void *args)
 {

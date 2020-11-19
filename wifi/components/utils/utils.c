@@ -8,7 +8,7 @@ static const char *TAG = "utils";
 const char *RESET_REASONS[ESP_RST_SDIO+1] = {
     "undetermined",
     "due to power-on event",
-    "by external pin (not applicable for ESP8266)",
+    "by external pin",
     "Software reset via esp_restart",
     "Software reset due to exception/panic",
     "due to interrupt watchdog",

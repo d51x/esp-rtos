@@ -486,9 +486,57 @@ static void main_debug_print(http_args_t *args)
 
     system_info_t *sys_info = malloc(sizeof(system_info_t));
     get_system_info(sys_info);
+    char *mac = calloc(1,6);
+    wifi_get_mac(mac);
+    sys_info->chip_info.chip_id = get_chip_id((uint8_t *)mac);
+    free(mac);
 
-    sys_info->chip_info.chip_id = get_chip_id((uint8_t *)wifi_get_mac());
+    char flash_size[10];
+    switch (sys_info->mem_info.flash_size_map)
+    {
+        case FLASH_SIZE_4M_MAP_256_256:
+            strcpy(flash_size, "512 Kb");
+            break;
+        
+        case FLASH_SIZE_2M:
+            strcpy(flash_size, "256 Kb");
+            break;
+                
+        case FLASH_SIZE_8M_MAP_512_512:
+            strcpy(flash_size, "1 MB");
+            break;
+                        
+        case FLASH_SIZE_16M_MAP_512_512:
+            strcpy(flash_size, "2 MB");
+            break;       
 
+        case FLASH_SIZE_32M_MAP_512_512:
+            strcpy(flash_size, "4 MB");
+            break;
+        
+        case FLASH_SIZE_16M_MAP_1024_1024:
+            strcpy(flash_size, "2 MB");
+            break;
+                
+        case FLASH_SIZE_32M_MAP_1024_1024:
+            strcpy(flash_size, "4 MB");
+            break;
+                        
+        case FLASH_SIZE_32M_MAP_2048_2048:
+            strcpy(flash_size, "4 MB");
+            break;                        
+            
+        case FLASH_SIZE_64M_MAP_1024_1024:
+            strcpy(flash_size, "8 MB");
+            break; 
+
+        case FLASH_SIZE_128M_MAP_1024_1024:
+            strcpy(flash_size, "16 MB");
+            break;
+        
+        default:
+            break;
+    }
     httpd_resp_sendstr_chunk(req, "CHIP INFO<br>");
     httpd_resp_sendstr_chunk_fmt(req, "Model: %s rev.%d<br>ChipID: %d<br>"
         , (sys_info->chip_info.chip_model == 0) ? "esp8266" : "esp32"
@@ -498,11 +546,11 @@ static void main_debug_print(http_args_t *args)
 
     httpd_resp_sendstr_chunk_fmt(req, 
     "<br>Flash: %s<br>"
-    "SPI Flash Size: %d Mb<br>"
+    "SPI Flash Size: %s<br>"
     "Compile Size: %d Mb<br>"
     //, sys_info->chip_info.features
     , sys_info->chip_info.features & CHIP_FEATURE_EMB_FLASH ? "Embedded" : "External"
-    , sys_info->mem_info.flash_size_map
+    , flash_size
     , sys_info->mem_info.flash_size / 0x100000 // 1024*1024
     );
 

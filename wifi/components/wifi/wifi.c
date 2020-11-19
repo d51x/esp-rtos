@@ -10,10 +10,15 @@ static const char *TAG = "WIFI";
 #define WIFI_RECONNECT_DELAY 5000
 
 static int retry_num = 0;
-static int reconnect_count = 0;
+static uint32_t reconnect_count = 0;
 
 
 TimerHandle_t xWiFiReconnectTimer;
+
+uint32_t wifi_get_reconnect_count()
+{
+    return reconnect_count;
+}
 
 static void wifi_set_host_name(){
     const char **hostname = calloc(1, TCPIP_HOSTNAME_MAX_SIZE);
@@ -137,8 +142,9 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
         }
 
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-        ESP_LOGD(TAG, "got ip: %s", ip4addr_ntoa(&event->ip_info.ip));
-
+        //ESP_LOGD(TAG, "got ip: %s", ip4addr_ntoa(&event->ip_info.ip));
+        strcpy(wifi_cfg->ip, ip4addr_ntoa(&event->ip_info.ip));
+        ESP_LOGD(TAG, "got ip: %s", wifi_cfg->ip);
         retry_num = 0;
         xEventGroupSetBits(xWiFiEventGroup, WIFI_CONNECTED_BIT);
     }
@@ -148,7 +154,7 @@ void wifi_init()
 
     wifi_cfg = calloc(1, sizeof(wifi_cfg_t));
     wifi_cfg_load(wifi_cfg);
-
+    strcpy(wifi_cfg->ip, "0.0.0.0");
 
     tcpip_adapter_init();
     xWiFiEventGroup = xEventGroupCreate();
@@ -270,10 +276,10 @@ void wifi_init_ap(void) {
     ESP_ERROR_CHECK(esp_wifi_start() );   
 }
 
-char *wifi_get_mac()
+void wifi_get_mac(char *mac)
 {
     //static char mac[6];
-    char *mac = calloc(1,6);
+    //char *mac = calloc(1,6);
     if ( wifi_cfg->mode == WIFI_MODE_STA ) {
         esp_read_mac((uint8_t *)mac, ESP_MAC_WIFI_STA);
     }
@@ -281,7 +287,7 @@ char *wifi_get_mac()
     {
         esp_read_mac( (uint8_t *)mac, ESP_MAC_WIFI_SOFTAP);
     }
-    return mac;
+    //return mac;
 }
 
 int8_t wifi_get_rssi(){

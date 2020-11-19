@@ -155,8 +155,8 @@ esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
 
 static char * mqtt_client_id()
 {
-    char *buf = calloc(1, 10);
-    buf = wifi_get_mac();
+    char *buf = calloc(1, 6);
+    wifi_get_mac(buf);
     sprintf(buf, MQTT_CLIENT_ID_MASK, buf[3], buf[4], buf[5]);
     ESP_LOGI(TAG, "mqtt client id: %s", buf);
     return buf;
