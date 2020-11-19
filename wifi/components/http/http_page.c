@@ -370,28 +370,28 @@ void http_print_value(httpd_req_t *req, const char *html_label, const char *titl
     char param[10];
     //sprintf(param, fmt, (char *)value); // TODO: через макрос лучше, чтобы сам тип понял
     switch (type) {
-        case UINT8_T:
+        case TYPE_UINT8:
             sprintf(param, fmt, *(uint8_t *)value);
             break;
-        case UINT16_T:
+        case TYPE_UINT16:
             sprintf(param, fmt, *(uint16_t *)value);
             break;     
-        case UINT32_T:
+        case TYPE_UINT32:
             sprintf(param, fmt, *(uint32_t *)value);
             break;                   
-        case INT8_T:
+        case TYPE_INT8:
             sprintf(param, fmt, *(int8_t *)value);
             break;   
-        case INT16_T:
+        case TYPE_INT16:
             sprintf(param, fmt, *(int16_t *)value);
             break;                
-        case INT32_T:
+        case TYPE_INT32:
             sprintf(param, fmt, *(int32_t *)value);
             break;  
-        case FLOAT:
+        case TYPE_FLOAT:
                 sprintf(param, fmt, *(float *)value);
                 break;      
-        case STRING:
+        case TYPE_STRING:
             sprintf(param, fmt, (char *)value);
             break;   
         default:

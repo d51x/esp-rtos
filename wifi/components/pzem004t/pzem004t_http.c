@@ -90,47 +90,47 @@ static void pzem_print_data(http_args_t *args)
 
     pzem_data_t pzem_data = pzem_get_data();
 
-    http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_voltage, "%0.2f V", FLOAT, (void *)&pzem_data.voltage);
+    http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_voltage, "%0.2f V", TYPE_FLOAT, (void *)&pzem_data.voltage);
 
-    http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_current, "%0.2f A", FLOAT, (void *)&pzem_data.current);
+    http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_current, "%0.2f A", TYPE_FLOAT, (void *)&pzem_data.current);
 
     float t = pzem_data.power / PZEM_FLOAT_DIVIDER;
-    http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_power, "%0.2f kW/h", FLOAT, (void *)&t);
+    http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_power, "%0.2f kW/h", TYPE_FLOAT, (void *)&t);
 
     t = pzem_data.energy / PZEM_FLOAT_DIVIDER;
-    http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_energy_total, "%0.2f kW*h", FLOAT, (void *)&t);
+    http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_energy_total, "%0.2f kW*h", TYPE_FLOAT, (void *)&t);
 
     #ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
     // ==========================================================================
     // расход вчера: общий
     t = pzem_data.consumption.prev_total / PZEM_FLOAT_DIVIDER;
-    http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_consump_prev, "%0.2f kW*h", FLOAT, (void *)&t);
+    http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_consump_prev, "%0.2f kW*h", TYPE_FLOAT, (void *)&t);
 
     if ( PZEM_ENERGY_ZONE_T1_HOUR > 0 && PZEM_ENERGY_ZONE_T2_HOUR > 0 )
     {
         // расход вчера: ночь
         t = pzem_data.consumption.prev_night / PZEM_FLOAT_DIVIDER;
-        http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_consump_night, "%0.2f kW*h", FLOAT, (void *)&t);
+        http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_consump_night, "%0.2f kW*h", TYPE_FLOAT, (void *)&t);
         
         // расход вчера: день
         t = pzem_data.consumption.prev_day / PZEM_FLOAT_DIVIDER;
-        http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_consump_day, "%0.2f kW*h", FLOAT, (void *)&t);        
+        http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_consump_day, "%0.2f kW*h", TYPE_FLOAT, (void *)&t);        
     }
 
     // ==========================================================================
     // расход сегодня: общий
     t = pzem_data.consumption.today_total / PZEM_FLOAT_DIVIDER;
-    http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_consump_today, "%0.2f kW*h", FLOAT, (void *)&t); 
+    http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_consump_today, "%0.2f kW*h", TYPE_FLOAT, (void *)&t); 
 
     if ( PZEM_ENERGY_ZONE_T1_HOUR > 0 && PZEM_ENERGY_ZONE_T2_HOUR > 0 )
     {
         // расход сегодня: ночь
         t = pzem_data.consumption.today_night / PZEM_FLOAT_DIVIDER;
-        http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_consump_night, "%0.2f kW*h", FLOAT, (void *)&t); 
+        http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_consump_night, "%0.2f kW*h", TYPE_FLOAT, (void *)&t); 
 
         // расход сегодня: день
         t = pzem_data.consumption.today_day / PZEM_FLOAT_DIVIDER;
-        http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_consump_day, "%0.2f kW*h", FLOAT, (void *)&t); 
+        http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_consump_day, "%0.2f kW*h", TYPE_FLOAT, (void *)&t); 
 
     }
 
