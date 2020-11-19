@@ -13,8 +13,6 @@
 #include "esp_wifi_types.h"
 #include "esp_log.h"
 #include "nvsparam.h"
-#include "lwip/netif.h"
-#include "lwip/dhcp.h"
 
 #define ESP_WIFI_SSID      "" //"DmintyIot"
 #define ESP_WIFI_PASS      "12346578"

@@ -151,10 +151,24 @@ static void mqtt_print_options(http_args_t *args)
     free(data);
 }
 
+static void mqtt_print_debug(http_args_t *args)
+{
+    http_args_t *arg = (http_args_t *)args;
+    httpd_req_t *req = (httpd_req_t *)arg->req;
+
+    httpd_resp_sendstr_chunk_fmt(req, "<br>MQTT: <BR>"
+    "status: %s<br>"
+    "reconnects: %d<br>"
+    , mqtt_state ? "connected" : "disconnected"
+    , mqtt_reconnects
+    ); 
+}
+
 void mqtt_register_http_print_data() 
 {
     http_args_t *p = calloc(1,sizeof(http_args_t));
     register_print_page_block( "mqtt_options", PAGES_URI[ PAGE_URI_SETUP ], 2, mqtt_print_options, p, mqtt_http_process_params, NULL );
+    register_print_page_block( "mqtt_debug", PAGES_URI[ PAGE_URI_DEBUG ], 2, mqtt_print_debug, p, NULL, NULL );
 }
 
 void mqtt_http_process_params(httpd_req_t *req, void *args)
