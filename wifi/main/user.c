@@ -12,9 +12,7 @@ void user_setup(void *args)
     // } else {
     //     ESP_LOGE(TAG, "SoftUart0 open ERROR" );
     // }
-    ESP_LOGW(TAG, "http_handlers_count = %d", http_handlers_count );
-    http_handlers_count++;
-    ESP_LOGW(TAG, "http_handlers_count = %d", http_handlers_count );
+    //http_handlers_count++;
 }
 
 void user_loop(uint32_t sec)
@@ -97,55 +95,55 @@ void user_process_param(httpd_req_t *req, void *args)
     ESP_LOGW("user", "Hello User process param!");
 }
 
-void sensors_print(http_args_t *args)
-{
-    ESP_LOGW(TAG, __func__ );
-    http_args_t *arg = (http_args_t *)args;
-    httpd_req_t *req = (httpd_req_t *)arg->req;
+// void sensors_print(http_args_t *args)
+// {
+//     ESP_LOGW(TAG, __func__ );
+//     http_args_t *arg = (http_args_t *)args;
+//     httpd_req_t *req = (httpd_req_t *)arg->req;
         
       
     
-}
+// }
 
-esp_err_t sensors_get_handler(httpd_req_t *req)
-{
-    bool vsens = false;
-    //if ( http_get_has_params(req) == ESP_OK) 
-	//{
-    char param[2];
-    vsens = ( http_get_key_str(req, "m", param, sizeof(param)) == ESP_OK );
-    //}
-    if ( !vsens )
-    {
-        httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
-    }
+// esp_err_t sensors_get_handler(httpd_req_t *req)
+// {
+//     bool vsens = false;
+//     //if ( http_get_has_params(req) == ESP_OK) 
+// 	//{
+//     char param[2];
+//     vsens = ( http_get_key_str(req, "m", param, sizeof(param)) == ESP_OK );
+//     //}
+//     if ( !vsens )
+//     {
+//         httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
+//     }
 
 
-    char *buf = malloc( 200 );
-    sprintf(buf, "hostname:%s;", wifi_cfg->hostname);
-    //httpd_resp_sendstr_chunk(req, buf);
+//     char *buf = malloc( 200 );
+//     sprintf(buf, "hostname:%s;", wifi_cfg->hostname);
+//     //httpd_resp_sendstr_chunk(req, buf);
 
-    pzem_data_t pzem_data = pzem_get_data();
-    sprintf(buf+strlen(buf), "pmv:%.1f;", pzem_data.voltage);
-    //httpd_resp_sendstr_chunk(req, buf);
+//     pzem_data_t pzem_data = pzem_get_data();
+//     sprintf(buf+strlen(buf), "pmv:%.1f;", pzem_data.voltage);
+//     //httpd_resp_sendstr_chunk(req, buf);
 
-    sprintf(buf+strlen(buf), "pmc:%.1f;", pzem_data.current);
-    //httpd_resp_sendstr_chunk(req, buf);
+//     sprintf(buf+strlen(buf), "pmc:%.1f;", pzem_data.current);
+//     //httpd_resp_sendstr_chunk(req, buf);
 
-    sprintf(buf+strlen(buf), "pmw:%d;", (uint32_t)pzem_data.power);
-    //httpd_resp_sendstr_chunk(req, buf);
+//     sprintf(buf+strlen(buf), "pmw:%d;", (uint32_t)pzem_data.power);
+//     //httpd_resp_sendstr_chunk(req, buf);
 
-    sprintf(buf+strlen(buf), "pmwh:%d;", (uint32_t)pzem_data.energy);
-    //httpd_resp_sendstr_chunk(req, buf);
+//     sprintf(buf+strlen(buf), "pmwh:%d;", (uint32_t)pzem_data.energy);
+//     //httpd_resp_sendstr_chunk(req, buf);
     
-    if ( vsens )
-        httpd_send(req, buf, strlen(buf));
-    else
-        httpd_resp_send(req, buf, strlen(buf));
+//     if ( vsens )
+//         httpd_send(req, buf, strlen(buf));
+//     else
+//         httpd_resp_send(req, buf, strlen(buf));
     
-    //httpd_resp_end(req);
+//     //httpd_resp_end(req);
 
-    free(buf);  
+//     free(buf);  
 
-    return ESP_OK;
-}
+//     return ESP_OK;
+// }

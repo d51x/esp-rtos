@@ -2,7 +2,7 @@
 #include "pzem004t.h"
 #include "utils.h"
 #include "freertos/task.h"
-
+#include "sensors.h"
 
 #ifdef CONFIG_SENSOR_PZEM004_T
 
@@ -116,6 +116,43 @@ void pzem_init(uint8_t uart_num)
 		pzem_nvs_save();
 	}
 	#endif
+
+	sensor_t *sensor = (sensor_t *)malloc( sizeof(sensor_t));
+	sensor->type = SENSOR_DEFAULT;
+	sensor->group_id = 0;
+	sensor->name = strdup("pzem_v");
+	sensor->title = strdup("Voltage:");
+	sensor->fmt = strdup("%0.1f");
+	sensor->dimen = strdup("V");
+	sensor->val_type = TYPE_FLOAT;
+	sensor->value.f = 0.0f;
+	sensors_add( sensor );
+
+	sensor->name = strdup("pzem_c");
+	sensor->title = strdup("Current:");
+	sensor->fmt = strdup("%0.1f");
+	sensor->dimen = strdup("A");
+	sensor->val_type = TYPE_FLOAT;
+	sensor->value.f = 0.0f;
+	sensors_add( sensor );	
+
+	sensor->name = strdup("pzem_p");
+	sensor->title = strdup("Power:");
+	sensor->fmt = strdup("%0.2f");
+	sensor->dimen = strdup("kW/h");
+	sensor->val_type = TYPE_FLOAT;
+	sensor->value.f = 0.0f;
+	sensors_add( sensor );	
+
+	sensor->name = strdup("pzem_e");
+	sensor->title = strdup("Energy:");
+	sensor->fmt = strdup("%d");
+	sensor->dimen = strdup("kW*h");
+	sensor->val_type = TYPE_INT32;
+	sensor->value.i32 = 0;
+	sensors_add( sensor );		
+
+	free(sensor);
 }
 
 static void send_buffer(const uint8_t *buffer, uint8_t len)

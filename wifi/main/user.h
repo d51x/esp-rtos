@@ -19,6 +19,6 @@ void user_web_main(http_args_t *args);
 void user_web_options(http_args_t *args);
 void user_process_param(httpd_req_t *req, void *args);
 
-void sensors_print(http_args_t *args);
-esp_err_t sensors_get_handler(httpd_req_t *req);
+//void sensors_print(http_args_t *args);
+//esp_err_t sensors_get_handler(httpd_req_t *req);
 #endif

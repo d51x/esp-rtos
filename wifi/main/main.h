@@ -117,6 +117,8 @@
     #endif
 #endif
 
+#include "sensors.h"
+#include "sensors_http.h"
 
 //======================== variable definitions ===================================
 extern httpd_handle_t http_server;

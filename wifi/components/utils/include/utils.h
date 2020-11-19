@@ -87,14 +87,14 @@ typedef enum {
 */
 
 typedef enum {
-    UINT8_T,
-    UINT16_T,
-    UINT32_T,
-    INT8_T,
-    INT16_T,
-    INT32_T,
-    FLOAT,
-    STRING
+    TYPE_UINT8,
+    TYPE_UINT16,
+    TYPE_UINT32,
+    TYPE_INT8,
+    TYPE_INT16,
+    TYPE_INT32,
+    TYPE_FLOAT,
+    TYPE_STRING
 } type_e;
 
 typedef struct {
