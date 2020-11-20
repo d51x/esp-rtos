@@ -57,11 +57,16 @@ static void pzem_print_options(http_args_t *args)
     // ==============================================
     // print page block data here
     // ==============================================
-    char rht[] = "rht";
-    char *b_id = "pzemrst";
-    
-    http_print_button(req, b_id, rht, "norm", pzem_reset_uri, -1, pzem_reset_title, 0, 0);
 
+    // сброс вычисленного расхода только сегодня
+    //http_print_button(req, "pzemrst1", "rht", "norm", pzem_reset_uri, -1, pzem_reset_title, 0, 0);
+
+    // сброс вычисленного расхода вчера и сегодня
+    http_print_button(req, "pzemrst2", "rht", "norm", pzem_reset_today_uri, -1, pzem_reset_title, 0, 0);
+
+    // сброс вычисленного расхода только вчера
+    // TODO
+    
     // ==============================================
     
     httpd_resp_sendstr_chunk(req, html_block_data_end); 
