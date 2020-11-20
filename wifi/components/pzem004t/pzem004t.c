@@ -516,7 +516,7 @@ static void pzem_periodic_task(void *arg)
 				pauseTask(1000);
 			}
 			//pauseTask(delay * 1000);
-			pauseTask(100);
+			pauseTask(1000);
 		}
     }
 
