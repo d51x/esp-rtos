@@ -328,7 +328,10 @@ esp_err_t pzem_set_addr(PZEM_Address *_addr)
 float pzem_read_voltage()
 {
 	//ESP_LOGW(TAG, __func__);
+	#ifdef CONFIG_COMPONENT_DEBUG
 	log_rtc_debug_str("pzem_read_voltage");
+	#endif
+
 	float v = pzem_voltage(_pzem_addr);
 	_pzem_data.voltage = ( v == 0 || v > VOLTAGE_TRESHOLD) ? _pzem_data.voltage : v;
 
@@ -344,7 +347,10 @@ float pzem_read_voltage()
 float pzem_read_current()
 {
 	//ESP_LOGW(TAG, __func__);
+	#ifdef CONFIG_COMPONENT_DEBUG
 	log_rtc_debug_str("pzem_read_current");
+	#endif 
+
 	float v = pzem_current(_pzem_addr);
 	_pzem_data.current = ( v == 0 || v > CURRENT_TRESHOLD) ? _pzem_data.current : v;
 
@@ -359,7 +365,10 @@ float pzem_read_current()
 float pzem_read_power()
 {
 	//ESP_LOGW(TAG, __func__);
+	#ifdef CONFIG_COMPONENT_DEBUG
 	log_rtc_debug_str("pzem_read_power");
+	#endif
+
 	float v = pzem_power(_pzem_addr);
 	_pzem_data.power = ( v == 0 || v > POWER_TRESHOLD) ? _pzem_data.power : v;	
 
@@ -374,7 +383,10 @@ float pzem_read_power()
 float pzem_read_energy()
 {
 	//ESP_LOGW(TAG, __func__);
+	#ifdef CONFIG_COMPONENT_DEBUG
 	log_rtc_debug_str("pzem_read_energy");
+	#endif
+
 	float v = pzem_energy(_pzem_addr);	
 	_pzem_data.energy = ( v == 0) ? _pzem_data.energy : v;
 
@@ -550,7 +562,10 @@ static void pzem_periodic_task(void *arg)
 
 		if ( _pzem_data.ready != ESP_OK ) 
 		{
+			#ifdef CONFIG_COMPONENT_DEBUG
 			log_rtc_debug_str("try to set pzem address");
+			#endif
+			
 			#ifdef CONFIG_DEBUG_UART1
 				userlog("try to set pzem address \n");
 			#endif			

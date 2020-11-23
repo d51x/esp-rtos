@@ -4,6 +4,8 @@
 
 static const char *TAG = "DBG";
 
+#ifdef CONFIG_COMPONENT_DEBUG
+
 #define DEBUG_LAST_STR_SIZE 32
 
 static RTC_NOINIT_ATTR  char rtc_debug_str_last[DEBUG_LAST_STR_SIZE] = "";	
@@ -15,6 +17,8 @@ static char _rtc_debug_str_last[DEBUG_LAST_STR_SIZE] = "";
 static char _rtc_debug_str_prev1[DEBUG_LAST_STR_SIZE] = "";	
 static char _rtc_debug_str_prev2[DEBUG_LAST_STR_SIZE] = "";	
 static char _rtc_debug_str_prev3[DEBUG_LAST_STR_SIZE] = "";	
+
+#endif
 
 #ifdef CONFIG_DEBUG_UART1
     #include "freertos/FreeRTOS.h"
@@ -62,7 +66,7 @@ void userlog(const char *fmt, ...)
 
 #endif
 
-
+#ifdef CONFIG_COMPONENT_DEBUG
 void log_rtc_debug_str(const char *str)
 {
 	strncpy(rtc_debug_str_prev3, rtc_debug_str_prev2, DEBUG_LAST_STR_SIZE);
@@ -98,3 +102,4 @@ void log_rtc_init_debug_str()
 	strncpy( _rtc_debug_str_prev2, rtc_debug_str_prev2, DEBUG_LAST_STR_SIZE);
 	strncpy( _rtc_debug_str_prev3, rtc_debug_str_prev3, DEBUG_LAST_STR_SIZE);
 }
+#endif

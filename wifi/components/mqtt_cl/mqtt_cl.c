@@ -281,6 +281,7 @@ static void mqtt_publish_generic(const char *_topic, const char *payload) {
     strcpy( topic, _mqtt_dev_name /*MQTT_DEVICE*/ );
     //strcpy( topic + strlen( topic ), _topic);
     strcat( topic, _topic);
+    WDT_FEED();
     esp_mqtt_client_publish(mqtt_client, topic, payload, strlen(payload), 0, 1);
 }
 
