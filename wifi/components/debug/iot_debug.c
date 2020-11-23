@@ -1,7 +1,20 @@
 #include "esp_log.h"
+#include "esp_attr.h"
 #include "iot_debug.h"
 
+static const char *TAG = "DBG";
 
+#define DEBUG_LAST_STR_SIZE 32
+
+static RTC_NOINIT_ATTR  char rtc_debug_str_last[DEBUG_LAST_STR_SIZE] = "";	
+static RTC_NOINIT_ATTR  char rtc_debug_str_prev1[DEBUG_LAST_STR_SIZE] = "";	
+static RTC_NOINIT_ATTR  char rtc_debug_str_prev2[DEBUG_LAST_STR_SIZE] = "";	
+static RTC_NOINIT_ATTR  char rtc_debug_str_prev3[DEBUG_LAST_STR_SIZE] = "";	
+
+static char _rtc_debug_str_last[DEBUG_LAST_STR_SIZE] = "";	
+static char _rtc_debug_str_prev1[DEBUG_LAST_STR_SIZE] = "";	
+static char _rtc_debug_str_prev2[DEBUG_LAST_STR_SIZE] = "";	
+static char _rtc_debug_str_prev3[DEBUG_LAST_STR_SIZE] = "";	
 
 #ifdef CONFIG_DEBUG_UART1
     #include "freertos/FreeRTOS.h"
@@ -47,6 +60,41 @@ void userlog(const char *fmt, ...)
 	str = NULL;
 }
 
-
-
 #endif
+
+
+void log_rtc_debug_str(const char *str)
+{
+	strncpy(rtc_debug_str_prev3, rtc_debug_str_prev2, DEBUG_LAST_STR_SIZE);
+	strncpy(rtc_debug_str_prev2, rtc_debug_str_prev1, DEBUG_LAST_STR_SIZE);
+	strncpy(rtc_debug_str_prev1, rtc_debug_str_last, DEBUG_LAST_STR_SIZE);
+	strncpy(rtc_debug_str_last, str, DEBUG_LAST_STR_SIZE);
+}
+
+void log_rtc_print_debug_str()
+{
+	ESP_LOGE(TAG, "Prev3 debug str: %s", rtc_debug_str_prev3);
+	ESP_LOGE(TAG, "Prev2 debug str: %s", rtc_debug_str_prev2);
+	ESP_LOGE(TAG, "Prev1 debug str: %s", rtc_debug_str_prev1);
+	ESP_LOGE(TAG, "Last debug str: %s", rtc_debug_str_last);
+}
+
+char *log_rtc_get_debug_str(uint8_t idx)
+{
+	char *str = malloc(DEBUG_LAST_STR_SIZE);
+	switch (idx) {
+		case 0: strncpy( str, _rtc_debug_str_last, DEBUG_LAST_STR_SIZE); break;
+		case 1: strncpy( str, _rtc_debug_str_prev1, DEBUG_LAST_STR_SIZE); break;
+		case 2: strncpy( str, _rtc_debug_str_prev2, DEBUG_LAST_STR_SIZE); break;
+		case 3: strncpy( str, _rtc_debug_str_prev3, DEBUG_LAST_STR_SIZE); break;
+	}
+	return str;
+}
+
+void log_rtc_init_debug_str()
+{
+	strncpy( _rtc_debug_str_last,  rtc_debug_str_last,  DEBUG_LAST_STR_SIZE);
+	strncpy( _rtc_debug_str_prev1, rtc_debug_str_prev1, DEBUG_LAST_STR_SIZE);
+	strncpy( _rtc_debug_str_prev2, rtc_debug_str_prev2, DEBUG_LAST_STR_SIZE);
+	strncpy( _rtc_debug_str_prev3, rtc_debug_str_prev3, DEBUG_LAST_STR_SIZE);
+}

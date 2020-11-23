@@ -49,6 +49,9 @@ void app_main(void)
 	//ESP_LOGI(TAG, "SDK: %s", esp_get_idf_version());
 	
     // ========================================= MODULES initialization START
+    log_rtc_print_debug_str();
+    log_rtc_init_debug_str();
+    
     initialize_modules();
     user_setup(NULL);
 
@@ -562,6 +565,11 @@ static void main_debug_print(http_args_t *args)
     esp_reset_reason_t reason = esp_reset_reason();
     httpd_resp_sendstr_chunk_fmt(req, "<br>Reset reason: %d (0x%02X) %s"
                 , reason, reason, RESET_REASONS[reason]);
+
+                httpd_resp_sendstr_chunk_fmt(req, "<br>Debug str last: %s", log_rtc_get_debug_str(0));
+                httpd_resp_sendstr_chunk_fmt(req, "<br>Debug str prev1: %s", log_rtc_get_debug_str(1));
+                httpd_resp_sendstr_chunk_fmt(req, "<br>Debug str prev2: %s", log_rtc_get_debug_str(2));
+                httpd_resp_sendstr_chunk_fmt(req, "<br>Debug str prev3: %s", log_rtc_get_debug_str(3));
 }
 
 void debug_register_http_print_data()

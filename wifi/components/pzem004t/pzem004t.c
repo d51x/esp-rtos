@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "freertos/task.h"
 
+#include "iot_debug.h"
 
 #ifdef CONFIG_SENSOR_PZEM004_T
 
@@ -34,8 +35,12 @@ static const char *TAG = "PZEM";
 
 #ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
 	#define PZEM_ENERGY_PERIODIC_DELAY 1 // sec
-	#define PZEM_NVS_SECTION "pzem"
-	#define PZEM_NVS_PARAM_ENERGY "energy"
+	//#define PZEM_NVS_SECTION "pzem"
+	//#define PZEM_NVS_PARAM_ENERGY "energy"
+
+	static RTC_NOINIT_ATTR  pzem_energy_t rtc_pzem_energy;
+	static RTC_NOINIT_ATTR  uint8_t rtc_pzem_energy_crc;	
+	static RTC_NOINIT_ATTR  float rtc_pzem_energy_counter;	
 #endif
 
 #ifdef CONFIG_SENSOR_PZEM004_T_SOFTUART
@@ -65,12 +70,20 @@ pzem_read_strategy_t _strategy;
 
 #define PZEM_READ_ERROR_COUNT 20
 
-#ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
-static void pzem_nvs_save()
+static uint8_t pzem_crc(uint8_t *data, uint8_t sz);
+
+// #ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
+// static void pzem_nvs_save()
+// {
+// 	nvs_param_save(PZEM_NVS_SECTION, PZEM_NVS_PARAM_ENERGY, &_pzem_data.energy_values, sizeof(pzem_energy_t));
+// }
+// #endif
+
+static void pzem_energy_values_save()
 {
-	nvs_param_save(PZEM_NVS_SECTION, PZEM_NVS_PARAM_ENERGY, &_pzem_data.energy_values, sizeof(pzem_energy_t));
+	memcpy(&rtc_pzem_energy, &_pzem_data.energy_values, sizeof(pzem_energy_t));
+	rtc_pzem_energy_crc = pzem_crc(&rtc_pzem_energy, sizeof(pzem_energy_t) );	
 }
-#endif
 
 //UART_NUM_0
 void pzem_init(uint8_t uart_num)
@@ -109,12 +122,36 @@ void pzem_init(uint8_t uart_num)
 	_strategy.energy_read_count = 1;
 	_pzem_data.ready = ESP_FAIL;
 
+	// reset reason
+    esp_reset_reason_t reason = esp_reset_reason();
+    ESP_LOGW(TAG, "Reset reason: %d (0x%02X) %s"
+                , reason, reason, RESET_REASONS[reason]);
+
+	
 	#ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
-	if ( nvs_param_load(PZEM_NVS_SECTION, PZEM_NVS_PARAM_ENERGY, &_pzem_data.energy_values) != ESP_OK )
+
+	if ( rtc_pzem_energy_crc != pzem_crc(&rtc_pzem_energy, sizeof(pzem_energy_t)) )
 	{
+		// first start
+		ESP_LOGE(TAG, "Pzem rtc mem data wrong (crc incorrect)");
 		memset(&_pzem_data.energy_values, 0, sizeof(pzem_energy_t));
-		pzem_nvs_save();
+		pzem_energy_values_save();	
+		rtc_pzem_energy_counter = 0;
+	} else {
+		ESP_LOGW(TAG, "prev_midnight = %d", rtc_pzem_energy.prev_midnight);
+		ESP_LOGW(TAG, "today_midnight = %d", rtc_pzem_energy.today_midnight);
+		ESP_LOGW(TAG, "prev_t1 = %d", rtc_pzem_energy.prev_t1);
+		ESP_LOGW(TAG, "prev_t2 = %d", rtc_pzem_energy.prev_t2);
+		ESP_LOGW(TAG, "today_t1 = %d", rtc_pzem_energy.today_t1);
+		ESP_LOGW(TAG, "today_t2 = %d", rtc_pzem_energy.today_t2);
+		memcpy(&_pzem_data.energy_values, &rtc_pzem_energy, sizeof(pzem_energy_t));
+		_pzem_data.energy = rtc_pzem_energy_counter;
 	}
+	//if ( nvs_param_load(PZEM_NVS_SECTION, PZEM_NVS_PARAM_ENERGY, &_pzem_data.energy_values) != ESP_OK )
+	//{
+	//	memset(&_pzem_data.energy_values, 0, sizeof(pzem_energy_t));
+	//	pzem_nvs_save();
+	//}
 	#endif
 }
 
@@ -291,6 +328,7 @@ esp_err_t pzem_set_addr(PZEM_Address *_addr)
 float pzem_read_voltage()
 {
 	//ESP_LOGW(TAG, __func__);
+	log_rtc_debug_str("pzem_read_voltage");
 	float v = pzem_voltage(_pzem_addr);
 	_pzem_data.voltage = ( v == 0 || v > VOLTAGE_TRESHOLD) ? _pzem_data.voltage : v;
 
@@ -306,6 +344,7 @@ float pzem_read_voltage()
 float pzem_read_current()
 {
 	//ESP_LOGW(TAG, __func__);
+	log_rtc_debug_str("pzem_read_current");
 	float v = pzem_current(_pzem_addr);
 	_pzem_data.current = ( v == 0 || v > CURRENT_TRESHOLD) ? _pzem_data.current : v;
 
@@ -320,6 +359,7 @@ float pzem_read_current()
 float pzem_read_power()
 {
 	//ESP_LOGW(TAG, __func__);
+	log_rtc_debug_str("pzem_read_power");
 	float v = pzem_power(_pzem_addr);
 	_pzem_data.power = ( v == 0 || v > POWER_TRESHOLD) ? _pzem_data.power : v;	
 
@@ -334,6 +374,7 @@ float pzem_read_power()
 float pzem_read_energy()
 {
 	//ESP_LOGW(TAG, __func__);
+	log_rtc_debug_str("pzem_read_energy");
 	float v = pzem_energy(_pzem_addr);	
 	_pzem_data.energy = ( v == 0) ? _pzem_data.energy : v;
 
@@ -363,7 +404,10 @@ void pzem_reset_consumption(bool today)
 	_pzem_data.energy_values.prev_t1 = 0;
 	_pzem_data.energy_values.prev_t2 = 0;
 
-	pzem_nvs_save();
+	//pzem_nvs_save();
+	// memset(&rtc_pzem_energy, 0, sizeof(pzem_energy_t));
+	// rtc_pzem_energy_crc = pzem_crc(&rtc_pzem_energy, sizeof(pzem_energy_t) );	
+	pzem_energy_values_save();
 }
 
 void pzem_set_read_strategy(pzem_read_strategy_t strategy)
@@ -382,6 +426,7 @@ static void calc_energy_values(void *arg)
     while (1) 
 	{
 		energy = (uint32_t)_pzem_data.energy;
+		//ESP_LOGW(TAG, "%s: %d (%0.2f)", __func__, energy, _pzem_data.energy);
 		if ( _pzem_data.energy_values.today_midnight == 0) _pzem_data.energy_values.today_midnight = energy;
 		if ( _pzem_data.energy_values.today_t1 == 0) _pzem_data.energy_values.today_t1 = energy;
 		if ( _pzem_data.energy_values.today_t2 == 0) _pzem_data.energy_values.today_t2 = energy;
@@ -390,32 +435,46 @@ static void calc_energy_values(void *arg)
 		if ( _pzem_data.energy_values.prev_t1 == 0) _pzem_data.energy_values.prev_t1 = energy;
 		if ( _pzem_data.energy_values.prev_t2 == 0) _pzem_data.energy_values.prev_t2 = energy;
 
+		// store energy values to RTC MEM
+		pzem_energy_values_save();
+
 		get_timeinfo(&timeinfo);
+
+		// проверить, что время установилось
+		if ( timeinfo.tm_year <  (2016 - 1900) ) 
+		{
+			//ESP_LOGE(TAG, "Time is not set!");
+			goto loop_end;
+		}
+
 
 		// в полночь обнуляем счетчик
 		if ( timeinfo.tm_hour == 0 && timeinfo.tm_min ==0 && timeinfo.tm_sec == 0 
 			&& timeinfo.tm_year >  (2016 - 1900) // реальная дата
 			) 
 		{
+			ESP_LOGW(TAG, "Reset today energy values, time is 00:00:00");
 			_pzem_data.energy_values.prev_midnight = _pzem_data.energy_values.today_midnight; 
 			_pzem_data.energy_values.today_midnight = energy;
 			_pzem_data.energy_values.prev_t1 = _pzem_data.energy_values.today_t1;
 			_pzem_data.energy_values.prev_t2 = _pzem_data.energy_values.today_t2;
-			pzem_nvs_save();
+			//pzem_nvs_save();
 		}
 		// в 7 утра
 		else if ( timeinfo.tm_hour == PZEM_ENERGY_ZONE_T1_HOUR && timeinfo.tm_min ==0 && timeinfo.tm_sec == 0 )
 		{
+			ESP_LOGW(TAG, "Store t1 values, time is 07:00:00");
 			_pzem_data.energy_values.prev_t1 = _pzem_data.energy_values.today_t1;
 			_pzem_data.energy_values.today_t1 = energy;
-			pzem_nvs_save();
+			//pzem_nvs_save();
 		}
 		// в 23 вечера
 		else if ( timeinfo.tm_hour == PZEM_ENERGY_ZONE_T2_HOUR && timeinfo.tm_min ==0 && timeinfo.tm_sec == 0 )
 		{
+			ESP_LOGW(TAG, "Store t2 values, time is 23:00:00");
 			_pzem_data.energy_values.prev_t2 = _pzem_data.energy_values.today_t2;
 			_pzem_data.energy_values.today_t2 = energy;		
-			pzem_nvs_save();
+			//pzem_nvs_save();
 		}
 
 		// TODO: сохраняем значения только в определенный час, если в этот момент esp ребутнулось, то данные по реальному расходу будут не актуальные
@@ -462,6 +521,8 @@ static void calc_energy_values(void *arg)
 			_pzem_data.consumption.today_day = _pzem_data.energy_values.today_t2 - _pzem_data.energy_values.today_t1;
 		}
 
+
+	loop_end:
 		pauseTask(delay * 1000);
 	}
 
@@ -483,8 +544,13 @@ static void pzem_periodic_task(void *arg)
 			userlog("%s result %s \n", __func__, esp_err_to_name(_pzem_data.ready) );
 		#endif
 
+		// debug
+		//_pzem_data.energy += 100;
+		//rtc_pzem_energy_counter = _pzem_data.energy;
+
 		if ( _pzem_data.ready != ESP_OK ) 
 		{
+			log_rtc_debug_str("try to set pzem address");
 			#ifdef CONFIG_DEBUG_UART1
 				userlog("try to set pzem address \n");
 			#endif			
@@ -515,8 +581,8 @@ static void pzem_periodic_task(void *arg)
 				//esp_restart();
 				pauseTask(1000);
 			}
-			//pauseTask(delay * 1000);
-			pauseTask(1000);
+			pauseTask(delay * 1000);
+			//pauseTask(1000);
 		}
     }
 

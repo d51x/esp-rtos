@@ -1,4 +1,5 @@
 #include "pzem004t_mqtt.h"
+#include "iot_debug.h"
 
 #ifdef CONFIG_SENSOR_PZEM004_T
 
@@ -40,11 +41,12 @@ static void pzem_mqtt_send_energy(char **payload, void *args)
 #ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
 static void pzem_mqtt_send_consunption(char **payload, void *args)
 {
+    log_rtc_debug_str("pzem_mqtt_send_consunption");
     pzem_data_t pzem_data = pzem_get_data();
     *payload = (char *) realloc(*payload, 140);
 
     memset(*payload, 0, 140);
-    snprintf(*payload, 140, "{\"today\":{\"total\":%0.2f,\"night\":%0.2f,\"day\":%0.2f},\"yesterday\":{\"total\":%0.2f,\"night\":%0.2f,\"day\":%0.2f}}"
+    snprintf(*payload, 140, "{\"ta\":%0.2f,\"tn\":%0.2f,\"td\":%0.2f},{\"ya\":%0.2f,\"yn\":%0.2f,\"yd\":%0.2f}}"
                     , pzem_data.consumption.today_total / PZEM_FLOAT_DIVIDER
                     , pzem_data.consumption.today_night / PZEM_FLOAT_DIVIDER
                     , pzem_data.consumption.today_day / PZEM_FLOAT_DIVIDER
