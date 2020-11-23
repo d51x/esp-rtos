@@ -4,16 +4,17 @@
 
 static const char *TAG = "utils";
 
- 
+char FW_VER[32] = "";
+
 const char *RESET_REASONS[ESP_RST_SDIO+1] = {
     "undetermined",
-    "due to power-on event",
+    "power-on event",
     "by external pin",
-    "Software reset via esp_restart",
-    "Software reset due to exception/panic",
-    "due to interrupt watchdog",
-    "due to task watchdog",
-    "due to other watchdogs",
+    "esp_restart",
+    "exception/panic",
+    "interrupt watchdog",
+    "task watchdog",
+    "other watchdogs",
     "after exiting deep sleep mode",
     "Brownout reset (software or hardware)",
     "Reset over SDIO",

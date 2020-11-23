@@ -22,6 +22,7 @@ void test_mcp23017_isr_cb7(char *buf);
 void test_mcp23017_isr_cb8(char *buf);
 #endif
 
+
 httpd_handle_t http_server = NULL;
 
 void app_main(void)
@@ -48,10 +49,17 @@ void app_main(void)
 	//ESP_LOGI(TAG, "Freemem: %d", esp_get_free_heap_size());
 	//ESP_LOGI(TAG, "SDK: %s", esp_get_idf_version());
 	
+    // get app version
+    esp_app_desc_t *app_desc = esp_ota_get_app_description();
+    const esp_partition_t* esp_part = esp_ota_get_running_partition();
+    strncpy(FW_VER, app_desc->version, 32);
+    strcpy(FW_VER, cut_str_from_str(FW_VER, "_"));
+    free(app_desc);
+
     // ========================================= MODULES initialization START
     log_rtc_print_debug_str();
     log_rtc_init_debug_str();
-    
+
     initialize_modules();
     user_setup(NULL);
 

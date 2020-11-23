@@ -23,8 +23,10 @@
 #include "esp_wifi_types.h"
 #include "driver/adc.h"
 #include "nvs.h"
-
-#define FW_VER CONFIG_FW_VER //"1.4.3"
+#include "esp_attr.h"
+//#define FW_VER CONFIG_FW_VER //"1.4.3"
+// Application version info  "1.19.17.10(861fe60)"
+extern char FW_VER[32];
 
 
 #define IOT_CHECK(tag, a, ret)  if(!(a)) {                                             \

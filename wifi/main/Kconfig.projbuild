@@ -1,12 +1,5 @@
 menu "Project config"
 
-        config FW_VER
-            string "project version"
-            default "1.0"
-            help
-                Project version
-
-
     menu "WIFI Config"
         config ESP_WIFI_SSID
             string "WiFi SSID"
