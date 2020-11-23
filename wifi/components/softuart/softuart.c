@@ -123,6 +123,9 @@ static void IRAM_ATTR read_rx(softuart_t *uart)
 // GPIO interrupt handler
 static void IRAM_ATTR handle_rx(void *arg)
 {
+    portBASE_TYPE HPTaskAwoken = pdFALSE;
+    BaseType_t xHigherPriorityTaskWoken;
+
     uint32_t gpio_num = (uint32_t) arg;
     // find uart
     int8_t uart_no = find_uart_by_rx(gpio_num);
@@ -138,6 +141,8 @@ static void IRAM_ATTR handle_rx(void *arg)
     // Done, reenable interrupt
     gpio_set_intr_type(uart->rx_pin, GPIO_INTR_NEGEDGE);
     // gpio_isr_handler_add(uart->rx_pin, handle_rx, (void *)(uart->rx_pin));
+
+    portEND_SWITCHING_ISR( HPTaskAwoken == pdTRUE );
 }
 
 static bool check_uart_no(uint8_t uart_no)
