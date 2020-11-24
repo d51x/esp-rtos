@@ -45,10 +45,8 @@ static void ledcontrol_print_data(http_args_t *args)
     ledcontrol_handle_t ledc_h = group->dev_h;
     ledcontrol_t *ledc = (ledcontrol_t *)ledc_h;
     
-    size_t sz = get_buf_size(html_block_data_header_start, group->title);
-    char *data = malloc( sz );   
-    sprintf(data, html_block_data_header_start, group->title);
-    httpd_resp_sendstr_chunk(req, data);
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_header_start, group->title);
+
     httpd_resp_sendstr_chunk(req, html_block_data_header_start);
 
     
@@ -58,30 +56,19 @@ static void ledcontrol_print_data(http_args_t *args)
         ledcontrol_channel_t *ch = ledc->channels + i;
         if ( group->group == ch->group)
         {        
-            sz = get_buf_size(html_block_led_control_item
-                                        , ch->name
-                                        , ch->channel                                   // channel num
-                                        , ch->duty              // channel duty    
-                                        , ch->channel     // for data-uri                                  
-                                        , ch->channel                                   // channel num
-                                        , ch->duty              // channel duty
+            httpd_resp_sendstr_chunk_fmt(req, html_block_led_control_item
+                                            , ch->name
+                                            , ch->channel     // channel num
+                                            , ch->duty        // channel duty    
+                                            , ch->channel     // for data-uri                                  
+                                            , ch->channel     // channel num
+                                            , ch->duty        // channel duty
                                         );
-            data = realloc(data, sz );
-            sprintf( data, html_block_led_control_item
-                                        , ch->name
-                                        , ch->channel                                   // channel num
-                                        , ch->duty              // channel duty    
-                                        , ch->channel     // for data-uri                                  
-                                        , ch->channel                                   // channel num
-                                        , ch->duty              // channel duty
-                                        );
-            httpd_resp_sendstr_chunk(req, data);
         }
     }
     
     httpd_resp_sendstr_chunk(req, html_block_data_end);
     httpd_resp_sendstr_chunk(req, html_block_data_end);
-    free(data);
 }
 
 void ledcontrol_register_http_print_data(ledcontrol_handle_t dev_h)

@@ -28,10 +28,7 @@ void i2c_print_options(http_args_t *args)
     i2c_config_t *cfg = (i2c_config_t *) calloc(1, sizeof(i2c_config_t));
     i2c_load_cfg( cfg );
 
-    size_t sz = get_buf_size(html_block_data_header_start, I2C_SETTINGS__TITLE);
-    char *data = malloc( sz );
-    sprintf(data, html_block_data_header_start, I2C_SETTINGS__TITLE);
-    httpd_resp_sendstr_chunk(req, data);
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_header_start, I2C_SETTINGS__TITLE);
 
     // ==========================================================================
     httpd_resp_sendstr_chunk(req, html_block_data_form_start);
@@ -40,45 +37,26 @@ void i2c_print_options(http_args_t *args)
     // ==========================================================================
     char param[2];
     itoa(cfg->sda_io_num , param, 10);
-    sz = get_buf_size(html_block_data_form_item_label_edit
-                                , TITLE_I2C_SDA // %s label
-                                , PARAM_I2C_SDA   // %s name
-                                , param // %d value
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_label_edit
+                                    , TITLE_I2C_SDA // %s label
+                                    , PARAM_I2C_SDA   // %s name
+                                    , param // %d value
                                 );
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_item_label_edit
-                                , TITLE_I2C_SDA // %s label
-                                , PARAM_I2C_SDA   // %s name
-                                , param // %d value
-                                );
-    httpd_resp_sendstr_chunk(req, data);
 
     // ==========================================================================
     itoa(cfg->scl_io_num , param, 10);
-    sz = get_buf_size(html_block_data_form_item_label_edit
-                                , TITLE_I2C_SCL // %s label
-                                , PARAM_I2C_SCL   // %s name
-                                , param  // %d value
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_label_edit
+                                    , TITLE_I2C_SCL // %s label
+                                    , PARAM_I2C_SCL   // %s name
+                                    , param  // %d value
                                 );
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_item_label_edit
-                                , TITLE_I2C_SCL // %s label
-                                , PARAM_I2C_SCL   // %s name
-                                , param  // %d value
-                                );
-    httpd_resp_sendstr_chunk(req, data);
     free(cfg);
 
     // ==========================================================================
     httpd_resp_sendstr_chunk(req, html_block_data_end);
 
     // ==========================================================================
-    sz = get_buf_size(html_block_data_form_submit, PARAM_I2C ); // %s st    
-    data = realloc(data, sz);
-    sprintf(data , html_block_data_form_submit, PARAM_I2C ); // %s st    
-    httpd_resp_sendstr_chunk(req, data);
-
-    free(data);
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_submit, PARAM_I2C ); // %s st    
 
     // ==========================================================================
     httpd_resp_sendstr_chunk(req, html_block_data_end);

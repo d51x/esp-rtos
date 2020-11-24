@@ -29,143 +29,85 @@ void lcd2004_print_options(http_args_t *args)
     uint8_t state = lcd2004_backlight_state();
     uint8_t state2 = lcd2004_state();
 
-    size_t sz = get_buf_size(html_block_data_header_start, lcd2004_title);
-    char *data = malloc( sz );   
-    sprintf(data, html_block_data_header_start, lcd2004_title);
-    httpd_resp_sendstr_chunk(req, data);
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_header_start, lcd2004_title);
+
     httpd_resp_sendstr_chunk(req, html_block_data_form_start);
     httpd_resp_sendstr_chunk(req, html_block_data_div_lf3);
 
     // ==========================================================================
     char param[10];
     sprintf(param, "0x%02X", cfg->addr);
-    sz = get_buf_size(html_block_data_form_item_label_edit_hex
-                                , lcd2004_title_addr // %s label
-                                , lcd2004_param_addr   // %s name
-                                , param  // %d value
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_label_edit_hex
+                                    , lcd2004_title_addr // %s label
+                                    , lcd2004_param_addr   // %s name
+                                    , param  // %d value
                                 );
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_item_label_edit_hex
-                                , lcd2004_title_addr // %s label
-                                , lcd2004_param_addr   // %s name
-                                , param  // %d value
-                                );
-    httpd_resp_sendstr_chunk(req, data);
     
     httpd_resp_sendstr_chunk(req, html_block_data_end);
 
     // ==========================================================================
-    sz = get_buf_size(html_block_data_form_submit
-                                , param_st_lcd // %s st
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_submit
+                                    , param_st_lcd // %s st
                                 );
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_submit
-                                , param_st_lcd // %s st
-                                );
-    httpd_resp_sendstr_chunk(req, data);
+    
     httpd_resp_sendstr_chunk(req, html_block_data_form_end);
-        httpd_resp_sendstr_chunk(req, html_block_data_end);  
+    httpd_resp_sendstr_chunk(req, html_block_data_end);  
     httpd_resp_sendstr_chunk(req, "<div class='rht'>");
     // ==========================================================================    
     char rht[] = "rht";
     char *b_id = malloc( strlen(button_id) + 5);
     sprintf(b_id, button_id, 1);
 
-    sz = get_buf_size(html_button
-                    , b_id
-                    , rht
-                    , "norm"
-                    , rht
-                    , lcd2004_button_clr_uri
-                    , !cfg->backlight
-                    , lcd2004_button_clr_title
-                    , 0
-                    , 1
-                    , lcd2004_button_clr_title
+    httpd_resp_sendstr_chunk_fmt(req, html_button
+                                    , b_id
+                                    , rht
+                                    , "norm"
+                                    , rht
+                                    , lcd2004_button_clr_uri
+                                    , !cfg->backlight
+                                    , lcd2004_button_clr_title
+                                    , 0
+                                    , 1
+                                    , lcd2004_button_clr_title
     );
-    data = realloc(data, sz);
-    
-    sprintf(data, html_button
-                    , b_id
-                    , rht
-                    , "norm"
-                    , rht
-                    , lcd2004_button_clr_uri
-                    , !cfg->backlight
-                    , lcd2004_button_clr_title
-                    , 0
-                    , 1
-                    , lcd2004_button_clr_title
-    );
-    httpd_resp_sendstr_chunk(req, data);
 
     // ==========================================================================    
     sprintf(b_id, button_id, 2);
-    sz = get_buf_size( html_button
-                    , b_id
-                    , rht
-                    , cfg->backlight ? " on" : " off"
-                    , rht
-                    , lcd2004_button_backlight_uri
-                    , !cfg->backlight
-                    , lcd2004_button_backlight_title
-                    , 0
-                    , 1
-                    , lcd2004_button_backlight_title
-    );   
-    data = realloc(data, sz);
     
-    sprintf(data, html_button
-                    , b_id
-                    , rht
-                    , cfg->backlight ? " on" : " off"
-                    , rht
-                    , lcd2004_button_backlight_uri
-                    , !cfg->backlight
-                    , lcd2004_button_backlight_title
-                    , 0
-                    , 1
-                    , lcd2004_button_backlight_title
+    httpd_resp_sendstr_chunk_fmt(req, html_button
+                                    , b_id
+                                    , rht
+                                    , cfg->backlight ? " on" : " off"
+                                    , rht
+                                    , lcd2004_button_backlight_uri
+                                    , !cfg->backlight
+                                    , lcd2004_button_backlight_title
+                                    , 0
+                                    , 1
+                                    , lcd2004_button_backlight_title
     );
-    httpd_resp_sendstr_chunk(req, data);
 
     // ==========================================================================
     // TODO: переделать вывод кнопок через функцию   
     sprintf(b_id, button_id, 3);
-    sz = get_buf_size(html_button
-                    , b_id
-                    , rht
-                    , cfg->backlight ? " on" : " off"
-                    , rht
-                    , lcd2004_button_backlight_uri
-                    , !cfg->backlight
-                    , "{0}"
-                    , 2
-                    , 1
-                    , cfg->state ? "ON" : "OFF"
+  
+    httpd_resp_sendstr_chunk_fmt(req, html_button
+                                    , b_id
+                                    , rht
+                                    , cfg->backlight ? " on" : " off"
+                                    , rht
+                                    , lcd2004_button_backlight_uri
+                                    , !cfg->backlight
+                                    , "{0}"
+                                    , 2
+                                    , 1
+                                    , cfg->state ? "ON" : "OFF"
     );
-    data = realloc(data, sz);
-    
-    sprintf(data, html_button
-                    , b_id
-                    , rht
-                    , cfg->backlight ? " on" : " off"
-                    , rht
-                    , lcd2004_button_backlight_uri
-                    , !cfg->backlight
-                    , "{0}"
-                    , 2
-                    , 1
-                    , cfg->state ? "ON" : "OFF"
-    );
-    httpd_resp_sendstr_chunk(req, data);
+
     free(b_id);
-    free(data);
     free(cfg);
     httpd_resp_sendstr_chunk(req, html_block_data_end); 
     // ==========================================================================    
-   
-  
     httpd_resp_sendstr_chunk(req, html_block_data_end);    
 }
 

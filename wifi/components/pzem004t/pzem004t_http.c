@@ -45,11 +45,7 @@ static void pzem_print_options(http_args_t *args)
     http_args_t *arg = (http_args_t *)args;
     httpd_req_t *req = (httpd_req_t *)arg->req;
 
-    size_t sz = get_buf_size(html_block_data_header_start, html_block_pzem004t_title);
-    char *data = malloc( sz );   
-    sprintf(data, html_block_data_header_start, html_block_pzem004t_title);
-    httpd_resp_sendstr_chunk(req, data);
-    free(data);
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_header_start, html_block_pzem004t_title);
 
     // httpd_resp_sendstr_chunk(req, html_block_data_form_start);
     // httpd_resp_sendstr_chunk(req, html_block_data_div_lf3);
@@ -87,11 +83,7 @@ static void pzem_print_data(http_args_t *args)
     http_args_t *arg = (http_args_t *)args;
     httpd_req_t *req = (httpd_req_t *)arg->req;
 
-    size_t sz = get_buf_size(html_block_data_header_start, html_block_pzem004t_title);
-    char *data = malloc( sz );   
-    sprintf(data, html_block_data_header_start, html_block_pzem004t_title);
-    httpd_resp_sendstr_chunk(req, data);
-    free(data);
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_header_start, html_block_pzem004t_title);
 
     pzem_data_t pzem_data = pzem_get_data();
 

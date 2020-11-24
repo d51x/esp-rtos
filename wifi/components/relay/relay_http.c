@@ -13,35 +13,19 @@ void relay_print_button(httpd_req_t *req, const char *btn_id, uint8_t idx)
 {
         char *b_uri = malloc( strlen(button_uri) + 5);
         sprintf(b_uri, button_uri, relays[idx].pin );
-        
-        size_t sz = get_buf_size(       html_button
-                                , btn_id
-                                , "lht"
-                                , relays[idx].state ? "on" : "off"
-                                , "lht"
-                                , b_uri
-                                , !relays[idx].state
-                                , relays[idx].name
-                                , 0
-                                , 1
-                                , relays[idx].name
+    
+        httpd_resp_sendstr_chunk_fmt(req, html_button
+                                        , btn_id
+                                        , "lht"
+                                        , relays[idx].state ? "on" : "off"
+                                        , "lht"
+                                        , b_uri
+                                        , !relays[idx].state
+                                        , relays[idx].name
+                                        , 0
+                                        , 1
+                                        , relays[idx].name
         );
-
-        char *data = malloc( sz );
-        sprintf(data, html_button
-                                , btn_id
-                                , "lht"
-                                , relays[idx].state ? "on" : "off"
-                                , "lht"
-                                , b_uri
-                                , !relays[idx].state
-                                , relays[idx].name
-                                , 0
-                                , 1
-                                , relays[idx].name
-        );
-        httpd_resp_sendstr_chunk(req, data);
-        free(data);
         free(b_uri);                           
 }
 
@@ -50,11 +34,7 @@ static void relay_print_data(http_args_t *args)
     http_args_t *arg = (http_args_t *)args;
     httpd_req_t *req = (httpd_req_t *)arg->req;
 
-    size_t sz = get_buf_size(html_block_data_header_start, relay_block_title);
-    char *data = malloc( sz );   
-    sprintf(data, html_block_data_header_start, relay_block_title);
-    httpd_resp_sendstr_chunk(req, data);    
-    free(data);
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_header_start, relay_block_title);
 
     for (uint8_t i = 0; i < relay_count; i++)
     {

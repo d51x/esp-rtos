@@ -125,6 +125,7 @@ esp_err_t sensors_get_handler(httpd_req_t *req)
     sprintf(buf, "hostname:%s;", wifi_cfg->hostname);
     //httpd_resp_sendstr_chunk(req, buf);
 
+    #ifdef CONFIG_SENSOR_PZEM004_T
     pzem_data_t pzem_data = pzem_get_data();
     sprintf(buf+strlen(buf), "pmv:%.1f;", pzem_data.voltage);
     //httpd_resp_sendstr_chunk(req, buf);
@@ -137,6 +138,7 @@ esp_err_t sensors_get_handler(httpd_req_t *req)
 
     sprintf(buf+strlen(buf), "pmwh:%d;", (uint32_t)pzem_data.energy);
     //httpd_resp_sendstr_chunk(req, buf);
+    #endif
     
     if ( vsens )
         httpd_send(req, buf, strlen(buf));

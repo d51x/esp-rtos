@@ -398,41 +398,22 @@ void http_print_value(httpd_req_t *req, const char *html_label, const char *titl
             sprintf(param, fmt, (char *)value);
             break;           
     }
-    size_t sz = get_buf_size(html_label, title , param );
-    char *data = malloc( sz );
-    sprintf(data, html_label, title, param);  
-    httpd_resp_sendstr_chunk(req, data);
-    free(data);     
+
+    httpd_resp_sendstr_chunk_fmt(req, html_label, title, param);    
 }
 
 void http_print_button(httpd_req_t *req, const char *b_id, const char *class, const char *st_class, const char *uri, int value, const char *text, int st, int v)
 {
-    size_t sz = get_buf_size(html_button
-                    , b_id
-                    , class
-                    , st_class
-                    , class
-                    , uri                // TODO: use checkbox to reset today consumption, otherwise will reset only yesterday consumption
-                    , value
-                    , text
-                    , st
-                    , 0
-                    , text
+    httpd_resp_sendstr_chunk_fmt(req, html_button
+                                    , b_id
+                                    , class
+                                    , st_class
+                                    , class
+                                    , uri
+                                    , value
+                                    , text
+                                    , st
+                                    , v
+                                    , text
     );
-    char *data = malloc(sz);
-    
-    sprintf(data, html_button
-                    , b_id
-                    , class
-                    , st_class
-                    , class
-                    , uri
-                    , value
-                    , text
-                    , st
-                    , v
-                    , text
-    );
-    httpd_resp_sendstr_chunk(req, data);      
-    free(data);
 }

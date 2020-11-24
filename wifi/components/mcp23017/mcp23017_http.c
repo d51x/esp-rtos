@@ -29,35 +29,18 @@ void mcp23017_print_button( mcp23017_handle_t dev_h, httpd_req_t *req, const cha
         char *uri = malloc( strlen(mcp23017_uri) + 2);
         sprintf(uri, mcp23017_uri, idx);
 
-        size_t sz;
-        sz = get_buf_size(html_button
-                                , btn_id
-                                , "lht"                        // id
-                                , val ? "on" : "off" 
-                                , "lht"       // class
-                                , uri
-                                , !val                      // data-val
-                                , ( dev->names[idx] != NULL ) ? dev->names[idx] : btn_name                  // data-text
-                                , 0                        
-                                , 1                       
-                                , ( dev->names[idx] != NULL ) ? dev->names[idx] : btn_name                  // текст кнопки
-                                );
-
-        char *buf_btn = malloc( sz );
-        sprintf(buf_btn, html_button
-                                , btn_id
-                                , "lht"                        // id
-                                , val ? "on" : "off"        // class
-                                , "lht"
-                                , uri
-                                , !val                      // data-val
-                                , ( dev->names[idx] != NULL ) ? dev->names[idx] : btn_name                  // data-text
-                                , 0                        
-                                , 1                       
-                                , ( dev->names[idx] != NULL ) ? dev->names[idx] : btn_name                  // текст кнопки
+        httpd_resp_sendstr_chunk_fmt(req, html_button
+                                        , btn_id
+                                        , "lht"                        // id
+                                        , val ? "on" : "off"        // class
+                                        , "lht"
+                                        , uri
+                                        , !val                      // data-val
+                                        , ( dev->names[idx] != NULL ) ? dev->names[idx] : btn_name                  // data-text
+                                        , 0                        
+                                        , 1                       
+                                        , ( dev->names[idx] != NULL ) ? dev->names[idx] : btn_name                  // текст кнопки
                                 );                                
-        httpd_resp_sendstr_chunk(req, buf_btn);
-        free(buf_btn);            
         free(uri);
         free(btn_name);
     }    
@@ -70,10 +53,7 @@ static void mcp23017_print_data(http_args_t *args)
 
     mcp23017_handle_t dev_h = (mcp23017_handle_t)arg->dev;
 
-    size_t sz = get_buf_size(html_block_data_header_start, html_block_mcp23107_title);
-    char *data = malloc( sz);   
-    sprintf(data, html_block_data_header_start, html_block_mcp23107_title);
-    httpd_resp_sendstr_chunk(req, data);
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_header_start, html_block_mcp23107_title);
 
     for ( uint8_t i = 0; i < 16; i++)
     {
@@ -84,7 +64,6 @@ static void mcp23017_print_data(http_args_t *args)
     }
     
     httpd_resp_sendstr_chunk(req, html_block_data_end);
-    free(data);
 }
 
 void mcp23017_register_http_print_data(mcp23017_handle_t dev_h) 

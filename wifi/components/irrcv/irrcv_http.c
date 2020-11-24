@@ -29,16 +29,13 @@ static void irrcv_print_data(http_args_t *args)
     irrcv_handle_t dev_h = (irrcv_handle_t)arg->dev;
     irrcv_t *dev = (irrcv_t *) dev_h; 
 
-    size_t sz = get_buf_size(html_block_data_header_start, IRRCV_TITLE);
-    char *data = malloc( sz );   
-    sprintf(data, html_block_data_header_start, IRRCV_TITLE);
-    httpd_resp_sendstr_chunk(req, data);
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_header_start, IRRCV_TITLE);
 
     // выводим настройку кнопок:
     // кол-во + Set
     // поля "код" + "функция имя" - нужен массив всех функций - имя, указаетль на функцию
     httpd_resp_sendstr_chunk(req, html_block_data_end);
-    free(data);
+
 }
 
 static void irrcv_print_cfg(http_args_t *args)
@@ -49,68 +46,38 @@ static void irrcv_print_cfg(http_args_t *args)
     irrcv_handle_t dev_h = (irrcv_handle_t)arg->dev;
     irrcv_t *dev = (irrcv_t *) dev_h;    
 
-    size_t sz = get_buf_size(html_block_data_header_start, IRRCV_TITLE);
-    char *data = malloc( sz );
-    sprintf(data, html_block_data_header_start, IRRCV_TITLE);
-    httpd_resp_sendstr_chunk(req, data);
-
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_header_start, IRRCV_TITLE);
     httpd_resp_sendstr_chunk(req, html_block_data_form_start);
     
     // ==========================================================================
-    sz = get_buf_size(html_block_data_form_item_checkbox
-                                , label_ir_en // %s label
-                                , param_iren   // %s name
-                                , dev->enabled  // %d value
-                                , dev->enabled ? "checked" : ""
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_checkbox
+                                    , label_ir_en // %s label
+                                    , param_iren   // %s name
+                                    , dev->enabled  // %d value
+                                    , dev->enabled ? "checked" : ""
                                 );
-    data = realloc(data, sz );
-    sprintf(data, html_block_data_form_item_checkbox
-                                , label_ir_en // %s label
-                                , param_iren   // %s name
-                                , dev->enabled  // %d value
-                                , dev->enabled ? "checked" : ""
-                                );
-    httpd_resp_sendstr_chunk(req, data);
 
     // ==========================================================================
     char param[10];
     itoa(dev->pin, param, 10);
-    sz = get_buf_size(html_block_data_form_item_label_edit
-                                , label_ir_gpio // %s label
-                                , param_irpin   // %s name
-                                , param  // %d value
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_label_edit
+                                    , label_ir_gpio // %s label
+                                    , param_irpin   // %s name
+                                    , param  // %d value
                                 );
-    data = realloc(data, sz );
-    sprintf(data, html_block_data_form_item_label_edit
-                                , label_ir_gpio // %s label
-                                , param_irpin   // %s name
-                                , param  // %d value
-                                );
-    httpd_resp_sendstr_chunk(req, data);
 
     // ==========================================================================
     itoa(dev->delay, param, 10);
-    sz = get_buf_size(html_block_data_form_item_label_edit
-                                , label_ir_delay // %s label
-                                , param_irdelay   // %s name
-                                , param  // %d value
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_label_edit
+                                    , label_ir_delay // %s label
+                                    , param_irdelay   // %s name
+                                    , param  // %d value
                                 );
-    data = realloc(data, sz );
-    sprintf(data, html_block_data_form_item_label_edit
-                                , label_ir_delay // %s label
-                                , param_irdelay   // %s name
-                                , param  // %d value
-                                );
-    httpd_resp_sendstr_chunk(req, data);
 
     // ==========================================================================
-    sz = get_buf_size(html_block_data_form_submit, param_st);
-    data = realloc(data, sz );
-    sprintf(data, html_block_data_form_submit
-                                , param_st // %s st
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_submit
+                                    , param_st // %s st
                                 );
-    httpd_resp_sendstr_chunk(req, data);
-    free(data);
 
     // ==========================================================================
     httpd_resp_sendstr_chunk(req, html_block_data_form_end);
