@@ -185,3 +185,41 @@ function slider(val, name, uri)
 	});
 
 }
+
+function otaGet(fsize) {
+    var x = document.getElementById("selectedFile");
+    var file = x.files[0];
+
+    var str = "<h4>File: " + file.name + "<br>" + "Size: " + file.size + " bytes</h4>";
+    if ( file.size > fsize ) str = str + "<h4 style='color: red;'>Files size is bigger than partition size!!!</h4>";
+    document.getElementById("file_info").innerHTML = str;
+}
+
+function updFw() {
+    // Form Data
+    //var formData = new FormData();
+
+    var fileSelect = document.getElementById("selectedFile");
+    
+    if (fileSelect.files && fileSelect.files.length == 1) {
+        var file = fileSelect.files[0];
+        //formData.set("file", file, file.name);
+        document.getElementById("ota_process").innerHTML = "Uploading " + file.name + " , Please Wait...";
+
+        // Http Request
+        //var request = new XMLHttpRequest();
+
+        //request.upload.addEventListener("progress", updateProgress);
+
+        //request.open('POST', "/update");
+        //request.responseType = "blob";
+        //request.send(formData);
+
+
+    } else {
+        window.alert('Select A File First')
+    }
+}
+
+
+

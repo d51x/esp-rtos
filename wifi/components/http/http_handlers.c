@@ -143,6 +143,7 @@ esp_err_t update_get_handler(httpd_req_t *req){
 	if ( http_get_has_params(req) == ESP_OK) 
 	{
         process_params(req);
+        return ESP_OK; 
 	}
 
   httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
