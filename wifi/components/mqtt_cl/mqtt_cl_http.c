@@ -41,114 +41,65 @@ static void mqtt_print_options(http_args_t *args)
     mqtt_config_t *mqtt_cfg = malloc(sizeof(mqtt_config_t));
     mqtt_get_cfg(mqtt_cfg);
 
-    size_t sz = get_buf_size(html_block_data_header_start, html_page_title_mqtt);
-    char *data = malloc( sz );   
-    sprintf(data, html_block_data_header_start, html_page_title_mqtt);
-    httpd_resp_sendstr_chunk(req, data);
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_header_start, html_page_title_mqtt);
+
     httpd_resp_sendstr_chunk(req, html_block_data_form_start);
 
     // ==========================================================================
-    sz = get_buf_size(html_block_data_form_item_checkbox
-                                , html_page_label_enable // %s label
-                                , URI_PARAM_MQTT_EN   // %s name
-                                , mqtt_cfg->enabled  // %d value
-                                , mqtt_cfg->enabled ? "checked" : "");
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_item_checkbox
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_checkbox
                                 , html_page_label_enable // %s label
                                 , URI_PARAM_MQTT_EN   // %s name
                                 , mqtt_cfg->enabled  // %d value
                                 , mqtt_cfg->enabled ? "checked" : ""
                                 );
-    httpd_resp_sendstr_chunk(req, data);
 
     // ==========================================================================
-    sz = get_buf_size(html_block_data_form_item_label_edit
-                                , html_page_label_host // %s label
-                                , URI_PARAM_MQTT_HOST   // %s name
-                                , mqtt_cfg->broker_url   // %d value
-    );
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_item_label_edit
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_label_edit
                                 , html_page_label_host // %s label
                                 , URI_PARAM_MQTT_HOST   // %s name
                                 , mqtt_cfg->broker_url   // %d value
                                 );
-    httpd_resp_sendstr_chunk(req, data);
 
     // ==========================================================================
-    sz = get_buf_size(    html_block_data_form_item_label_edit
-                                , html_page_label_login // %s label
-                                , URI_PARAM_MQTT_LOGIN   // %s name
-                                , mqtt_cfg->login   // %d value
-    );
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_item_label_edit
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_label_edit
                                 , html_page_label_login // %s label
                                 , URI_PARAM_MQTT_LOGIN   // %s name
                                 , mqtt_cfg->login   // %d value
                                 );
-    httpd_resp_sendstr_chunk(req, data);
 
     // ==========================================================================
-    sz = get_buf_size(html_block_data_form_item_label_edit
-                                , html_page_label_pass // %s label
-                                , URI_PARAM_MQTT_PASSW   // %s name
-                                , mqtt_cfg->password   // %d value
-    );  
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_item_label_edit
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_label_edit
                                 , html_page_label_pass // %s label
                                 , URI_PARAM_MQTT_PASSW   // %s name
                                 , mqtt_cfg->password   // %d value
                                 );
-    httpd_resp_sendstr_chunk(req, data);
 
     // ==========================================================================
-    sz = get_buf_size(    html_block_data_form_item_label_edit
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_label_edit
                                 , html_page_label_topic // %s label
                                 , URI_PARAM_MQTT_TOPIC_BASE   // %s name
                                 , mqtt_cfg->base_topic   // %d value
                                 );
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_item_label_edit
-                                , html_page_label_topic // %s label
-                                , URI_PARAM_MQTT_TOPIC_BASE   // %s name
-                                , mqtt_cfg->base_topic   // %d value
-                                );
-    httpd_resp_sendstr_chunk(req, data);
     
     // ==========================================================================
     char *send_int = malloc(10);
     itoa(mqtt_cfg->send_interval, send_int, 10);
-    sz = get_buf_size(html_block_data_form_item_label_edit
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_label_edit
                                 , html_page_label_interval // %s label
                                 , URI_PARAM_MQTT_SEND_INTERVAL   // %s name
                                 , send_int  // %d value
                                 );
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_item_label_edit
-                                , html_page_label_interval // %s label
-                                , URI_PARAM_MQTT_SEND_INTERVAL   // %s name
-                                , send_int  // %d value
-                                );
-    httpd_resp_sendstr_chunk(req, data);
+
     free(send_int);
     free(mqtt_cfg);
     
     // ==========================================================================
-    sz = get_buf_size(html_block_data_form_submit, "2");
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_submit
-                                , "2" // %s st
-                                );
-    httpd_resp_sendstr_chunk(req, data);
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_submit, "2");
 
     // ==========================================================================
     httpd_resp_sendstr_chunk(req, html_block_data_form_end);
     httpd_resp_sendstr_chunk(req, html_block_data_end);
     httpd_resp_sendstr_chunk(req, html_block_data_end);
-    free(data);
 }
 
 static void mqtt_print_debug(http_args_t *args)
