@@ -44,27 +44,34 @@ static esp_err_t sensors_get_handler(httpd_req_t *req)
         // sensors[i].fmt
         // sensors[i].val_type
         // sensors[i].value        
-        char sval[10];
-        switch ( sensors[i].val_type)
-        {
-            case TYPE_UINT8:
-            case TYPE_INT8:
-            case TYPE_UINT16:
-            case TYPE_INT16:
-            case TYPE_UINT32:
-            case TYPE_INT32:
-                sprintf(sval, sensors[i].fmt, sensors[i].value);
-                break;
-            case TYPE_FLOAT:
-                sprintf(sval, sensors[i].fmt, sensors[i].value.f);
-                break;            
-            case TYPE_STRING:
-                break;
-        }
+        // char sval[10];
+        // switch ( sensors[i].val_type)
+        // {
+        //     case TYPE_UINT8:
+        //     case TYPE_INT8:
+        //     case TYPE_UINT16:
+        //     case TYPE_INT16:
+        //     case TYPE_UINT32:
+        //     case TYPE_INT32:
+        //         sprintf(sval, sensors[i].fmt, sensors[i].value);
+        //         break;
+        //     case TYPE_FLOAT:
+        //         sprintf(sval, sensors[i].fmt, sensors[i].value.f);
+        //         break;            
+        //     case TYPE_STRING:
+        //         break;
+        // }
 
-        sz = get_buf_size("%s:%s;", sensors[i].name, sval);
-        data = (char *) realloc(data, strlen(data) + sz);
-        sprintf(data + strlen(data), "%s:%s;", sensors[i].name, sval);
+        // sz = get_buf_size("%s:%s;", sensors[i].name, sval);
+        // data = (char *) realloc(data, strlen(data) + sz);
+        // sprintf(data + strlen(data), "%s:%s;", sensors[i].name, sval);
+
+        char *buf = calloc( 1, 1 );
+        sensors[i].fn_cb(&buf, sensors[i].args) ;
+        // print buf, buf must be formatted as "%s:%s;", name, val
+        data = (char *) realloc(data, strlen(data) + strlen(buf));
+        strcat(data, buf);
+        free(buf);
     } 
 
 

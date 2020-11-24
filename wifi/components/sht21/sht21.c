@@ -20,6 +20,9 @@
 #include "i2c_bus.h"
 #include "sht21.h"
 
+#ifdef CONFIG_SENSORS_GET
+#include "sensors.h"
+#endif
 
 #ifdef CONFIG_SENSOR_SHT21
 
@@ -204,10 +207,23 @@ static void sht21_periodic_task(void *arg)
 }
 
 
+#ifdef CONFIG_SENSORS_GET
+static void sht21_sensors_print(char **buf, void *args)
+{
+    size_t sz = get_buf_size("shtt:%0.2f;shth:%0.2f;", sht21_data.temp, sht21_data.hum);
+    *buf = (char *) realloc(*buf, sz+1);
+    memset(*buf, 0, sz+1);
+    snprintf(*buf, sz+1, "shtt:%0.2f;shth:%0.2f;", sht21_data.temp, sht21_data.hum);
+}
+#endif
 
 void sht21_start(uint32_t delay)
 {
     xTaskCreate(sht21_periodic_task, "sht21_task", SHT21_PERIODIC_TASK_STACK_DEPTH, delay, SHT21_PERIODIC_TASK_PRIORITY, &xHandle);
+
+    #ifdef CONFIG_SENSORS_GET
+    sensors_add("sht21", sht21_sensors_print, NULL); 
+    #endif
 }
 
 
