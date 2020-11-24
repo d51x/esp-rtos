@@ -26,8 +26,14 @@ esp_err_t ota_load_nvs(ota_firm_t *fw)
 esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
     ESP_LOGW(TAG, "Starting OTA...");
     
+    ota_status.state = OTA_START;
+    ota_status.progress = 0;
+    
     int total_len = req->content_len;
     int file_len = total_len;
+
+    ota_status.total = file_len;
+
     char fname[32];
     int recv_len;           // принято за раз
     int remain = total_len;  // осталось загрузить
@@ -47,6 +53,7 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
     if (!upgrade_data_buf) {
         strcpy(err_text, "Couldn't allocate memory to upgrade data buffer");
         ESP_LOGE(TAG, err_text);
+        ota_status.state = OTA_ERROR;
         return ESP_ERR_NO_MEM;
     }
 
@@ -61,6 +68,7 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
         strcpy(err_text, esp_err_to_name(err));
         strcpy(err_text+strlen(err_text), "Error With OTA Begin, Cancelling OTA");
         ESP_LOGE(TAG, err_text);
+        ota_status.state = OTA_ERROR;
         return ESP_ERR_FLASH_OP_FAIL;               
     } 
 
@@ -72,6 +80,7 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
             if (recv_len == HTTPD_SOCK_ERR_TIMEOUT) {
                 /* Retry receiving if timeout occurred */
                 if ( retry_count > 20 ) {
+                    ota_status.state = OTA_ERROR;
                 ESP_LOGE(TAG, "Timeout ... Max retry count reached %d...  httpd_req_recv %d (%d%%)", retry_count, received, received*100/total_len);  
                 break;  
                 }                
@@ -81,6 +90,7 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
                 continue;
             }
             sprintf(err_text, "File upload failed, uploaded %d%%", received*100/total_len);
+            ota_status.state = OTA_ERROR;
             ESP_LOGE(TAG, err_text);      
             return ESP_ERR_FLASH_OP_FAIL;             
         }
@@ -105,6 +115,8 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
             strncpy(fname, post_data, 32);
             //file_len = body_start_p - upgrade_data_buf;
             file_len = total_len - 196;
+            ota_status.total = file_len;
+            
             ESP_LOGW(TAG, "%s (%d)", fname, file_len);
             free(post_data);
 
@@ -116,15 +128,18 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
                 strcpy(err_text, esp_err_to_name(err));
                 strcpy(err_text+strlen(err_text), "ERROR 1: OTA write failed");
                 ESP_LOGE(TAG, err_text);
+                ota_status.state = OTA_ERROR;
                 return err;
             }    
         } else {
             // Write OTA data
+            ota_status.state = OTA_PROGRESS;
             err = esp_ota_write(ota_handle, (const void *)upgrade_data_buf, recv_len);
             if ( err != ESP_OK ) {
                 strcpy(err_text, esp_err_to_name(err));
                 strcpy(err_text+strlen(err_text), "ERROR 2: OTA write failed");
                 ESP_LOGE(TAG, err_text);
+                ota_status.state = OTA_ERROR;
                 return err;
             }    
         }
@@ -134,13 +149,16 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
         if ( new_part < received ) {
             ESP_LOGI(TAG, "uploaded %d %%", new_part*100/total_len);
             new_part += one_part;
+            ota_status.progress = new_part;
         }
     } // while
     //=========================================================================================
+    ota_status.progress = file_len;
 
     free(upgrade_data_buf);
     if (esp_ota_end(ota_handle) == ESP_OK) {
         // Lets update the partition
+        
         if (esp_ota_set_boot_partition(update_partition) == ESP_OK) {
 
             const esp_partition_t *boot_partition = esp_ota_get_boot_partition();
@@ -154,17 +172,18 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
             get_localtime(&fw->dt);
             ota_save_nvs(fw);
             free(fw);
+            ota_status.state = OTA_FINISH;
         } else {
             strcpy(err_text, "ERROR1: OTA upgrading failed. Flashed Error!");
             ESP_LOGE(TAG, err_text);
-
+            ota_status.state = OTA_ERROR;
             return ESP_ERR_FLASH_OP_FAIL;
         }
     } else {
         strcpy(err_text, esp_err_to_name(err));
         strcpy(err_text+strlen(err_text), "ERROR2: OTA upgrading failed. Flashed Error!");
         ESP_LOGE(TAG, err_text);
-
+        ota_status.state = OTA_ERROR;
         return ESP_ERR_FLASH_OP_FAIL;
     } 
     return ESP_OK;        

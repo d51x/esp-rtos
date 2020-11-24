@@ -19,6 +19,22 @@ typedef struct {
     char dt[25]; 
 } ota_firm_t;
 
+typedef enum {
+    OTA_IDLE,
+    OTA_START,
+    OTA_PROGRESS,
+    OTA_FINISH,
+    OTA_ERROR
+} e_ota_state;
+
+typedef struct {
+    e_ota_state state;
+    uint32_t progress;
+    uint32_t total;
+} ota_status_t;
+
+ota_status_t ota_status;
+
 esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text);
 esp_err_t ota_load_nvs(ota_firm_t *fw);
 
