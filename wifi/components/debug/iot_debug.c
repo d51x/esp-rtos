@@ -85,7 +85,8 @@ void log_rtc_print_debug_str()
 
 char *log_rtc_get_debug_str(uint8_t idx)
 {
-	char *str = malloc(DEBUG_LAST_STR_SIZE);
+	static char *str = NULL;
+	str = realloc(str, DEBUG_LAST_STR_SIZE);
 	switch (idx) {
 		case 0: strncpy( str, _rtc_debug_str_last, DEBUG_LAST_STR_SIZE); break;
 		case 1: strncpy( str, _rtc_debug_str_prev1, DEBUG_LAST_STR_SIZE); break;
