@@ -7,6 +7,7 @@
 #define URI_PARAM_WIFI_SSID             "ssid"
 #define URI_PARAM_WIFI_PASSW            "pass"
 #define URI_PARAM_WIFI_MODE             "wifi_mode"
+#define URI_PARAM_WIFI_IP_ADDR             "ipaddr"
 
 const char *html_page_config_wifi_title ICACHE_RODATA_ATTR = "WiFi Settings";
 const char *html_page_config_wifi_hostname ICACHE_RODATA_ATTR = "Hostname";
@@ -21,100 +22,65 @@ const char *html_page_config_wifi_mode ICACHE_RODATA_ATTR =
 			"</p>"
 ;
 
+const char *html_page_config_wifi_ip_addr ICACHE_RODATA_ATTR = 
+
+			"<p><label class='lf'>IP address:</label>"
+				"<input size='20' name='"URI_PARAM_WIFI_IP_ADDR"' class='edit rh' value='%s' %s />"
+			"</p>"
+;
+
 static void wifi_print_options(http_args_t *args)
 {
 	http_args_t *arg = (http_args_t *)args;
 	httpd_req_t *req = (httpd_req_t *)arg->req;
 
-	size_t sz = get_buf_size(html_block_data_header_start, html_page_config_wifi_title);
-    char *data = malloc( sz );   
-    sprintf(data, html_block_data_header_start, html_page_config_wifi_title);
-    httpd_resp_sendstr_chunk(req, data);
+	httpd_resp_sendstr_chunk_fmt(req, html_block_data_header_start, html_page_config_wifi_title);
+
     httpd_resp_sendstr_chunk(req, html_block_data_form_start);
 
 	// ==========================================================================
-	sz = get_buf_size(html_block_data_form_item_label_edit
-                                , html_page_config_wifi_hostname // %s label
-                                , URI_PARAM_WIFI_HOST   // %s name
-                                , wifi_cfg->hostname);
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_item_label_edit
+	httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_label_edit
                                 , html_page_config_wifi_hostname // %s label
                                 , URI_PARAM_WIFI_HOST   // %s name
                                 , wifi_cfg->hostname   // %d value
                                 );
-    httpd_resp_sendstr_chunk(req, data);
-
 	// ==========================================================================
-	sz = get_buf_size(html_block_data_form_item_label_edit
-                                , html_page_config_wifi_ssid // %s label
-                                , URI_PARAM_WIFI_SSID   // %s name
-                                , wifi_cfg->ssid);
-    data = realloc(data, sz);
-    sprintf(data, html_block_data_form_item_label_edit
+	httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_label_edit
                                 , html_page_config_wifi_ssid // %s label
                                 , URI_PARAM_WIFI_SSID   // %s name
                                 , wifi_cfg->ssid   // %d value
                                 );
-    httpd_resp_sendstr_chunk(req, data);
-
 	// ==========================================================================
-    sz = get_buf_size(html_block_data_form_item_label_edit
-                                , html_page_config_wifi_pass // %s label
-                                , URI_PARAM_WIFI_PASSW   // %s name
-                                , wifi_cfg->password);
-	data = realloc(data, sz);
-    sprintf(data, html_block_data_form_item_label_edit
+	httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_label_edit
                                 , html_page_config_wifi_pass // %s label
                                 , URI_PARAM_WIFI_PASSW   // %s name
                                 , wifi_cfg->password   // %d value
                                 );
-    httpd_resp_sendstr_chunk(req, data);
-	
-	// ==========================================================================
-	sz = get_buf_size(html_page_config_wifi_mode
-										, (wifi_cfg->mode == WIFI_MODE_STA) ? "checked" : ""          // sta checked
-										, (wifi_cfg->mode == WIFI_MODE_AP)  ? "checked" : "" );
 
-    data = realloc(data, sz);
-    sprintf(data, html_page_config_wifi_mode
-										, (wifi_cfg->mode == WIFI_MODE_STA) ? "checked" : ""          // sta checked
+	// ==========================================================================
+	httpd_resp_sendstr_chunk_fmt(req, html_page_config_wifi_mode
+											, (wifi_cfg->mode == WIFI_MODE_STA) ? "checked" : ""          // sta checked
 										, (wifi_cfg->mode == WIFI_MODE_AP)  ? "checked" : ""         // ap checked
                                 );
-    httpd_resp_sendstr_chunk(req, data);
 
 	// ==========================================================================
-    sz = get_buf_size(html_block_data_form_submit, "1");
-	data = realloc(data, sz);
-	sprintf(data, html_block_data_form_submit
-                                , "1" // %s st
-                                );
-    httpd_resp_sendstr_chunk(req, data);
+	httpd_resp_sendstr_chunk_fmt(req, html_page_config_wifi_ip_addr, wifi_cfg->ip, "disabled");
+
+	// ==========================================================================
+	httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_submit, "1");
 
 	// ==========================================================================
     httpd_resp_sendstr_chunk(req, html_block_data_form_end);
     httpd_resp_sendstr_chunk(req, html_block_data_end);
     httpd_resp_sendstr_chunk(req, html_block_data_end);
-	free(data);
+
 }
 
 static void wifi_print_debug(http_args_t *args)
 {
     http_args_t *arg = (http_args_t *)args;
     httpd_req_t *req = (httpd_req_t *)arg->req;
-
-    httpd_resp_sendstr_chunk_fmt(req, "<br>WIFI: <BR>"
-	"mode: %s<br>"
-	"IP address: %s<br>"
-	"status: %s<br>"
-	"reconnects: %d<br>"
-	, wifi_cfg->mode == WIFI_MODE_STA ? "STA" : ( wifi_cfg->mode == WIFI_MODE_AP ? "AP" : "UNKNOWN")
-	, wifi_cfg->ip
-	, isWiFiConnected() ? "connected" : "disconnected"
-	, wifi_get_reconnect_count()
-	);
-
-    //http_print_value(req, html_block_data_form_item_label_label, html_block_pzem004t_title_errors, "%d", UINT16_T, (void *)&pzem_data.errors);
+    httpd_resp_sendstr_chunk_fmt(req, "<br>Wifi reconnects: %d<br>", wifi_get_reconnect_count());
 }
 
 void wifi_register_http_print_data() 
