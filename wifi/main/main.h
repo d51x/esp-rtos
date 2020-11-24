@@ -117,6 +117,10 @@
     #endif
 #endif
 
+#ifdef CONFIG_SENSORS_GET
+#include "sensors.h"
+#include "sensors_http.h"
+#endif
 
 //======================== variable definitions ===================================
 extern httpd_handle_t http_server;

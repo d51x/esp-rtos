@@ -252,6 +252,10 @@ void test_mcp23017_isr_cb8(char *buf)
 
 void initialize_modules()
 {
+    #ifdef CONFIG_SENSORS_GET
+    http_handlers_count++; 
+    sensors_init();
+    #endif
 
     #ifdef CONFIG_SENSOR_PZEM004_T
     pzem_init(0);
@@ -431,6 +435,10 @@ void initialize_modules_mqtt()
 
 void initialize_modules_http(httpd_handle_t _server)
 {
+    #ifdef CONFIG_SENSORS_GET
+    sensors_http_init(_server);
+    #endif
+    
     debug_register_http_print_data();
     wifi_http_init( _server );
     ota_http_init( _server );
@@ -479,11 +487,11 @@ void initialize_modules_http(httpd_handle_t _server)
         pzem_http_init(_server);
     #endif
 
-    http_args_t *p = calloc(1,sizeof(http_args_t));
+    //http_args_t *p = calloc(1,sizeof(http_args_t));
     //register_print_page_block( "user1", PAGES_URI[ PAGE_URI_ROOT], 0, user_web_main, p, NULL, NULL  );     
     //register_print_page_block( "user1", PAGES_URI[ PAGE_URI_ROOT], 0, user_web_main, p, NULL, NULL  );     
     //register_print_page_block( "sensors", "/sensors", 0, sensors_print, p, NULL, NULL  ); 
-    add_uri_get_handler( _server, "/sensors", sensors_get_handler, NULL); 
+    //add_uri_get_handler( _server, "/sensors", sensors_get_handler, NULL); 
 
 
 }

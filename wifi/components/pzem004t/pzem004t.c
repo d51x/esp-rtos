@@ -5,6 +5,13 @@
 
 #include "iot_debug.h"
 
+#ifdef CONFIG_SENSORS_GET
+#include "sensors.h"
+const char *pzem_sensors_data ICACHE_RODATA_ATTR = "pmv:%0.2f;pmc:%0.2f;pmw:%d;pmwh:%d;";
+#endif
+
+
+
 #ifdef CONFIG_SENSOR_PZEM004_T
 
 static const char *TAG = "PZEM";
@@ -71,6 +78,9 @@ pzem_read_strategy_t _strategy;
 #define PZEM_READ_ERROR_COUNT 20
 
 static uint8_t pzem_crc(uint8_t *data, uint8_t sz);
+#ifdef CONFIG_SENSORS_GET
+static void pzem_sensors_print(char **buf, void *args);
+#endif
 
 // #ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
 // static void pzem_nvs_save()
@@ -153,6 +163,10 @@ void pzem_init(uint8_t uart_num)
 	//	pzem_nvs_save();
 	//}
 	#endif
+
+    #ifdef CONFIG_SENSORS_GET
+    sensors_add("pzem", pzem_sensors_print, NULL); 
+    #endif
 }
 
 static void send_buffer(const uint8_t *buffer, uint8_t len)
@@ -611,5 +625,25 @@ void pzem_task_start(uint32_t delay_sec)
 	xTaskCreate(calc_energy_values, "pzem_enrg", PZEM_PERIODIC_TASK_STACK_DEPTH, PZEM_ENERGY_PERIODIC_DELAY, PZEM_PERIODIC_TASK_PRIORITY, NULL);
 	#endif
 }
+
+#ifdef CONFIG_SENSORS_GET
+static void pzem_sensors_print(char **buf, void *args)
+{
+    size_t sz = get_buf_size(pzem_sensors_data
+							, _pzem_data.voltage
+							, _pzem_data.current
+							, (uint32_t)_pzem_data.power
+							, (uint32_t)_pzem_data.energy
+							);
+    *buf = (char *) realloc(*buf, sz+1);
+    memset(*buf, 0, sz+1);
+    snprintf(*buf, sz+1, pzem_sensors_data
+							, _pzem_data.voltage
+							, _pzem_data.current
+							, (uint32_t)_pzem_data.power
+							, (uint32_t)_pzem_data.energy
+							);
+}
+#endif
 
 #endif

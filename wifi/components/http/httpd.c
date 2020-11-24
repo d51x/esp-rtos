@@ -88,10 +88,12 @@ httpd_handle_t webserver_start(void)
     config.lru_purge_enable = true;  /* If no space is available for new session, close the least recently used one */
     
     // Start the httpd server
-    ESP_LOGD(TAG, "******** Starting server on port: '%d'", config.server_port);
+    ESP_LOGW(TAG, "******** Starting server on port: '%d'", config.server_port);
     if (httpd_start(&_server, &config) == ESP_OK) {
         // Set URI handlers
         register_uri_handlers(_server);
+        ESP_LOGW(TAG, "http_handlers_count = %d", http_handlers_count );
+
         page_initialize_menu();
         return _server;
     }
