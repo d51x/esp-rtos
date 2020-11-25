@@ -59,7 +59,7 @@ void relay_mqtt_init()
         mqtt_add_periodic_publish_callback( t, relay_mqtt_periodic_send_cb, (relay_t *)&relays[i]);
 
         sprintf(t, RELAY_MQTT_RECV_TOPIC, relays[i].pin);
-        mqtt_add_receive_callback(t, relay_mqtt_recv_cb, (relay_t *)&relays[i]);
+        mqtt_add_receive_callback(t, 1, relay_mqtt_recv_cb, (relay_t *)&relays[i]);
         //free(p);    make after in delete callback
     }    
 }

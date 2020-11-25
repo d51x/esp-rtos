@@ -73,7 +73,7 @@ void mcp23017_mqtt_init(mcp23017_handle_t dev_h)
         mqtt_add_periodic_publish_callback( t, mcp23017_mqtt_periodic_send_cb, (mcp23017_mqtt_t *)p);
 
         sprintf(t, "%s%d", MCP23017_MQTT_RECV_TOPIC, i);
-        mqtt_add_receive_callback(t, mcp23017_mqtt_recv_cb, (mcp23017_mqtt_t *)p);
+        mqtt_add_receive_callback(t, 1, mcp23017_mqtt_recv_cb, (mcp23017_mqtt_t *)p);
         //free(p);    make after in delete callback
     }    
 }

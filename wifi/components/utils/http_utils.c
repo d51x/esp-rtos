@@ -107,7 +107,7 @@ char *http_uri_clean(httpd_req_t *req)
     char *p;
     if ( http_get_has_params(req) == ESP_OK) 
 	{
-        p = cut_str_from_str( req->uri, "?");
+        p = copy_str_from_str( req->uri, "?");
     } else {
         p = (char *) calloc(1, strlen( req->uri));
         strcpy(p, req->uri);

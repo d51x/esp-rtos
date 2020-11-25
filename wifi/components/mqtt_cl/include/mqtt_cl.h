@@ -56,7 +56,9 @@ typedef struct {
 #define MQTT_SEND_CB 5
 
 typedef struct {
-    char topic[TOPIC_END_NAME_LENGTH];
+    //char topic[TOPIC_END_NAME_LENGTH];
+    char *topic;
+    uint8_t inner;
     func_mqtt_recv_cb fn_cb;
     void *args;
 } mqtt_recv_t;
@@ -84,4 +86,14 @@ void mqtt_publish(const char *_topic, const char *payload);
 void mqtt_add_periodic_publish_callback( const char *topic, func_mqtt_send_cb fn_cb, void *args);
 
 // зарегистрировать функцию колбека, которая будет вызвана при получении данных в указанном топике
-void mqtt_add_receive_callback( const char *topic, func_mqtt_recv_cb fn_cb, void *args);  
+// topic должен содержать часть пути после  "login/hostname"
+
+/**
+  * @brief  зарегистрировать функцию колбека, которая будет вызвана при получении данных в указанном топике
+  *
+  * @param  topic topic path, length 64 symbols
+  * @param  inner_topic  Внутренний топик, содержить путь после "login/hostname" 
+  * @param  fn_cb  callback, который будет вызван при получении данных в топик 
+  *
+  */
+void mqtt_add_receive_callback( const char *topic, uint8_t inner_topic, func_mqtt_recv_cb fn_cb, void *args);  

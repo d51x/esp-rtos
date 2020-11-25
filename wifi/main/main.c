@@ -53,7 +53,7 @@ void app_main(void)
     esp_app_desc_t *app_desc = esp_ota_get_app_description();
     const esp_partition_t* esp_part = esp_ota_get_running_partition();
     strncpy(FW_VER, app_desc->version, 32);
-    strcpy(FW_VER, cut_str_from_str(FW_VER, "_"));
+    strcpy(FW_VER, copy_str_from_str(FW_VER, "_"));
     free(app_desc);
 
     // ========================================= MODULES initialization START
@@ -401,6 +401,9 @@ void initialize_modules()
     http_handlers_count += I2C_HANDLERS_COUNT;
     #endif
 
+    #ifdef CONFIG_SENSOR_MQTT
+    mqtt_subscriber_init();
+    #endif
 
 }
 
@@ -409,8 +412,8 @@ void initialize_modules_mqtt()
     //mqtt_add_periodic_publish_callback( "test1", test1, NULL);
     //mqtt_add_periodic_publish_callback( "test2", test2, NULL);
 
-    //mqtt_add_receive_callback("recv1", test_recv1, NULL);
-    //mqtt_add_receive_callback("recv2", test_recv2, NULL);
+    //mqtt_add_receive_callback("recv1", 1, test_recv1, NULL);
+    //mqtt_add_receive_callback("recv2", 1, test_recv2, NULL);
 
     #ifdef CONFIG_COMPONENT_RELAY
     relay_mqtt_init();
@@ -438,7 +441,7 @@ void initialize_modules_http(httpd_handle_t _server)
     #ifdef CONFIG_SENSORS_GET
     sensors_http_init(_server);
     #endif
-    
+
     debug_register_http_print_data();
     wifi_http_init( _server );
     ota_http_init( _server );

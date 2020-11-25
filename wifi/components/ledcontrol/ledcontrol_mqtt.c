@@ -60,7 +60,7 @@ void ledcontrol_mqtt_init(ledcontrol_handle_t dev_h)
         mqtt_add_periodic_publish_callback( t, ledcontrol_mqtt_periodic_send_cb, (ledcontrol_mqtt_t *)p); 
 
         sprintf(t, "%s%d", LEDCONTROL_MQTT_RECV_TOPIC, i);
-        mqtt_add_receive_callback(t, ledcontrol_mqtt_recv_cb, (ledcontrol_mqtt_t *)p);                   
+        mqtt_add_receive_callback(t, 1, ledcontrol_mqtt_recv_cb, (ledcontrol_mqtt_t *)p);                   
     }
 }
 

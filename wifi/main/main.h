@@ -122,6 +122,10 @@
 #include "sensors_http.h"
 #endif
 
+#ifdef CONFIG_SENSOR_MQTT
+#include "mqtt_sub.h"
+#endif
+
 //======================== variable definitions ===================================
 extern httpd_handle_t http_server;
 

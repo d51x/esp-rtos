@@ -173,7 +173,7 @@ void mqtt_init()
     //memset(mqtt_recv, 0, MQTT_RECV_CB*sizeof(mqtt_recv_t));
 
     //mqtt_start();
-    mqtt_add_receive_callback("restart", esp_restart, NULL);
+    mqtt_add_receive_callback("restart", 1, esp_restart, NULL);
 }
 
 void mqtt_start()
@@ -252,10 +252,11 @@ static void process_data(esp_mqtt_event_handle_t event)
     //ESP_LOGI(TAG, "DATA=%s", data);
 
     // cut _mqtt_dev_name from topic
-    char _topic[TOPIC_END_NAME_LENGTH];
-    strcpy(_topic, topic + strlen(_mqtt_dev_name));
+    //char _topic[TOPIC_END_NAME_LENGTH];
+    //strcpy(_topic, topic + strlen(_mqtt_dev_name));
 
-    process_custom_topics(_topic, data);  // mqtt_add_receive_callback
+    //process_custom_topics(_topic, data);  // mqtt_add_receive_callback
+    process_custom_topics(topic, data);  // mqtt_add_receive_callback
 
     free(topic);
     free(data);    
@@ -263,11 +264,27 @@ static void process_data(esp_mqtt_event_handle_t event)
 
 static void process_custom_topics(const char *_topic, const char *data) 
 {
+    ESP_LOGW(TAG, "%s: topic = %s", __func__, _topic);
     for ( uint8_t i = 0; i < mqtt_recv_cnt; i++ ) {
-        if ( strcmp( mqtt_recv[i].topic, _topic) == ESP_OK ) 
+        
+        char *istr = strstr(_topic, mqtt_recv[i].topic);
+        if ( istr == NULL )
         {
+            // topic not found
+            continue;
+        } else if (istr == 0) {
+            // полное совпадение
+            ESP_LOGW(TAG, "%s: full arr: %s == param: %s", __func__, mqtt_recv[i].topic, _topic);
             mqtt_recv[i].fn_cb(data, mqtt_recv[i].args);
-        }
+        } else {
+            char t[TOPIC_END_NAME_LENGTH] = "";
+            strncpy(t, _topic + strlen(_mqtt_dev_name), TOPIC_END_NAME_LENGTH);
+            ESP_LOGW(TAG, "%s: part arr: %s == %s param: %s", __func__, mqtt_recv[i].topic, t, _topic);
+            if ( strcmp( mqtt_recv[i].topic, t) == ESP_OK )  
+            {
+                mqtt_recv[i].fn_cb(data, mqtt_recv[i].args);
+            }
+        } 
     }
 }
 
@@ -348,8 +365,10 @@ void mqtt_add_periodic_publish_callback( const char *topic, func_mqtt_send_cb fn
 
 }
 
-void mqtt_add_receive_callback( const char *topic, func_mqtt_recv_cb fn_cb, void *args)
+void mqtt_add_receive_callback( const char *topic, uint8_t inner_topic, func_mqtt_recv_cb fn_cb, void *args)
 {
+    ESP_LOGW(TAG, "%s, topic = %s, inner %d", __func__, topic, inner_topic);
+
     for ( uint8_t i = 0; i < mqtt_recv_cnt; i++) 
     {
         if (strcmp(mqtt_recv[i].topic, topic) == 0 && mqtt_recv[i].fn_cb == fn_cb) 
@@ -359,9 +378,11 @@ void mqtt_add_receive_callback( const char *topic, func_mqtt_recv_cb fn_cb, void
     mqtt_recv_cnt++;
     mqtt_recv = (mqtt_recv_t *) realloc(mqtt_recv, mqtt_recv_cnt * sizeof(mqtt_recv_t));
 
-    strncpy( mqtt_recv[ mqtt_recv_cnt - 1 ].topic, topic, TOPIC_END_NAME_LENGTH);
+    //strncpy( mqtt_recv[ mqtt_recv_cnt - 1 ].topic, topic, TOPIC_END_NAME_LENGTH);
+    mqtt_recv[ mqtt_recv_cnt - 1 ].topic = strdup(topic);
     mqtt_recv[ mqtt_recv_cnt - 1 ].fn_cb = fn_cb;
     mqtt_recv[ mqtt_recv_cnt - 1 ].args = args;
+    mqtt_recv[ mqtt_recv_cnt - 1 ].inner = inner_topic;
 
 }
 

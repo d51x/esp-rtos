@@ -465,7 +465,30 @@ void print_tasks_info()
 }
 #endif
 
-char* cut_str_from_str(const char *str, const char *str2)
+char* cut_str_from_str(char *str, const char *str2)
+{
+    if ( strlen(str) == 0 ) return NULL;
+    char *p = strstr(str, str2);
+    int pos = 0;
+    if ( p != NULL ) {
+        pos = p - str;
+    } else {
+        pos = strlen(str);
+    }
+
+    char *r = (char *) calloc(1, pos + 1);
+    strncpy(r, str, pos);
+
+    if ( p != NULL ) {
+        strcpy(str, p+1);
+    } else {
+         memset(str, 0, strlen(str)+1);
+    }
+    
+    return r;
+}
+
+char* copy_str_from_str(const char *str, const char *str2)
 {
     char *p = strstr(str, str2);
     uint8_t pos = p - str;

@@ -376,6 +376,13 @@ menu "Project config"
                 depends on SENSOR_PZEM004_T
                 help
                     Show PZEM data on main page in own block
+
+        config SENSOR_MQTT
+            bool "MQTT Sensors"
+            default n
+            help
+                Subscribe to mqtt-topics
+                
     endmenu
 
 endmenu

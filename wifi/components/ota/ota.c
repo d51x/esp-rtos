@@ -111,7 +111,7 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
             memcpy(post_data, upgrade_data_buf, body_start_p - upgrade_data_buf);
             //ESP_LOGW(TAG, "%s", post_data);
             post_data = strstr(post_data, "filename=") + 10;
-            post_data = cut_str_from_str(post_data, "\"");
+            post_data = copy_str_from_str(post_data, "\"");
             strncpy(fname, post_data, 32);
             //file_len = body_start_p - upgrade_data_buf;
             file_len = total_len - 196;
