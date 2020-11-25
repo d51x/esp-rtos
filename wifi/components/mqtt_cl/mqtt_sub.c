@@ -68,26 +68,26 @@ static void mqtt_subscriber_load_nvs()
     }    
 
     base_topics = (mqtt_sub_base_topic_t *) calloc(base_topics_count, sizeof(mqtt_sub_base_topic_t));
-    f_mqtt_sub_base_topic_t *t = (f_mqtt_sub_base_topic_t *) calloc(base_topics_count, sizeof(f_mqtt_sub_base_topic_t));
+    ////f_mqtt_sub_base_topic_t *t = (f_mqtt_sub_base_topic_t *) calloc(base_topics_count, sizeof(f_mqtt_sub_base_topic_t));
 
-    //err = nvs_param_load(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_BASE_DATA, base_topics);
-    err = nvs_param_load(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_BASE_DATA, t);
+    err = nvs_param_load(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_BASE_DATA, base_topics);
+    ////err = nvs_param_load(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_BASE_DATA, t);
     if ( err != ESP_OK ) {
         ESP_LOGE(TAG, "%s: %s %s", __func__, esp_err_to_name(err), MQTT_SUBS_NVS_KEY_BASE_DATA);
         memset(base_topics, 0, base_topics_count * sizeof(mqtt_sub_base_topic_t));
-        free(t);
+        ////free(t);
         return;
     }     
 
-    for ( uint8_t i = 0; i < base_topics_count; i++)
-    {
-        base_topics[i].base = strdup(t[i].base);
-        base_topics[i].id = t[i].id;
+    ////for ( uint8_t i = 0; i < base_topics_count; i++)
+    ////{
+    ////     base_topics[i].base = strdup(t[i].base);
+    ////     base_topics[i].id = t[i].id;
         
-        //ESP_LOGI(TAG, "base topic %d: %s", i, base_topics[i].base);
+        ////ESP_LOGI(TAG, "base topic %d: %s", i, base_topics[i].base);
 
-    }
-    free(t);
+    ////}
+    ////free(t);
 
     //ESP_LOGI(TAG, "try load end_points_count");
     err = nvs_param_u8_load(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_ENDPOINT_COUNT, &end_points_count);
@@ -99,23 +99,23 @@ static void mqtt_subscriber_load_nvs()
 
     //ESP_LOGI(TAG, "end_points_count = %d", end_points_count);
     end_points = (mqtt_sub_endpoint_t *) calloc(end_points_count, sizeof(mqtt_sub_endpoint_t));
-    f_mqtt_sub_endpoint_t *e = (f_mqtt_sub_endpoint_t *) calloc(end_points_count, sizeof(f_mqtt_sub_endpoint_t));
-    //err = nvs_param_load(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_ENDPOINT_DATA, end_points);
-    err = nvs_param_load(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_ENDPOINT_DATA, e);
+    ////f_mqtt_sub_endpoint_t *e = (f_mqtt_sub_endpoint_t *) calloc(end_points_count, sizeof(f_mqtt_sub_endpoint_t));
+    err = nvs_param_load(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_ENDPOINT_DATA, end_points);
+    ////err = nvs_param_load(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_ENDPOINT_DATA, e);
     if ( err != ESP_OK ) {
         ESP_LOGE(TAG, "%s: %s %s", __func__, esp_err_to_name(err), MQTT_SUBS_NVS_KEY_ENDPOINT_DATA);
         memset(end_points, 0, end_points_count * sizeof(mqtt_sub_endpoint_t));
-        free(e);
+        ////free(e);
         return;
     }    
-    for (uint8_t i = 0; i < end_points_count; i++)
-    {
-        end_points[i].endpoint = strdup(e[i].endpoint);
-        end_points[i].id = e[i].id;
-        end_points[i].base_id = e[i].base_id;
-        //ESP_LOGI(TAG, "base topic %d: %s, endpoint %d: %s", end_points[i].base_id, base_topics[end_points[i].base_id].base, i, end_points[i].endpoint);
-    }
-    free(e);
+    ////for (uint8_t i = 0; i < end_points_count; i++)
+    ////{
+    ////    end_points[i].endpoint = strdup(e[i].endpoint);
+    ////    end_points[i].id = e[i].id;
+    ////    end_points[i].base_id = e[i].base_id;
+    ////    //ESP_LOGI(TAG, "base topic %d: %s, endpoint %d: %s", end_points[i].base_id, base_topics[end_points[i].base_id].base, i, end_points[i].endpoint);
+    ////}
+    ////free(e);
 }
 
 static void mqtt_subscriber_save_nvs_base_topics()
@@ -125,20 +125,20 @@ static void mqtt_subscriber_save_nvs_base_topics()
         ESP_LOGE(TAG, "%s: %s", __func__, esp_err_to_name(err));
     }
 
-    f_mqtt_sub_base_topic_t *t = (f_mqtt_sub_base_topic_t *) calloc(base_topics_count, sizeof(f_mqtt_sub_base_topic_t));
-    for (uint8_t i = 0; i < base_topics_count; i++)
-    {
-        strcpy(t[i].base, base_topics[i].base);
-        t[i].id = base_topics[i].id;
-        //ESP_LOGW(TAG, "%s: %s", __func__, t[i].base);
-    }
+    ////f_mqtt_sub_base_topic_t *t = (f_mqtt_sub_base_topic_t *) calloc(base_topics_count, sizeof(f_mqtt_sub_base_topic_t));
+    ////for (uint8_t i = 0; i < base_topics_count; i++)
+    ////{
+    ////    strcpy(t[i].base, base_topics[i].base);
+    ////    t[i].id = base_topics[i].id;
+    ////    //ESP_LOGW(TAG, "%s: %s", __func__, t[i].base);
+    ////}
 
-    //err = nvs_param_save(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_BASE_DATA, base_topics, base_topics_count*sizeof(mqtt_sub_base_topic_t));
-    err = nvs_param_save(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_BASE_DATA, t, base_topics_count*sizeof(f_mqtt_sub_base_topic_t));
+    err = nvs_param_save(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_BASE_DATA, base_topics, base_topics_count*sizeof(mqtt_sub_base_topic_t));
+    ////err = nvs_param_save(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_BASE_DATA, t, base_topics_count*sizeof(f_mqtt_sub_base_topic_t));
     if ( err != ESP_OK ) {
         ESP_LOGE(TAG, "%s: %s", __func__, esp_err_to_name(err));
     }
-    free(t);
+    ////free(t);
 }
 
 static void mqtt_subscriber_save_nvs_end_points()
@@ -148,20 +148,20 @@ static void mqtt_subscriber_save_nvs_end_points()
         ESP_LOGE(TAG, "%s: %s", __func__, esp_err_to_name(err));
     }
 
-    f_mqtt_sub_endpoint_t *t = (f_mqtt_sub_endpoint_t *) calloc(end_points_count, sizeof(f_mqtt_sub_endpoint_t));
-    for (uint8_t i = 0; i < end_points_count; i++)
-    {
-        strcpy(t[i].endpoint, end_points[i].endpoint);
-        t[i].id = end_points[i].id;
-        t[i].base_id = end_points[i].base_id;
-    }
+    ////f_mqtt_sub_endpoint_t *t = (f_mqtt_sub_endpoint_t *) calloc(end_points_count, sizeof(f_mqtt_sub_endpoint_t));
+    ////for (uint8_t i = 0; i < end_points_count; i++)
+    ////{
+    ////    strcpy(t[i].endpoint, end_points[i].endpoint);
+    ////    t[i].id = end_points[i].id;
+    ////    t[i].base_id = end_points[i].base_id;
+    ////}
 
-    //err = nvs_param_save(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_ENDPOINT_DATA, end_points, end_points_count*sizeof(mqtt_sub_endpoint_t));
-    err = nvs_param_save(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_ENDPOINT_DATA, t, end_points_count*sizeof(f_mqtt_sub_endpoint_t));
+    err = nvs_param_save(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_ENDPOINT_DATA, end_points, end_points_count*sizeof(mqtt_sub_endpoint_t));
+    ////err = nvs_param_save(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_ENDPOINT_DATA, t, end_points_count*sizeof(f_mqtt_sub_endpoint_t));
     if ( err != ESP_OK ) {
         ESP_LOGE(TAG, "%s: %s", __func__, esp_err_to_name(err));
     }
-    free(t);
+    ////free(t);
 }
 
 static int mqtt_subscriber_get_endpoint_id(uint8_t base_id, char *_endpoint)
@@ -187,11 +187,14 @@ static int mqtt_subscriber_get_endpoint_id(uint8_t base_id, char *_endpoint)
 
 static void mqtt_subscriber_del_endpoints(uint8_t base_id)
 {
+    //ESP_LOGI(TAG, __func__ );
+
     int8_t _endpoints_count = 0;
     for (uint8_t i = 0; i < end_points_count; i++)
     {
        if ( end_points[i].base_id == base_id)  _endpoints_count++;
     }
+    ESP_LOGI(TAG, "%s: _endpoints_count = %d", __func__, _endpoints_count);
 
     if ( _endpoints_count > 0) 
     {
@@ -204,12 +207,13 @@ static void mqtt_subscriber_del_endpoints(uint8_t base_id)
             {
                 _end_points[k].base_id = end_points[i].base_id;
                 _end_points[k].id = k;
-                _end_points[k].endpoint = strdup(end_points[i].endpoint);
+                ////_end_points[k].endpoint = strdup(end_points[i].endpoint);
+                strcpy(_end_points[k].endpoint, end_points[i].endpoint);
                 k++;
             }
 
             // ?????
-            free(end_points[i].endpoint);
+            ////free(end_points[i].endpoint);
         }
 
         end_points_count -= _endpoints_count; 
@@ -219,10 +223,10 @@ static void mqtt_subscriber_del_endpoints(uint8_t base_id)
         {
             end_points[i].base_id = _end_points[i].base_id;
             end_points[i].id = i;
-            end_points[i].endpoint = strdup(_end_points[i].endpoint);  
-
+            ////end_points[i].endpoint = strdup(_end_points[i].endpoint);  
+            strcpy(end_points[i].endpoint, _end_points[i].endpoint);
             // ?????
-            free(_end_points[i].endpoint);           
+            ////free(_end_points[i].endpoint);           
         }       
 
         free(_end_points);
@@ -239,8 +243,9 @@ static void mqtt_subscriber_del_base_topic(uint8_t base_id)
         if ( base_topics[i].id != base_id )
         {
             _base_topics[k].id = base_topics[i].id;
-            _base_topics[k].base = strdup( base_topics[i].base );
-            free(base_topics[i].base);
+            ////_base_topics[k].base = strdup( base_topics[i].base );
+            strcpy(_base_topics[k].base,base_topics[i].base );
+            ////free(base_topics[i].base);
             k++;
         }
     }
@@ -251,8 +256,9 @@ static void mqtt_subscriber_del_base_topic(uint8_t base_id)
     for (uint8_t i = 0; i < base_topics_count; i++)
     {
         base_topics[i].id = _base_topics[i].id;
-        base_topics[i].base = strdup( _base_topics[i].base );
-        free(_base_topics[i].base);
+        //base_topics[i].base = strdup( _base_topics[i].base );
+        strcpy(base_topics[i].base, _base_topics[i].base );
+        ////free(_base_topics[i].base);
     }
     free( _base_topics );
 }
@@ -271,12 +277,14 @@ static esp_err_t mqtt_subscriber_add_endpoints(uint8_t base_id, char *_endpoints
     // удалить все endpoints для base_id
     mqtt_subscriber_del_endpoints(base_id);
 
+    //ESP_LOGI(TAG, "%s: endpoints deleted", __func__ );
     while ( e != NULL )
     {
         e = cut_str_from_str(s, ";");
 
-        //ESP_LOGI(TAG, "%s: endpoint: %s, other endpoints: %s", __func__, e, s);
+        
         if ( e == NULL ) break;
+        //ESP_LOGI(TAG, "%s: endpoint: %s, other endpoints: %s", __func__, e, s);
         // ищем endpoint в endpoints
         //if ( mqtt_subscriber_get_endpoint_id(base_id, e) > -1 ) {
         //    // endpoint уже присутствует
@@ -289,7 +297,8 @@ static esp_err_t mqtt_subscriber_add_endpoints(uint8_t base_id, char *_endpoints
                 end_points = (mqtt_sub_endpoint_t *) realloc(end_points, end_points_count * sizeof(mqtt_sub_endpoint_t));
                 end_points[ end_points_count - 1 ].id = end_points_count - 1;
                 end_points[ end_points_count - 1 ].base_id = base_id;
-                end_points[ end_points_count - 1 ].endpoint = strdup( e );
+                ////end_points[ end_points_count - 1 ].endpoint = strdup( e );
+                strcpy(end_points[ end_points_count - 1 ].endpoint, e );
                 //ESP_LOGI(TAG, "New endpoint \"%s\" added for base topic \"%s\"", e, base_topics[ base_id ].base);
             } else {
                 ESP_LOGE(TAG, "Not slots (%d) available for new endpoint %s", MQTT_SUBSCRIBER_MAX_END_POINTS, e);
@@ -337,10 +346,11 @@ esp_err_t mqtt_subscriber_add(const char* base_topic, const char *_endpoints)
             // увеличим массив
             base_topics = (mqtt_sub_base_topic_t *) realloc(base_topics, base_topics_count * sizeof(mqtt_sub_base_topic_t));
             base_topics[ base_id ].id = base_id;
-            base_topics[ base_id ].base = strdup( base_topic );
+            //base_topics[ base_id ].base = strdup( base_topic );
+            strcpy(base_topics[ base_id ].base, base_topic );
             //ESP_LOGI(TAG, "New base topic \"%s\" added ", base_topics[ base_id ].base);  
 
-            mqtt_subscriber_save_nvs_base_topics();
+            //mqtt_subscriber_save_nvs_base_topics();
 
         } else {
             ESP_LOGE(TAG, "Not slots (%d) available for new base topic %s", MQTT_SUBSCRIBER_MAX_BASE_TOPICS,  base_topic);
@@ -350,8 +360,8 @@ esp_err_t mqtt_subscriber_add(const char* base_topic, const char *_endpoints)
 
     // продолжаем, если base_id > -1
     esp_err_t err = mqtt_subscriber_add_endpoints( base_id, _endpoints);
-    if ( err == ESP_OK )
-        mqtt_subscriber_save_nvs_end_points();
+    // if ( err == ESP_OK )
+    //     mqtt_subscriber_save_nvs_end_points();
     return err;
 }
 
@@ -409,8 +419,8 @@ esp_err_t mqtt_subscriber_del(const char* base_topic)
     rebase_endpoint_ids();
     rebase_base_topic_ids();
 
-    mqtt_subscriber_save_nvs_base_topics();
-    mqtt_subscriber_save_nvs_end_points();
+    //mqtt_subscriber_save_nvs_base_topics();
+    //mqtt_subscriber_save_nvs_end_points();
 
     return ESP_OK;
 }
@@ -434,6 +444,9 @@ void mqtt_subscriber_init()
         mqtt_subscriber_del("esp/test3");
     }
     
+    mqtt_subscriber_save_nvs_base_topics();
+    mqtt_subscriber_save_nvs_end_points();
+
     debug_print_endpoints();
     mqtt_subscriber_clear_all();
     debug_print_endpoints();

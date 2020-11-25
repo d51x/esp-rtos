@@ -16,29 +16,29 @@
 #define MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH 28
 #define MQTT_SUBSCRIBER_END_POINT_VALUE_MAX_LENGTH 16
 
-typedef struct {
-    char *base; // [MQTT_SUBSCRIBER_BASE_TOPIC_MAX_LENGTH]
-    uint8_t id;
-} mqtt_sub_base_topic_t;
+// typedef struct {
+//     char *base; // [MQTT_SUBSCRIBER_BASE_TOPIC_MAX_LENGTH]
+//     uint8_t id;
+// } mqtt_sub_base_topic_t;
 
 typedef struct {
     char base[MQTT_SUBSCRIBER_BASE_TOPIC_MAX_LENGTH]; // [MQTT_SUBSCRIBER_BASE_TOPIC_MAX_LENGTH]
     uint8_t id;
-} f_mqtt_sub_base_topic_t;
+} mqtt_sub_base_topic_t;
 
-typedef struct {
-    char *endpoint; // [MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH] max length
-    uint8_t base_id;
-    uint8_t id;
-    //char *name; //[12] max, param name
-} mqtt_sub_endpoint_t;
+// typedef struct {
+//     char *endpoint; // [MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH] max length
+//     uint8_t base_id;
+//     uint8_t id;
+//     //char *name; //[12] max, param name
+// } mqtt_sub_endpoint_t;
 
 typedef struct {
     char endpoint[MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH]; // [MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH] max length
     uint8_t base_id;
     uint8_t id;
     //char *name; //[12] max, param name
-} f_mqtt_sub_endpoint_t;
+} mqtt_sub_endpoint_t;
 
 typedef struct {
     uint8_t id;
