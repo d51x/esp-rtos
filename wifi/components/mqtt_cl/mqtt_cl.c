@@ -407,8 +407,26 @@ static void mqtt_subscribe_topics(esp_mqtt_client_handle_t client)
     strcat(topic, "#");
     //snprintf(topic, 32, MQTT_TOPIC_SUBSCRIBE, "test", "esp");
     esp_mqtt_client_subscribe(client, topic, 0);
+
+    // subscribe to custom topics
+    for ( uint8_t i = 0; i < mqtt_recv_cnt; i++ ) {
+        if ( mqtt_recv[i].inner == 0 )
+        {
+            if ( mqtt_client != NULL ) 
+            {
+                esp_mqtt_client_subscribe(mqtt_client, mqtt_recv[i].topic, 0);
+            } else {
+                ESP_LOGE(TAG, "mqtt client is not available");
+            }            
+        }
+    }
 }
 
+void mqtt_unsubscribe_topic(const char *topic)
+{
+    if ( mqtt_client != NULL )
+        esp_mqtt_client_unsubscribe(mqtt_client, topic);
+}
 
 static void mqtt_publish_custom_registered_topics()
 {

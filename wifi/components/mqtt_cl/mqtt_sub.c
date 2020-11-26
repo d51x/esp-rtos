@@ -43,6 +43,15 @@ static void debug_print_endpoints()
     }    
 }
 
+char *mqtt_subscriber_get_full_topic_by_endpoint_id(uint8_t id)
+{
+    char *t = calloc(1, MQTT_SUBSCRIBER_BASE_TOPIC_MAX_LENGTH + MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH + 1 ); 
+    strcpy(t, base_topics[ end_points[id].base_id ].base);
+    strcat(t + strlen(t), "/");
+    strcat(t + strlen(t), end_points[id].endpoint);
+    return t;
+}
+
 void mqtt_subscriber_clear_all()
 {
     nvs_param_erase(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_BASE_COUNT);
@@ -57,6 +66,7 @@ void mqtt_subscriber_clear_all()
     if ( end_points ) free( end_points );
     if ( endpoint_values ) free( endpoint_values );
 }
+
 static void mqtt_subscriber_load_nvs()
 {
     esp_err_t err = nvs_param_u8_load(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_BASE_COUNT, &base_topics_count);
@@ -190,20 +200,18 @@ static int mqtt_subscriber_get_endpoint_id(uint8_t base_id, char *_endpoint)
 static int mqtt_subscriber_get_endpoint_id_by_topic(const char *topic)
 {
     int res = -1;
-    char *t = calloc(1, MQTT_SUBSCRIBER_BASE_TOPIC_MAX_LENGTH + MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH + 1 ); 
     for (uint8_t i = 0; i < end_points_count; i++)
     {
-        memset(t, 0, MQTT_SUBSCRIBER_BASE_TOPIC_MAX_LENGTH + MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH + 1 );
-        strcpy(t, base_topics[ end_points[i].base_id ].base);
-        strcat(t + strlen(t), "/");
-        strcat(t + strlen(t), end_points[i].endpoint);
+        char *t = mqtt_subscriber_get_full_topic_by_endpoint_id(i);
 
         if ( strcmp(topic, t) == 0) {
             res = i;  // нашли endpoint id
+            free(t);
             break;
         }
+
+        free(t);
     }
-    free(t);
     return res;
 }
 
@@ -236,6 +244,11 @@ static void mqtt_subscriber_del_endpoints(uint8_t base_id)
                 
                 _end_point_values[k].id = k;
                 strcpy(_end_point_values[k].value, endpoint_values[i].value);
+
+                char *t = mqtt_subscriber_get_full_topic_by_endpoint_id(i);                
+                mqtt_unsubscribe_topic(t);
+                free(t);
+                
                 k++;
             }
 
@@ -499,14 +512,11 @@ void mqtt_subscriber_init()
     mqtt_subscriber_save_nvs_base_topics();
     mqtt_subscriber_save_nvs_end_points();
 
-    char *t = calloc(1, MQTT_SUBSCRIBER_BASE_TOPIC_MAX_LENGTH + MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH + 1 );
     for (uint8_t i = 0; i < end_points_count; i++)
     {
-        strcpy(t, base_topics[ end_points[i].base_id ].base);
-        strcat(t + strlen(t), "/");
-        strcat(t + strlen(t), end_points[i].endpoint);
-        //ESP_LOGI(TAG, "Subscribe to: %s", t);
+        char *t = mqtt_subscriber_get_full_topic_by_endpoint_id(i);
         mqtt_add_receive_callback( t, 0, mqtt_subscriber_receive_cb, NULL);
+        free(t);
     }
     
     
