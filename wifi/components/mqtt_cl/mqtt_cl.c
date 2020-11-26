@@ -266,20 +266,22 @@ static void process_custom_topics(const char *_topic, const char *data)
 {
     ESP_LOGW(TAG, "%s: topic = %s", __func__, _topic);
     for ( uint8_t i = 0; i < mqtt_recv_cnt; i++ ) {
-        
+        //ESP_LOGI(TAG, "%s: find %s", __func__, mqtt_recv[i].topic);
         char *istr = strstr(_topic, mqtt_recv[i].topic);
         if ( istr == NULL )
         {
             // topic not found
             continue;
-        } else if (istr == 0) {
+        } else if (istr - _topic == 0) {
             // полное совпадение
-            ESP_LOGW(TAG, "%s: full arr: %s == param: %s", __func__, mqtt_recv[i].topic, _topic);
+            //ESP_LOGI(TAG, "%s: full arr: %s == param: %s", __func__, mqtt_recv[i].topic, _topic);
+            //mqtt_recv[i].args = (char *) strdup(mqtt_recv[i].topic);
+            mqtt_recv[i].args = (char *) (mqtt_recv[i].topic);
             mqtt_recv[i].fn_cb(data, mqtt_recv[i].args);
         } else {
             char t[TOPIC_END_NAME_LENGTH] = "";
             strncpy(t, _topic + strlen(_mqtt_dev_name), TOPIC_END_NAME_LENGTH);
-            ESP_LOGW(TAG, "%s: part arr: %s == %s param: %s", __func__, mqtt_recv[i].topic, t, _topic);
+            //ESP_LOGI(TAG, "%s: part arr: %s == %s param: %s", __func__, mqtt_recv[i].topic, t, _topic);
             if ( strcmp( mqtt_recv[i].topic, t) == ESP_OK )  
             {
                 mqtt_recv[i].fn_cb(data, mqtt_recv[i].args);
@@ -384,6 +386,16 @@ void mqtt_add_receive_callback( const char *topic, uint8_t inner_topic, func_mqt
     mqtt_recv[ mqtt_recv_cnt - 1 ].args = args;
     mqtt_recv[ mqtt_recv_cnt - 1 ].inner = inner_topic;
 
+
+    if ( inner_topic == 0 )
+    {
+        if ( mqtt_client != NULL ) 
+        {
+            esp_mqtt_client_subscribe(mqtt_client, topic, 0);
+        } else {
+            ESP_LOGE(TAG, "mqtt client is not available");
+        }
+    }
 }
 
 
@@ -391,11 +403,12 @@ static void mqtt_subscribe_topics(esp_mqtt_client_handle_t client)
 {
     char topic[32];
     strcpy(topic, _mqtt_dev_name ); /*MQTT_DEVICE*/
-    //strcpy(topic+strlen(topic), "#");
+    //stresp_mqtt_client_subscribe(client, topic, 0);cpy(topic+strlen(topic), "#");
     strcat(topic, "#");
     //snprintf(topic, 32, MQTT_TOPIC_SUBSCRIBE, "test", "esp");
     esp_mqtt_client_subscribe(client, topic, 0);
 }
+
 
 static void mqtt_publish_custom_registered_topics()
 {

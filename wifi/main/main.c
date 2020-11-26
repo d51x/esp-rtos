@@ -87,6 +87,11 @@ void app_main(void)
 
     initialize_modules_http( http_server );
     
+
+    #ifdef CONFIG_SENSOR_MQTT
+    mqtt_subscriber_init();
+    #endif
+        
     while (true) {
 
         static uint32_t sec = 0;
@@ -401,9 +406,7 @@ void initialize_modules()
     http_handlers_count += I2C_HANDLERS_COUNT;
     #endif
 
-    #ifdef CONFIG_SENSOR_MQTT
-    mqtt_subscriber_init();
-    #endif
+
 
 }
 

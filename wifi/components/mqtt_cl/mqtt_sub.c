@@ -99,6 +99,8 @@ static void mqtt_subscriber_load_nvs()
 
     //ESP_LOGI(TAG, "end_points_count = %d", end_points_count);
     end_points = (mqtt_sub_endpoint_t *) calloc(end_points_count, sizeof(mqtt_sub_endpoint_t));
+    endpoint_values = (mqtt_sub_endpoint_value_t *) calloc(end_points_count, sizeof(mqtt_sub_endpoint_value_t));
+    memset(endpoint_values, 0, end_points_count * sizeof(mqtt_sub_endpoint_value_t));
     ////f_mqtt_sub_endpoint_t *e = (f_mqtt_sub_endpoint_t *) calloc(end_points_count, sizeof(f_mqtt_sub_endpoint_t));
     err = nvs_param_load(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_ENDPOINT_DATA, end_points);
     ////err = nvs_param_load(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_ENDPOINT_DATA, e);
@@ -185,6 +187,26 @@ static int mqtt_subscriber_get_endpoint_id(uint8_t base_id, char *_endpoint)
     return -1;
 }
 
+static int mqtt_subscriber_get_endpoint_id_by_topic(const char *topic)
+{
+    int res = -1;
+    char *t = calloc(1, MQTT_SUBSCRIBER_BASE_TOPIC_MAX_LENGTH + MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH + 1 ); 
+    for (uint8_t i = 0; i < end_points_count; i++)
+    {
+        memset(t, 0, MQTT_SUBSCRIBER_BASE_TOPIC_MAX_LENGTH + MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH + 1 );
+        strcpy(t, base_topics[ end_points[i].base_id ].base);
+        strcat(t + strlen(t), "/");
+        strcat(t + strlen(t), end_points[i].endpoint);
+
+        if ( strcmp(topic, t) == 0) {
+            res = i;  // нашли endpoint id
+            break;
+        }
+    }
+    free(t);
+    return res;
+}
+
 static void mqtt_subscriber_del_endpoints(uint8_t base_id)
 {
     //ESP_LOGI(TAG, __func__ );
@@ -199,6 +221,7 @@ static void mqtt_subscriber_del_endpoints(uint8_t base_id)
     if ( _endpoints_count > 0) 
     {
         mqtt_sub_endpoint_t *_end_points = (mqtt_sub_endpoint_t *)calloc( end_points_count - _endpoints_count, sizeof(mqtt_sub_endpoint_t));
+        mqtt_sub_endpoint_value_t *_end_point_values = (mqtt_sub_endpoint_value_t *)calloc( end_points_count - _endpoints_count, sizeof(mqtt_sub_endpoint_value_t));
 
         uint8_t k = 0;
         for (uint8_t i = 0; i < end_points_count; i++)
@@ -207,8 +230,12 @@ static void mqtt_subscriber_del_endpoints(uint8_t base_id)
             {
                 _end_points[k].base_id = end_points[i].base_id;
                 _end_points[k].id = k;
+
                 ////_end_points[k].endpoint = strdup(end_points[i].endpoint);
                 strcpy(_end_points[k].endpoint, end_points[i].endpoint);
+                
+                _end_point_values[k].id = k;
+                strcpy(_end_point_values[k].value, endpoint_values[i].value);
                 k++;
             }
 
@@ -218,6 +245,7 @@ static void mqtt_subscriber_del_endpoints(uint8_t base_id)
 
         end_points_count -= _endpoints_count; 
         end_points = (mqtt_sub_endpoint_t *)realloc( end_points, end_points_count * sizeof(mqtt_sub_endpoint_t)); 
+        endpoint_values = (mqtt_sub_endpoint_value_t *)realloc( endpoint_values, end_points_count * sizeof(mqtt_sub_endpoint_value_t)); 
 
         for (uint8_t i = 0; i < end_points_count; i++)
         {
@@ -226,10 +254,13 @@ static void mqtt_subscriber_del_endpoints(uint8_t base_id)
             ////end_points[i].endpoint = strdup(_end_points[i].endpoint);  
             strcpy(end_points[i].endpoint, _end_points[i].endpoint);
             // ?????
-            ////free(_end_points[i].endpoint);           
+            ////free(_end_points[i].endpoint);   
+            endpoint_values[i].id = i;
+            strcpy(endpoint_values[i].value, _end_point_values[i].value);
         }       
 
         free(_end_points);
+        free(_end_point_values);
     }
     
 }
@@ -292,14 +323,21 @@ static esp_err_t mqtt_subscriber_add_endpoints(uint8_t base_id, char *_endpoints
         //    continue;
         //} else {
             // добавляем новый endpoint 
-            if ( end_points_count < MQTT_SUBSCRIBER_MAX_END_POINTS ) {
+            if ( end_points_count < MQTT_SUBSCRIBER_MAX_END_POINTS ) 
+            {
                 end_points_count++;
+                
                 end_points = (mqtt_sub_endpoint_t *) realloc(end_points, end_points_count * sizeof(mqtt_sub_endpoint_t));
+                endpoint_values = (mqtt_sub_endpoint_value_t *) realloc(endpoint_values, end_points_count * sizeof(mqtt_sub_endpoint_value_t));
+
                 end_points[ end_points_count - 1 ].id = end_points_count - 1;
                 end_points[ end_points_count - 1 ].base_id = base_id;
                 ////end_points[ end_points_count - 1 ].endpoint = strdup( e );
                 strcpy(end_points[ end_points_count - 1 ].endpoint, e );
                 //ESP_LOGI(TAG, "New endpoint \"%s\" added for base topic \"%s\"", e, base_topics[ base_id ].base);
+                endpoint_values[ end_points_count - 1 ].id = end_points_count - 1;
+                strcpy(endpoint_values[ end_points_count - 1 ].value, "");
+                
             } else {
                 ESP_LOGE(TAG, "Not slots (%d) available for new endpoint %s", MQTT_SUBSCRIBER_MAX_END_POINTS, e);
                 err = ESP_FAIL;
@@ -425,9 +463,25 @@ esp_err_t mqtt_subscriber_del(const char* base_topic)
     return ESP_OK;
 }
 
+static void mqtt_subscriber_receive_cb(char *buf, void *args)
+{
+    // в args положить topic
+    char *topic = (char *)args;
+//    ESP_LOGI(TAG, "received topic %s with data: %s", topic, buf);
+    //free(topic);
+    // ищем endpoint id
+    int endpoint_id = mqtt_subscriber_get_endpoint_id_by_topic(topic);
+    if ( endpoint_id > -1 )
+    {
+        strcpy(endpoint_values[ endpoint_id ].value, buf);
+
+        ESP_LOGI(TAG, "received topic %s with data: %s", topic, endpoint_values[ endpoint_id ].value);
+    }
+}
+
 void mqtt_subscriber_init()
 {
-    mqtt_subscriber_clear_all();
+    //mqtt_subscriber_clear_all();
     ESP_LOGI(TAG, __func__ );
 
     mqtt_subscriber_load_nvs();
@@ -435,19 +489,29 @@ void mqtt_subscriber_init()
 
     if (base_topics_count == 0 && end_points_count == 0)
     {
-        mqtt_subscriber_add("esp/test", "dsw1;dsw2;dsw3");
-        mqtt_subscriber_add("esp/test", "dsw4;dsw2;dsw5");
-        mqtt_subscriber_add("esp/test2", "dsw4;dsw2;dsw5");
-        mqtt_subscriber_del("esp/test2");
-        mqtt_subscriber_add("esp/test3", "dsw4;dsw2;dsw5");
-        mqtt_subscriber_add("esp/test4", "dsw4;dsw2;dsw5");
-        mqtt_subscriber_del("esp/test3");
+        mqtt_subscriber_add("dacha/bathroom", "dhtt1;dhth1");
+        mqtt_subscriber_add("dacha/bedroom", "dhtt1;dhth1");
+        mqtt_subscriber_add("dacha/livingroom1", "dhtt1;dhth1");
+        mqtt_subscriber_add("dacha/livingroom2", "dhtt1;dhth1");
     }
     
+
     mqtt_subscriber_save_nvs_base_topics();
     mqtt_subscriber_save_nvs_end_points();
 
-    debug_print_endpoints();
-    mqtt_subscriber_clear_all();
-    debug_print_endpoints();
+    char *t = calloc(1, MQTT_SUBSCRIBER_BASE_TOPIC_MAX_LENGTH + MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH + 1 );
+    for (uint8_t i = 0; i < end_points_count; i++)
+    {
+        strcpy(t, base_topics[ end_points[i].base_id ].base);
+        strcat(t + strlen(t), "/");
+        strcat(t + strlen(t), end_points[i].endpoint);
+        //ESP_LOGI(TAG, "Subscribe to: %s", t);
+        mqtt_add_receive_callback( t, 0, mqtt_subscriber_receive_cb, NULL);
+    }
+    
+    
+
+    //debug_print_endpoints();
+    //mqtt_subscriber_clear_all();
+    //debug_print_endpoints();
 }
