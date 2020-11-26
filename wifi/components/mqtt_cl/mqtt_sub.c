@@ -1,11 +1,11 @@
 #include "mqtt_sub.h"
 #include "string.h"
-#include "http_page.h"
-#include "http_page_tpl.h"
+
 
 static const char *TAG = "MQTTSUBS";
 
 const char *html_page_title_mqtt_sensors ICACHE_RODATA_ATTR = "MQTT Sensors";
+const char *html_page_title_mqtt_sensors_cfg ICACHE_RODATA_ATTR = "MQTT Sensors Config";
 
 static uint8_t base_topics_count = 0;
 static uint8_t end_points_count = 0;
@@ -496,7 +496,7 @@ static void mqtt_subscriber_receive_cb(char *buf, void *args)
     }
 }
 
-static void mqtt_subscriber_print_options(http_args_t *args)
+static void mqtt_subscriber_print_data_block(http_args_t *args)
 {
     http_args_t *arg = (http_args_t *)args;
     httpd_req_t *req = (httpd_req_t *)arg->req;
@@ -518,13 +518,106 @@ static void mqtt_subscriber_print_options(http_args_t *args)
     httpd_resp_sendstr_chunk(req, html_block_data_end);
 }
 
+
+static void mqtt_subscriber_print_options(http_args_t *args)
+{
+    http_args_t *arg = (http_args_t *)args;
+    httpd_req_t *req = (httpd_req_t *)arg->req;
+
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_header_start, html_page_title_mqtt_sensors_cfg);
+    httpd_resp_sendstr_chunk(req, html_block_data_form_start);
+
+    // print options (edit text)
+    for ( uint8_t i = 0 ; i < base_topics_count; i++ )
+    {
+        char label[16] = "";
+        char name[10] = "";
+        sprintf(label, "Base topic %d", i+1 );
+        sprintf(name, "base%d", i );
+        httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_label_edit
+                                    , label // %s label
+                                    , name 
+                                    , base_topics[i].base
+                                    );
+        uint8_t count = 0;
+        for (uint8_t k=0; k < end_points_count; k++)
+        {
+            if ( end_points[k].base_id == i) count++;
+        }
+
+        char *_endpoints = NULL;        
+        if ( count > 0 )
+        {
+            _endpoints = malloc( count * (MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH + 1) + 1);
+            strcpy(_endpoints, "");
+            //ESP_LOGI(TAG, "%s: endpoints = %s", __func__, _endpoints);
+
+            for (uint8_t k=0; k < end_points_count; k++)
+            {
+                if ( end_points[k].base_id == i) 
+                {
+                    strcat(_endpoints, end_points[k].endpoint);
+                    //ESP_LOGI(TAG, "%s: endpoints = %s", __func__, _endpoints);
+
+                    if (count > 1 ) strcat( _endpoints, ";");
+                    //ESP_LOGI(TAG, "%s: endpoints = %s", __func__, _endpoints);
+                    count--;
+                } 
+            }
+        }
+        
+        sprintf(name, "endpt%d", i);
+        httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_label_edit
+                                     , "endpoints" // %s label
+                                     , name
+                                     , _endpoints
+                                     );                                    
+        free(_endpoints);
+        httpd_resp_sendstr_chunk(req, "<hr>");
+    }
+
+    httpd_resp_sendstr_chunk(req, html_block_data_end);  
+}
+
 void mqtt_subscriber_register_http_print_data()
 {
     http_args_t *p = calloc(1,sizeof(http_args_t));
-    register_print_page_block( "mqtt_subs", PAGES_URI[ PAGE_URI_ROOT ], 7, mqtt_subscriber_print_options, p, NULL, NULL );
+    register_print_page_block( "mqtt_subs", PAGES_URI[ PAGE_URI_ROOT ], 7, mqtt_subscriber_print_data_block, p, NULL, NULL );
+    register_print_page_block( "mqtt_subs_opt", MQTT_SUBSCRIBER_URI, 2, mqtt_subscriber_print_options, p, NULL, NULL); 
 }
 
-void mqtt_subscriber_init()
+
+esp_err_t mqtt_subscriber_get_handler(httpd_req_t *req)
+{
+        // check params
+    char page[512] = ""; 
+	if ( http_get_has_params(req) == ESP_OK) 
+	{
+        ESP_LOGI(TAG, "%s: has params", __func__ );
+        // TODO: redirect to /mqttsub page without params
+
+    } else {
+        ESP_LOGI(TAG, "%s: has no params", __func__ );
+    }
+
+    show_http_page( req );
+
+    
+	//httpd_resp_send_chunk(req, NULL, 0); 
+    httpd_resp_end(req);
+    return ESP_OK;
+}
+
+void mqtt_subscriber_register_http_handler(httpd_handle_t _server)
+{
+    user_ctx_t *ctx = (user_ctx_t *)calloc(1, sizeof(user_ctx_t));
+    strncpy(ctx->title, "Mqtt subscriber", 20);
+    ctx->show = true; 
+
+    add_uri_get_handler( _server, MQTT_SUBSCRIBER_URI, mqtt_subscriber_get_handler, ctx); 
+}
+
+void mqtt_subscriber_init(httpd_handle_t _server)
 {
     //mqtt_subscriber_clear_all();
     ESP_LOGI(TAG, __func__ );
@@ -553,6 +646,7 @@ void mqtt_subscriber_init()
     
     
     mqtt_subscriber_register_http_print_data();
+    mqtt_subscriber_register_http_handler(_server);
     //debug_print_endpoints();
     //mqtt_subscriber_clear_all();
     //debug_print_endpoints();

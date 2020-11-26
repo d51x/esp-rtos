@@ -142,6 +142,10 @@ const char *html_block_data_form_item_label_edit  =
 const char *html_block_data_form_item_label_edit_hex  = 
 		"<p><label class='lf'>%s: </label><input size='20' name='%s' class='edit rh' value='%s' /></p>";
 
+const char *html_block_data_form_item_edit_edit  = 
+		"<p><input size='20' name='%s' class='edit rh' value='%s' />/<input size='20' name='%s' class='edit rh' value='%s' /></p>";
+
+
 const char *html_block_data_form_item_checkbox  = 
 		"<p><label class='lf'>%s: </label><input type='checkbox' name='%s' class='edit rh' value='%d' %s /></p>";
 
