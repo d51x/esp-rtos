@@ -108,6 +108,25 @@ menu "Project config"
             help
                 Apply MQTT settings to make the same topic for sending and receiving data                
 
+        config SENSOR_MQTT
+            bool "MQTT Sensors"
+            default n
+            help
+                Subscribe to mqtt-topics
+
+            config SENSOR_MQTT_BASE_TOPIC_COUNT
+                int "MQTT Sensors Base topics count"
+                default 10
+                depends on SENSOR_MQTT
+                help
+                    Number of base topics to subscribe  
+
+            config SENSOR_MQTT_END_POINT_COUNT
+                int "MQTT Sensors endpoints count for each base topic"
+                default 5
+                depends on SENSOR_MQTT
+                help
+                    Number of endpoints for each base topics                                
     endmenu    
 
     menu "HTTP server"
@@ -376,12 +395,6 @@ menu "Project config"
                 depends on SENSOR_PZEM004_T
                 help
                     Show PZEM data on main page in own block
-
-        config SENSOR_MQTT
-            bool "MQTT Sensors"
-            default n
-            help
-                Subscribe to mqtt-topics
                 
     endmenu
 

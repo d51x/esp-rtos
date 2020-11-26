@@ -6,8 +6,8 @@
 #include <string.h>
 #include "mqtt_cl.h"
 
-#define MQTT_SUBSCRIBER_MAX_BASE_TOPICS 5
-#define MQTT_SUBSCRIBER_MAX_END_POINTS 10 * MQTT_SUBSCRIBER_MAX_BASE_TOPICS  // общее кол-во endpoints на все base topics
+#define MQTT_SUBSCRIBER_MAX_BASE_TOPICS CONFIG_SENSOR_MQTT_BASE_TOPIC_COUNT //5
+#define MQTT_SUBSCRIBER_MAX_END_POINTS CONFIG_SENSOR_MQTT_END_POINT_COUNT * MQTT_SUBSCRIBER_MAX_BASE_TOPICS  // общее кол-во endpoints на все base topics
 
 #define MQTT_SUBSCRIBER_BASE_TOPIC_MAX_LENGTH 36
 #define MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH 28
@@ -49,7 +49,7 @@ void mqtt_subscriber_clear_all();
 // 4. страница управления - поля, кнопки, обработчик get/post запросов
 
 // отобразить настройки на веб странице
-// void mqtt_subscriber_http_print_page();
+void mqtt_subscriber_register_http_print_data();
 
 // get обработчик при сохранении настроек
 // void mqtt_subscriber_http_get_handler();

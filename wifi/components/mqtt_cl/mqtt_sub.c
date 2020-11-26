@@ -1,7 +1,11 @@
 #include "mqtt_sub.h"
 #include "string.h"
+#include "http_page.h"
+#include "http_page_tpl.h"
 
 static const char *TAG = "MQTTSUBS";
+
+const char *html_page_title_mqtt_sensors ICACHE_RODATA_ATTR = "MQTT Sensors";
 
 static uint8_t base_topics_count = 0;
 static uint8_t end_points_count = 0;
@@ -492,6 +496,34 @@ static void mqtt_subscriber_receive_cb(char *buf, void *args)
     }
 }
 
+static void mqtt_subscriber_print_options(http_args_t *args)
+{
+    http_args_t *arg = (http_args_t *)args;
+    httpd_req_t *req = (httpd_req_t *)arg->req;
+
+    httpd_resp_sendstr_chunk_fmt(req, html_block_data_header_start, html_page_title_mqtt_sensors);
+    httpd_resp_sendstr_chunk(req, html_block_data_form_start);
+
+    for ( uint8_t i = 0 ; i < end_points_count; i++ )
+    {
+        char *t = mqtt_subscriber_get_full_topic_by_endpoint_id(i);
+
+        httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_label_w65_label
+                                    , t // %s label
+                                    , endpoint_values[i].value
+                                    );
+
+        free(t);
+    }
+    httpd_resp_sendstr_chunk(req, html_block_data_end);
+}
+
+void mqtt_subscriber_register_http_print_data()
+{
+    http_args_t *p = calloc(1,sizeof(http_args_t));
+    register_print_page_block( "mqtt_subs", PAGES_URI[ PAGE_URI_ROOT ], 7, mqtt_subscriber_print_options, p, NULL, NULL );
+}
+
 void mqtt_subscriber_init()
 {
     //mqtt_subscriber_clear_all();
@@ -520,7 +552,7 @@ void mqtt_subscriber_init()
     }
     
     
-
+    mqtt_subscriber_register_http_print_data();
     //debug_print_endpoints();
     //mqtt_subscriber_clear_all();
     //debug_print_endpoints();

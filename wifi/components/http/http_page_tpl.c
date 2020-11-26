@@ -130,6 +130,9 @@ const char *html_block_data_form_submit  =
 const char *html_block_data_form_end  = 
 		"</form>";
 
+const char *html_block_data_form_item_label_w65_label  = 
+		"<p><label class='lf' style='width:65%%'>%s: </label><label>%s</label></p>";
+
 const char *html_block_data_form_item_label_label  = 
 		"<p><label class='lf'>%s: </label><label>%s</label></p>";
 
