@@ -1,3 +1,11 @@
+/*
+* TODO:
+*       - задавать название для каждого утвзщште через веб
+*           endpoints: "endp1:name1;endp2:name"
+*       - хранить datetime последнего получения данных для endpoint
+*       - выводить рядом со значением datetime последнего получения данных
+*/
+
 #pragma once
 
 //#include <stdio.h>

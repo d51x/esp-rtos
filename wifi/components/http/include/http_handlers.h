@@ -138,7 +138,6 @@ esp_err_t icon_wifi_get_handler(httpd_req_t *req);
 esp_err_t main_css_get_handler(httpd_req_t *req);
 esp_err_t main_ajax_get_handler(httpd_req_t *req);
 
-// TODO: еще надо функцию регистрации callback'a обработчика, чтобы обработку wifi_param, mqtt_param вынести в соответствующие модули
 // uri - параметры какого uri будем обрабатывать
 // fn_cb - функция коллбека обработки данных
 

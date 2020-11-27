@@ -131,8 +131,6 @@ void page_generate_top_header(httpd_req_t *req)
 
 void page_generate_data(httpd_req_t *req, const char *uri)
 {
-    ESP_LOGI(TAG, "%s: %s", __func__, uri);
-    //TODO: для AP не отображаются страницы, останавливается вывод на hostname, далее пусто
     httpd_resp_sendstr_chunk(req, html_page_content_start);
     
     if ( strcmp(uri, PAGES_URI[PAGE_URI_DEBUG]) == 0) {
