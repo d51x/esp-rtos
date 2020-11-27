@@ -10,7 +10,7 @@
 #include "http_page_tpl.h"
 
 #define MQTT_SUBSCRIBER_URI "/mqttsub"
-#define MQTT_SUBSCRIBER_HANDLERS_COUNT 1
+#define MQTT_SUBSCRIBER_HANDLERS_COUNT 2
 
 #define MQTT_SUBSCRIBER_MAX_BASE_TOPICS CONFIG_SENSOR_MQTT_BASE_TOPIC_COUNT //5
 #define MQTT_SUBSCRIBER_MAX_END_POINTS CONFIG_SENSOR_MQTT_END_POINT_COUNT * MQTT_SUBSCRIBER_MAX_BASE_TOPICS  // общее кол-во endpoints на все base topics
@@ -45,14 +45,6 @@ esp_err_t mqtt_subscriber_add(const char* base_topic, const char *endpoints);
 esp_err_t mqtt_subscriber_del(const char* base_topic); 
 
 void mqtt_subscriber_clear_all();
-
-//TODO:
-// 1. подписка на топики по base_topic + endpoint
-    // при удалении топика делать отписку
-
-// +++++++2. callback получения данных обновляет значение endtopic_values[]
-// 3. +++++вывод на главной
-// 4. страница управления - +++++ поля, кнопки, обработчик get/post запросов
 
 // отобразить настройки на веб странице
 void mqtt_subscriber_register_http_print_data();

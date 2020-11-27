@@ -127,6 +127,17 @@ const char *html_block_data_form_submit  =
 			"<div class='rh2'><p><input type='hidden' name='st' value='%s'></p>"
 			"<p><input type='submit' value='Сохранить' class='button norm rht'></p>";
 
+const char *html_block_data_form_submit_set  = 
+
+			"<p><input type='hidden' name='st' value='%s'></p>"
+			"<p ><input type='submit' value='Сохранить' class='button norm'></p>";
+
+const char *html_block_data_form_submit_del  = 
+
+			"<p><input type='hidden' name='st' value='%s'></p>"
+			"<p><input type='submit' value='Удалить' class='button norm'></p>";
+
+
 const char *html_block_data_form_end  = 
 		"</form>";
 

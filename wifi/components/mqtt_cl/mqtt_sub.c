@@ -82,28 +82,14 @@ static void mqtt_subscriber_load_nvs()
     }    
 
     base_topics = (mqtt_sub_base_topic_t *) calloc(base_topics_count, sizeof(mqtt_sub_base_topic_t));
-    ////f_mqtt_sub_base_topic_t *t = (f_mqtt_sub_base_topic_t *) calloc(base_topics_count, sizeof(f_mqtt_sub_base_topic_t));
-
     err = nvs_param_load(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_BASE_DATA, base_topics);
-    ////err = nvs_param_load(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_BASE_DATA, t);
+
     if ( err != ESP_OK ) {
         ESP_LOGE(TAG, "%s: %s %s", __func__, esp_err_to_name(err), MQTT_SUBS_NVS_KEY_BASE_DATA);
         memset(base_topics, 0, base_topics_count * sizeof(mqtt_sub_base_topic_t));
-        ////free(t);
         return;
     }     
 
-    ////for ( uint8_t i = 0; i < base_topics_count; i++)
-    ////{
-    ////     base_topics[i].base = strdup(t[i].base);
-    ////     base_topics[i].id = t[i].id;
-        
-        ////ESP_LOGI(TAG, "base topic %d: %s", i, base_topics[i].base);
-
-    ////}
-    ////free(t);
-
-    //ESP_LOGI(TAG, "try load end_points_count");
     err = nvs_param_u8_load(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_ENDPOINT_COUNT, &end_points_count);
     if ( err != ESP_OK ) {
         ESP_LOGE(TAG, "%s: %s %s", __func__, esp_err_to_name(err), MQTT_SUBS_NVS_KEY_ENDPOINT_COUNT);
@@ -111,27 +97,15 @@ static void mqtt_subscriber_load_nvs()
         return;
     } 
 
-    //ESP_LOGI(TAG, "end_points_count = %d", end_points_count);
     end_points = (mqtt_sub_endpoint_t *) calloc(end_points_count, sizeof(mqtt_sub_endpoint_t));
     endpoint_values = (mqtt_sub_endpoint_value_t *) calloc(end_points_count, sizeof(mqtt_sub_endpoint_value_t));
     memset(endpoint_values, 0, end_points_count * sizeof(mqtt_sub_endpoint_value_t));
-    ////f_mqtt_sub_endpoint_t *e = (f_mqtt_sub_endpoint_t *) calloc(end_points_count, sizeof(f_mqtt_sub_endpoint_t));
     err = nvs_param_load(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_ENDPOINT_DATA, end_points);
-    ////err = nvs_param_load(MQTT_SUBS_NVS_SECTION, MQTT_SUBS_NVS_KEY_ENDPOINT_DATA, e);
     if ( err != ESP_OK ) {
         ESP_LOGE(TAG, "%s: %s %s", __func__, esp_err_to_name(err), MQTT_SUBS_NVS_KEY_ENDPOINT_DATA);
         memset(end_points, 0, end_points_count * sizeof(mqtt_sub_endpoint_t));
-        ////free(e);
         return;
     }    
-    ////for (uint8_t i = 0; i < end_points_count; i++)
-    ////{
-    ////    end_points[i].endpoint = strdup(e[i].endpoint);
-    ////    end_points[i].id = e[i].id;
-    ////    end_points[i].base_id = e[i].base_id;
-    ////    //ESP_LOGI(TAG, "base topic %d: %s, endpoint %d: %s", end_points[i].base_id, base_topics[end_points[i].base_id].base, i, end_points[i].endpoint);
-    ////}
-    ////free(e);
 }
 
 static void mqtt_subscriber_save_nvs_base_topics()
@@ -182,22 +156,12 @@ static void mqtt_subscriber_save_nvs_end_points()
 
 static int mqtt_subscriber_get_endpoint_id(uint8_t base_id, char *_endpoint)
 {
-    //ESP_LOGI(TAG, "%s: base id: %d, endpoint: %s", __func__, base_id, _endpoint);
-
     for (uint8_t i = 0; i < end_points_count; i++)
     {
-        //ESP_LOGI(TAG, "%s: endpoint (%d): %s, base_id: %d", __func__, i, end_points[i].endpoint, end_points[i].base_id);
-
         if ( end_points[i].base_id == base_id && strcmp( end_points[i].endpoint, _endpoint) == 0) {
-            //found = true;
-            //break;
-            //ESP_LOGI(TAG, "%s: endpoint %s found", __func__, _endpoint);
             return i;
         }
     }
-
-    // не нашли
-    //ESP_LOGI(TAG, "%s: endpoint not found", __func__);
     return -1;
 }
 
@@ -221,15 +185,12 @@ static int mqtt_subscriber_get_endpoint_id_by_topic(const char *topic)
 
 static void mqtt_subscriber_del_endpoints(uint8_t base_id)
 {
-    //ESP_LOGI(TAG, __func__ );
-
     int8_t _endpoints_count = 0;
     for (uint8_t i = 0; i < end_points_count; i++)
     {
        if ( end_points[i].base_id == base_id)  _endpoints_count++;
     }
-    ESP_LOGI(TAG, "%s: _endpoints_count = %d", __func__, _endpoints_count);
-
+ 
     if ( _endpoints_count > 0) 
     {
         mqtt_sub_endpoint_t *_end_points = (mqtt_sub_endpoint_t *)calloc( end_points_count - _endpoints_count, sizeof(mqtt_sub_endpoint_t));
@@ -243,7 +204,6 @@ static void mqtt_subscriber_del_endpoints(uint8_t base_id)
                 _end_points[k].base_id = end_points[i].base_id;
                 _end_points[k].id = k;
 
-                ////_end_points[k].endpoint = strdup(end_points[i].endpoint);
                 strcpy(_end_points[k].endpoint, end_points[i].endpoint);
                 
                 _end_point_values[k].id = k;
@@ -255,9 +215,6 @@ static void mqtt_subscriber_del_endpoints(uint8_t base_id)
                 
                 k++;
             }
-
-            // ?????
-            ////free(end_points[i].endpoint);
         }
 
         end_points_count -= _endpoints_count; 
@@ -268,18 +225,14 @@ static void mqtt_subscriber_del_endpoints(uint8_t base_id)
         {
             end_points[i].base_id = _end_points[i].base_id;
             end_points[i].id = i;
-            ////end_points[i].endpoint = strdup(_end_points[i].endpoint);  
             strcpy(end_points[i].endpoint, _end_points[i].endpoint);
-            // ?????
-            ////free(_end_points[i].endpoint);   
             endpoint_values[i].id = i;
             strcpy(endpoint_values[i].value, _end_point_values[i].value);
         }       
 
         free(_end_points);
         free(_end_point_values);
-    }
-    
+    }  
 }
 
 static void mqtt_subscriber_del_base_topic(uint8_t base_id)
@@ -291,9 +244,7 @@ static void mqtt_subscriber_del_base_topic(uint8_t base_id)
         if ( base_topics[i].id != base_id )
         {
             _base_topics[k].id = base_topics[i].id;
-            ////_base_topics[k].base = strdup( base_topics[i].base );
             strcpy(_base_topics[k].base,base_topics[i].base );
-            ////free(base_topics[i].base);
             k++;
         }
     }
@@ -304,9 +255,7 @@ static void mqtt_subscriber_del_base_topic(uint8_t base_id)
     for (uint8_t i = 0; i < base_topics_count; i++)
     {
         base_topics[i].id = _base_topics[i].id;
-        //base_topics[i].base = strdup( _base_topics[i].base );
         strcpy(base_topics[i].base, _base_topics[i].base );
-        ////free(_base_topics[i].base);
     }
     free( _base_topics );
 }
@@ -315,30 +264,18 @@ static void mqtt_subscriber_del_base_topic(uint8_t base_id)
 // если endpoint уже есть для указанного base topic id, то ничего не делает
 static esp_err_t mqtt_subscriber_add_endpoints(uint8_t base_id, char *_endpoints)
 {
-    //ESP_LOGI(TAG, "%s: try add base id: %d, endpoints: %s", __func__, base_id, _endpoints);
     esp_err_t err = ESP_OK;
 
     char *s = strdup(_endpoints);
     char *e = malloc(1); //cut_str_from_str(_endpoints, ";");
-    //ESP_LOGI(TAG, "%s: fist endpoint: %s", __func__, e);
     
     // удалить все endpoints для base_id
     mqtt_subscriber_del_endpoints(base_id);
 
-    //ESP_LOGI(TAG, "%s: endpoints deleted", __func__ );
     while ( e != NULL )
     {
         e = cut_str_from_str(s, ";");
-
-        
-        if ( e == NULL ) break;
-        //ESP_LOGI(TAG, "%s: endpoint: %s, other endpoints: %s", __func__, e, s);
-        // ищем endpoint в endpoints
-        //if ( mqtt_subscriber_get_endpoint_id(base_id, e) > -1 ) {
-        //    // endpoint уже присутствует
-        //    ESP_LOGW(TAG, "New endpoint \"%s\" already exists for base topic \"%s\"", e, base_topics[ base_id ].base);
-        //    continue;
-        //} else {
+       if ( e == NULL ) break;
             // добавляем новый endpoint 
             if ( end_points_count < MQTT_SUBSCRIBER_MAX_END_POINTS ) 
             {
@@ -349,9 +286,7 @@ static esp_err_t mqtt_subscriber_add_endpoints(uint8_t base_id, char *_endpoints
 
                 end_points[ end_points_count - 1 ].id = end_points_count - 1;
                 end_points[ end_points_count - 1 ].base_id = base_id;
-                ////end_points[ end_points_count - 1 ].endpoint = strdup( e );
                 strcpy(end_points[ end_points_count - 1 ].endpoint, e );
-                //ESP_LOGI(TAG, "New endpoint \"%s\" added for base topic \"%s\"", e, base_topics[ base_id ].base);
                 endpoint_values[ end_points_count - 1 ].id = end_points_count - 1;
                 strcpy(endpoint_values[ end_points_count - 1 ].value, "");
                 
@@ -360,7 +295,6 @@ static esp_err_t mqtt_subscriber_add_endpoints(uint8_t base_id, char *_endpoints
                 err = ESP_FAIL;
                 break;
             }
-        //}
     }
     free(e);
     free(s);
@@ -384,11 +318,7 @@ static int mqtt_subscriber_get_base_topic_id(const char *base)
 // 
 esp_err_t mqtt_subscriber_add(const char* base_topic, const char *_endpoints)
 {
-    //ESP_LOGI(TAG, "%s: try add %s: %s", __func__, base_topic, _endpoints);
-
     int base_id = mqtt_subscriber_get_base_topic_id(base_topic);
-
-    //ESP_LOGI(TAG, "%s: base id: %d", __func__, base_id);
 
     if ( base_id == -1 )
     {
@@ -401,12 +331,8 @@ esp_err_t mqtt_subscriber_add(const char* base_topic, const char *_endpoints)
             // увеличим массив
             base_topics = (mqtt_sub_base_topic_t *) realloc(base_topics, base_topics_count * sizeof(mqtt_sub_base_topic_t));
             base_topics[ base_id ].id = base_id;
-            //base_topics[ base_id ].base = strdup( base_topic );
             strcpy(base_topics[ base_id ].base, base_topic );
-            //ESP_LOGI(TAG, "New base topic \"%s\" added ", base_topics[ base_id ].base);  
-
-            //mqtt_subscriber_save_nvs_base_topics();
-
+            mqtt_subscriber_save_nvs_base_topics();
         } else {
             ESP_LOGE(TAG, "Not slots (%d) available for new base topic %s", MQTT_SUBSCRIBER_MAX_BASE_TOPICS,  base_topic);
             return ESP_FAIL;           
@@ -415,8 +341,8 @@ esp_err_t mqtt_subscriber_add(const char* base_topic, const char *_endpoints)
 
     // продолжаем, если base_id > -1
     esp_err_t err = mqtt_subscriber_add_endpoints( base_id, _endpoints);
-    // if ( err == ESP_OK )
-    //     mqtt_subscriber_save_nvs_end_points();
+     if ( err == ESP_OK )
+         mqtt_subscriber_save_nvs_end_points();
     return err;
 }
 
@@ -429,7 +355,6 @@ static void rebase_endpoint_ids()
         {
             if ( end_points[k].base_id == base_topics[i].id )
                 {
-//                    ESP_LOGI(TAG, "%s:  %s --> %s | old base id: %d | new base id: %d", __func__, base_topics[i].base, end_points[k].endpoint, end_points[k].base_id, i);
                     end_points[k].base_id = i; // ????? не будет ли пересечений
                 }
         }
@@ -439,16 +364,10 @@ static void rebase_endpoint_ids()
 
 static void rebase_base_topic_ids()
 {
-    //ESP_LOGW(TAG, __func__ );
-
-    //debug_print_endpoints();
-
     for ( uint8_t i = 0; i < base_topics_count; i++ )
     {
-        //ESP_LOGI(TAG, "%s:  %s | old base id: %d | new base id: %d", __func__, base_topics[i].base, base_topics[i].id, i);
         base_topics[i].id = i;
     }    
-    //ESP_LOGW(TAG, "=================================" );
 }
 
 
@@ -474,8 +393,8 @@ esp_err_t mqtt_subscriber_del(const char* base_topic)
     rebase_endpoint_ids();
     rebase_base_topic_ids();
 
-    //mqtt_subscriber_save_nvs_base_topics();
-    //mqtt_subscriber_save_nvs_end_points();
+    mqtt_subscriber_save_nvs_base_topics();
+    mqtt_subscriber_save_nvs_end_points();
 
     return ESP_OK;
 }
@@ -484,15 +403,11 @@ static void mqtt_subscriber_receive_cb(char *buf, void *args)
 {
     // в args положить topic
     char *topic = (char *)args;
-//    ESP_LOGI(TAG, "received topic %s with data: %s", topic, buf);
-    //free(topic);
     // ищем endpoint id
     int endpoint_id = mqtt_subscriber_get_endpoint_id_by_topic(topic);
     if ( endpoint_id > -1 )
     {
         strcpy(endpoint_values[ endpoint_id ].value, buf);
-
-        ESP_LOGI(TAG, "received topic %s with data: %s", topic, endpoint_values[ endpoint_id ].value);
     }
 }
 
@@ -525,15 +440,33 @@ static void mqtt_subscriber_print_options(http_args_t *args)
     httpd_req_t *req = (httpd_req_t *)arg->req;
 
     httpd_resp_sendstr_chunk_fmt(req, html_block_data_header_start, html_page_title_mqtt_sensors_cfg);
-    httpd_resp_sendstr_chunk(req, html_block_data_form_start);
+
+    httpd_resp_sendstr_chunk_fmt(req, "<button class='button norm rh2' onclick='mqttsuba(\"%s\",%d,%d)'>New</button>"
+                                      "<div>"
+                                      "<p> <span id='basecnt'>Base topics: %d</span><span>/%d</span></p>"
+                                      "<p> <span id='endpcnt'>Endpoints: %d</span><span>/%d</span></p>"
+                                      "</div>"
+                                      "<hr>"
+                , "mqttpcs"
+                , base_topics_count
+                , end_points_count
+                , base_topics_count
+                , MQTT_SUBSCRIBER_MAX_BASE_TOPICS
+                , end_points_count
+                , MQTT_SUBSCRIBER_MAX_END_POINTS
+                );
 
     // print options (edit text)
+    httpd_resp_sendstr_chunk(req, "<div id='mqttpcs'>");
+
     for ( uint8_t i = 0 ; i < base_topics_count; i++ )
     {
         char label[16] = "";
         char name[10] = "";
         sprintf(label, "Base topic %d", i+1 );
         sprintf(name, "base%d", i );
+
+        httpd_resp_sendstr_chunk_fmt(req, "<div id=\"basetop%d\">", i);
         httpd_resp_sendstr_chunk_fmt(req, html_block_data_form_item_label_edit
                                     , label // %s label
                                     , name 
@@ -573,9 +506,20 @@ static void mqtt_subscriber_print_options(http_args_t *args)
                                      , _endpoints
                                      );                                    
         free(_endpoints);
-        httpd_resp_sendstr_chunk(req, "<hr>");
+
+        httpd_resp_sendstr_chunk_fmt(req, "<p class='lf2'>"
+                                            "<button class='button norm rht' onclick='mqttsubs(%d,0)'>Set</button>"
+                                            "<button class='button norm rht' onclick='mqttsubs(%d,1)'>Del</button>"
+                                            "</p>"
+        , i
+        , i
+        ); 
+        
+        httpd_resp_sendstr_chunk(req, "</div>");
+        if (i < base_topics_count-1 ) httpd_resp_sendstr_chunk(req, "<hr>");
     }
 
+    httpd_resp_sendstr_chunk(req, "</div>");
     httpd_resp_sendstr_chunk(req, html_block_data_end);  
 }
 
@@ -595,7 +539,43 @@ esp_err_t mqtt_subscriber_get_handler(httpd_req_t *req)
 	{
         ESP_LOGI(TAG, "%s: has params", __func__ );
         // TODO: redirect to /mqttsub page without params
+        // /mqttsub?base0=dacha%2Fbathroom&endpt0=dhtt1%3Bdhth1&st=mqbt0
 
+        httpd_req_get_url_query_str(req, page, 512);
+        ESP_LOGW(TAG, "%s: query data = %s", __func__, page);
+
+        char param[10];
+
+        if ( http_get_key_str(req, "clear", param, sizeof(param)) == ESP_OK ) {
+            ESP_LOGW(TAG, "%s: base = %s", __func__, param);
+            if ( strcmp(param, "all") == 0) {
+                mqtt_subscriber_clear_all();
+            }
+        } else {
+            if ( http_get_key_str(req, "act", param, sizeof(param)) == ESP_OK ) {
+                ESP_LOGW(TAG, "%s: action = %s", __func__, param);
+                
+                char _base_topic[MQTT_SUBSCRIBER_BASE_TOPIC_MAX_LENGTH+1];
+                if ( http_get_key_str(req, "base", _base_topic, MQTT_SUBSCRIBER_BASE_TOPIC_MAX_LENGTH) == ESP_OK ) {
+                    ESP_LOGW(TAG, "%s: base = %s", __func__, _base_topic);
+                } 
+
+                char _endpoints[MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH+1];
+                if ( http_get_key_str(req, "endpt", _endpoints, MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH) == ESP_OK ) {
+                    ESP_LOGW(TAG, "%s: endpoints = %s", __func__, _endpoints);
+                }                
+                
+
+                switch ( atoi(param)) {
+                    case 0:
+                            mqtt_subscriber_add(_base_topic, _endpoints);
+                            break;
+                    case 1:
+                            mqtt_subscriber_del(_base_topic);
+                            break;
+                }
+            }
+        }
     } else {
         ESP_LOGI(TAG, "%s: has no params", __func__ );
     }
@@ -608,6 +588,83 @@ esp_err_t mqtt_subscriber_get_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+esp_err_t mqtt_subscriber_post_handler(httpd_req_t *req, void *args)
+{
+    if ( req->content_len == 0 ) {
+        httpd_resp_end(req);
+        return ESP_FAIL;
+    }
+
+    bool error = false;
+    char *buf = calloc(1, req->content_len+1);
+
+    if ( httpd_req_recv(req, buf, req->content_len) > 0)
+    {
+        // /mqttsub?base=dacha/bathroom&endpt=dhtt1;dhth1&act=0
+        char _base_id[3];
+        char _base_topic[MQTT_SUBSCRIBER_BASE_TOPIC_MAX_LENGTH+1];
+        char _endpoints[MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH+1];
+        char _action[4];
+
+        esp_err_t res;
+        res = httpd_query_key_value(buf, "id", _base_id, 3);
+        error |= res;
+
+        if ( res == ESP_OK) 
+                ESP_LOGW(TAG, "Found URL query parameter => %s=%s", "id", _base_id);
+        else ESP_LOGD(TAG, esp_err_to_name( error ));  
+
+        res = httpd_query_key_value(buf, "base", _base_topic, MQTT_SUBSCRIBER_BASE_TOPIC_MAX_LENGTH);
+        error |= res;
+        
+        if ( res == ESP_OK) 
+                ESP_LOGW(TAG, "Found URL query parameter => %s=%s", "base", _base_topic);
+        else ESP_LOGD(TAG, esp_err_to_name( error ));        
+
+        res = httpd_query_key_value(buf, "endpt", _endpoints, MQTT_SUBSCRIBER_END_POINT_MAX_LENGTH);
+        error |= res;
+
+        if ( res == ESP_OK) 
+                ESP_LOGW(TAG, "Found URL query parameter => %s=%s", "endpt", _endpoints);
+        else ESP_LOGD(TAG, esp_err_to_name( error ));                
+
+        res = httpd_query_key_value(buf, "act", _action, 4);
+        error |= res;
+
+        if ( res == ESP_OK) 
+                ESP_LOGW(TAG, "Found URL query parameter => %s=%s", "act", _action);
+        else ESP_LOGD(TAG, esp_err_to_name( error ));  
+
+        if ( error == ESP_OK ) {
+            uint8_t action = atoi(_action);
+            if ( action == 0 ) {
+                // добавляем
+                res = mqtt_subscriber_add(_base_topic, _endpoints); 
+                error |= res;
+            } else if ( action == 1 ) {
+                // удаляем
+                res = mqtt_subscriber_del(_base_topic); 
+                error |= res;
+            }
+        }       
+    }
+    
+    httpd_resp_set_status(req, HTTPD_TYPE_JSON);
+    if ( error == ESP_OK ) 
+    {
+        strcpy(buf, "{\"error\":0}");
+        
+    } else {
+        strcpy(buf, "{\"error\":1}");
+    }
+    
+    httpd_resp_sendstr_chunk(req, buf);
+    free(buf);
+    httpd_resp_end(req);
+
+    return ESP_OK;
+}
+
 void mqtt_subscriber_register_http_handler(httpd_handle_t _server)
 {
     user_ctx_t *ctx = (user_ctx_t *)calloc(1, sizeof(user_ctx_t));
@@ -615,27 +672,14 @@ void mqtt_subscriber_register_http_handler(httpd_handle_t _server)
     ctx->show = true; 
 
     add_uri_get_handler( _server, MQTT_SUBSCRIBER_URI, mqtt_subscriber_get_handler, ctx); 
+    add_uri_post_handler(_server, MQTT_SUBSCRIBER_URI, mqtt_subscriber_post_handler, NULL);
 }
 
 void mqtt_subscriber_init(httpd_handle_t _server)
 {
     //mqtt_subscriber_clear_all();
-    ESP_LOGI(TAG, __func__ );
-
     mqtt_subscriber_load_nvs();
-    debug_print_endpoints();
-
-    if (base_topics_count == 0 && end_points_count == 0)
-    {
-        mqtt_subscriber_add("dacha/bathroom", "dhtt1;dhth1");
-        mqtt_subscriber_add("dacha/bedroom", "dhtt1;dhth1");
-        mqtt_subscriber_add("dacha/livingroom1", "dhtt1;dhth1");
-        mqtt_subscriber_add("dacha/livingroom2", "dhtt1;dhth1");
-    }
-    
-
-    mqtt_subscriber_save_nvs_base_topics();
-    mqtt_subscriber_save_nvs_end_points();
+    //debug_print_endpoints();
 
     for (uint8_t i = 0; i < end_points_count; i++)
     {
@@ -643,11 +687,8 @@ void mqtt_subscriber_init(httpd_handle_t _server)
         mqtt_add_receive_callback( t, 0, mqtt_subscriber_receive_cb, NULL);
         free(t);
     }
-    
-    
+        
     mqtt_subscriber_register_http_print_data();
     mqtt_subscriber_register_http_handler(_server);
-    //debug_print_endpoints();
-    //mqtt_subscriber_clear_all();
-    //debug_print_endpoints();
+    register_http_page_menu( MQTT_SUBSCRIBER_URI, "MqttSub");
 }

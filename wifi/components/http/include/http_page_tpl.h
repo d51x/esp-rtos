@@ -49,6 +49,8 @@ extern const char *html_block_data_form_start ICACHE_RODATA_ATTR;
 extern const char *html_block_data_div_lf3 ICACHE_RODATA_ATTR;  
 
 extern const char *html_block_data_form_submit ICACHE_RODATA_ATTR;
+extern const char *html_block_data_form_submit_set ICACHE_RODATA_ATTR;
+extern const char *html_block_data_form_submit_del ICACHE_RODATA_ATTR;
 
 extern const char *html_block_data_form_end ICACHE_RODATA_ATTR;
 

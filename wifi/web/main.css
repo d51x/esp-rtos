@@ -324,3 +324,8 @@ float: right;
     float: right;
     margin-right: 170px;
 }
+
+hr {
+    border: none;
+    border-bottom: 1px solid #dee2e6!important;
+}
