@@ -9,6 +9,7 @@
 #include "http_page.h"
 #include "http_page_tpl.h"
 
+#ifdef CONFIG_SENSOR_MQTT
 #define MQTT_SUBSCRIBER_URI "/mqttsub"
 #define MQTT_SUBSCRIBER_HANDLERS_COUNT 2
 
@@ -51,5 +52,5 @@ void mqtt_subscriber_register_http_print_data();
 
 // get обработчик при сохранении настроек
 // void mqtt_subscriber_http_get_handler();
-
+#endif
 #endif

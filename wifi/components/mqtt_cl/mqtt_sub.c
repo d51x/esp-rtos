@@ -1,7 +1,7 @@
 #include "mqtt_sub.h"
 #include "string.h"
 
-
+#ifdef CONFIG_SENSOR_MQTT
 static const char *TAG = "MQTTSUBS";
 
 const char *html_page_title_mqtt_sensors ICACHE_RODATA_ATTR = "MQTT Sensors";
@@ -646,3 +646,4 @@ void mqtt_subscriber_init(httpd_handle_t _server)
     mqtt_subscriber_register_http_handler(_server);
     register_http_page_menu( MQTT_SUBSCRIBER_URI, "MqttSub");
 }
+#endif
