@@ -248,7 +248,7 @@ static void process_data(esp_mqtt_event_handle_t event)
     memset(data, 0, event->data_len+1);
     strncpy(data, event->data, event->data_len);
 
-    ESP_LOGI(TAG, "EVENT_DATA \t %s, \t %s", topic, data);
+    ESP_LOGD(TAG, "EVENT_DATA \t %s, \t %s", topic, data);
     //ESP_LOGI(TAG, "DATA=%s", data);
 
     // cut _mqtt_dev_name from topic
@@ -264,9 +264,7 @@ static void process_data(esp_mqtt_event_handle_t event)
 
 static void process_custom_topics(const char *_topic, const char *data) 
 {
-    ESP_LOGW(TAG, "%s: topic = %s", __func__, _topic);
     for ( uint8_t i = 0; i < mqtt_recv_cnt; i++ ) {
-        //ESP_LOGI(TAG, "%s: find %s", __func__, mqtt_recv[i].topic);
         char *istr = strstr(_topic, mqtt_recv[i].topic);
         if ( istr == NULL )
         {
@@ -274,14 +272,11 @@ static void process_custom_topics(const char *_topic, const char *data)
             continue;
         } else if (istr - _topic == 0) {
             // полное совпадение
-            //ESP_LOGI(TAG, "%s: full arr: %s == param: %s", __func__, mqtt_recv[i].topic, _topic);
-            //mqtt_recv[i].args = (char *) strdup(mqtt_recv[i].topic);
             mqtt_recv[i].args = (char *) (mqtt_recv[i].topic);
             mqtt_recv[i].fn_cb(data, mqtt_recv[i].args);
         } else {
             char t[TOPIC_END_NAME_LENGTH] = "";
             strncpy(t, _topic + strlen(_mqtt_dev_name), TOPIC_END_NAME_LENGTH);
-            //ESP_LOGI(TAG, "%s: part arr: %s == %s param: %s", __func__, mqtt_recv[i].topic, t, _topic);
             if ( strcmp( mqtt_recv[i].topic, t) == ESP_OK )  
             {
                 mqtt_recv[i].fn_cb(data, mqtt_recv[i].args);
@@ -369,8 +364,6 @@ void mqtt_add_periodic_publish_callback( const char *topic, func_mqtt_send_cb fn
 
 void mqtt_add_receive_callback( const char *topic, uint8_t inner_topic, func_mqtt_recv_cb fn_cb, void *args)
 {
-    ESP_LOGW(TAG, "%s, topic = %s, inner %d", __func__, topic, inner_topic);
-
     for ( uint8_t i = 0; i < mqtt_recv_cnt; i++) 
     {
         if (strcmp(mqtt_recv[i].topic, topic) == 0 && mqtt_recv[i].fn_cb == fn_cb) 
@@ -420,6 +413,12 @@ static void mqtt_subscribe_topics(esp_mqtt_client_handle_t client)
             }            
         }
     }
+}
+
+void mqtt_subscribe_topic(const char *topic)
+{
+    if ( mqtt_client != NULL )
+        esp_mqtt_client_subscribe(mqtt_client, topic, 0);
 }
 
 void mqtt_unsubscribe_topic(const char *topic)
