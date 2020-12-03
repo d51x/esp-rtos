@@ -110,37 +110,34 @@ static void IRAM_ATTR read_rx(softuart_t *uart)
     }
 
     // Wait for stop bit
-    //ets_delay_us(uart->bit_time);
+    ets_delay_us(uart->bit_time);
 
     /* from arduino esp8266 software serial */
     unsigned long wait = uart->bit_time;
     while ((0x7FFFFFFF & esp_get_time()) - start_time > wait )
     {
         wait += uart->bit_time;
+        pauseTask(1);
     }    
 }
 
 // GPIO interrupt handler
 static void IRAM_ATTR handle_rx(void *arg)
 {
+    if ( arg == NULL ) return;
+
     portBASE_TYPE HPTaskAwoken = pdFALSE;
     BaseType_t xHigherPriorityTaskWoken;
 
-    uint32_t gpio_num = (uint32_t) arg;
-    // find uart
-    int8_t uart_no = find_uart_by_rx(gpio_num);
-    if (uart_no < 0) return;
-    softuart_t *uart = uarts + uart_no;
+    softuart_t *uart = (softuart_t *)arg;
 
     // Disable interrupt
-    gpio_set_intr_type(gpio_num, GPIO_INTR_DISABLE);
-    // gpio_isr_handler_remove(gpio_num);
+    gpio_set_intr_type(uart->rx_pin, GPIO_INTR_DISABLE);
 
     read_rx(uart);
 
     // Done, reenable interrupt
     gpio_set_intr_type(uart->rx_pin, GPIO_INTR_NEGEDGE);
-    // gpio_isr_handler_add(uart->rx_pin, handle_rx, (void *)(uart->rx_pin));
 
     portEND_SWITCHING_ISR( HPTaskAwoken == pdTRUE );
 }
@@ -229,7 +226,8 @@ bool softuart_open(uint8_t uart_no, uint32_t baudrate, uint32_t rx_pin, uint32_t
     gpio_install_isr_service(0);
     // Setup the interrupt handler to get the start bit
     gpio_set_intr_type(rx_pin, GPIO_INTR_NEGEDGE);
-    gpio_isr_handler_add(rx_pin, handle_rx, (void *)rx_pin);
+    //gpio_isr_handler_add(rx_pin, handle_rx, (void *)rx_pin);
+    gpio_isr_handler_add(rx_pin, handle_rx, (void *)uart);
 
     ets_delay_us(1000); // TODO: not sure if it really needed
 
@@ -345,6 +343,7 @@ uint8_t softuart_read_buf(uint8_t uart_no, char *buf, uint8_t max_len)
     uint8_t next_char;
     uint8_t len = 0;
 
+	WDT_FEED();
     while ( softuart_available(uart_no) > 0)
     {
         next_char = softuart_read(uart_no);
