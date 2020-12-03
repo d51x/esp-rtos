@@ -282,7 +282,6 @@ static esp_err_t pzem_read(uint8_t resp, uint8_t *data)
 			res = ESP_OK;
 		}	
 	free(buf);
-	WDT_FEED();
 	buf = NULL;
 	return res;
 }
@@ -298,7 +297,7 @@ static float pzem_voltage(uint8_t *addr) {
 
 static float pzem_current(uint8_t *addr) {
 	uint8_t data[RESPONSE_DATA_SIZE];
-	pzem_send(addr, CMD_CURRENT);
+	pzem_send(addr, CMD_CURRENT);	
 	esp_err_t err = pzem_read( RESP_CURRENT, &data);
 	pauseTask(10);
 	float value = (err == ESP_OK ) ? (data[0] << 8) + data[1] + (data[2] / 100.0) : PZEM_ERROR_VALUE;

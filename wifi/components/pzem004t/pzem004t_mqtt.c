@@ -67,7 +67,18 @@ static void pzem_mqtt_send_consunption(char **payload, void *args)
 
     memset(*payload, 0, 140);
     WDT_FEED();
-    snprintf(*payload, 140, "{\"ta\":%0.2f,\"tn\":%0.2f,\"td\":%0.2f},{\"ya\":%0.2f,\"yn\":%0.2f,\"yd\":%0.2f}}"
+    snprintf(*payload, 140, "{"
+                                "\"t\":{"
+                                    "\"a\":%0.2f,"
+                                    "\"n\":%0.2f,"
+                                    "\"d\":%0.2f"
+                                    "},"
+                                "\"y\":{"
+                                    "\"a\":%0.2f,"
+                                    "\"n\":%0.2f,"
+                                    "\"d\":%0.2f"
+                                    "}"
+                            "}"
                     , pzem_data.consumption.today_total / PZEM_FLOAT_DIVIDER
                     , pzem_data.consumption.today_night / PZEM_FLOAT_DIVIDER
                     , pzem_data.consumption.today_day / PZEM_FLOAT_DIVIDER
