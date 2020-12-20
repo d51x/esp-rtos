@@ -69,7 +69,7 @@ esp_err_t http_get_key_uint16(httpd_req_t *req, const char *param_name, uint16_t
             /* Get value of expected key from query string */
             if (httpd_query_key_value(buf, param_name, param, sizeof(param)) == ESP_OK) {
                 ESP_LOGD(TAG, "Found URL query parameter => %s=%s", param_name, param);
-                error = str_to_uint(value, param, 10);
+                error = str_to_uint16(value, param, 10);
                 ESP_LOGD(TAG, "%s = %d", param_name, *value);
             }              
         }        
@@ -102,3 +102,15 @@ esp_err_t http_get_key_uint8(httpd_req_t *req, const char *param_name, uint8_t *
     return (error == 0) ? ESP_OK : ESP_FAIL;
 }
 
+char *http_uri_clean(httpd_req_t *req)
+{
+    char *p;
+    if ( http_get_has_params(req) == ESP_OK) 
+	{
+        p = copy_str_from_str( req->uri, "?");
+    } else {
+        p = (char *) calloc(1, strlen( req->uri));
+        strcpy(p, req->uri);
+    }
+    return p;  
+}

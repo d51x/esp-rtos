@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef __LEDCONTROL_H__
 #define __LEDCONTROL_H__
 
@@ -15,15 +17,12 @@
 #include "utils.h"
 #include "http_utils.h"
 
+#ifdef CONFIG_LED_CONTROLLER
+
 #define LEDCONTROL_CHANNEL_MAX 5
 #define LEDCONTROL_FREQ_MIN 100
 #define LEDCONTROL_FREQ_MAX 500
 #define MAX_DUTY 255
-
-#define LEDC_URI "/ledc"
-
-#define MQTT_TOPIC_LEDC_CHANNEL "ledc"
-
 
 typedef enum {
 	TBL_NONE = 0,
@@ -70,16 +69,16 @@ typedef struct ledcontrol_channel ledcontrol_channel_t;
 
 typedef void (* ledcontrol_init_f)();  // инициализация ledcontrol и pwm
 typedef esp_err_t (* ledcontrol_register_channel_f)(ledcontrol_channel_t );  // регистрация канала
-typedef void (* ledcontrol_set_duty_f)(ledcontrol_channel_t *, uint16_t);  // установить duty канала
+typedef esp_err_t (* ledcontrol_set_duty_f)(ledcontrol_channel_t *, uint16_t);  // установить duty канала
 typedef uint16_t (* ledcontrol_get_duty_f)(ledcontrol_channel_t *);  // получить duty канала
 typedef void (* ledcontrol_update_f)();  // aka pwm start
-typedef void (* ledcontrol_channel_on_f)(ledcontrol_channel_t *);  
-typedef void (* ledcontrol_channel_off_f)(ledcontrol_channel_t *);  
-typedef void (* ledcontrol_channel_next_duty_f)(ledcontrol_channel_t *, uint8_t);  
-typedef void (* ledcontrol_channel_prev_duty_f)(ledcontrol_channel_t *, uint8_t);  
-typedef void (* ledcontrol_channel_fade_f)(ledcontrol_channel_t *, uint16_t, uint16_t, uint16_t);  
-typedef void (* ledcontrol_channel_fade_to_off_f)(ledcontrol_channel_t *, uint16_t, uint16_t);  
-typedef void (* ledcontrol_channel_fade_to_on_f)(ledcontrol_channel_t *, uint16_t, uint16_t);  
+typedef esp_err_t (* ledcontrol_channel_on_f)(ledcontrol_channel_t *);  
+typedef esp_err_t (* ledcontrol_channel_off_f)(ledcontrol_channel_t *);  
+typedef esp_err_t (* ledcontrol_channel_next_duty_f)(ledcontrol_channel_t *, uint8_t);  
+typedef esp_err_t (* ledcontrol_channel_prev_duty_f)(ledcontrol_channel_t *, uint8_t);  
+typedef esp_err_t (* ledcontrol_channel_fade_f)(ledcontrol_channel_t *, uint16_t, uint16_t, uint16_t);  
+typedef esp_err_t (* ledcontrol_channel_fade_to_off_f)(ledcontrol_channel_t *, uint16_t, uint16_t);  
+typedef esp_err_t (* ledcontrol_channel_fade_to_on_f)(ledcontrol_channel_t *, uint16_t, uint16_t);  
 typedef void (* ledcontrol_channel_set_brightness_table_f)(ledcontrol_channel_t *, brightness_table_e);  
 typedef void (* ledcontrol_all_off_f)();  
 typedef void (* ledcontrol_all_on_f)();  
@@ -87,9 +86,7 @@ typedef void (* ledcontrol_all_next_duty_f)(uint8_t);
 typedef void (* ledcontrol_all_prev_duty_f)(uint8_t);
 typedef void (* ledcontrol_all_fade_f)(uint16_t, uint16_t, uint16_t);
 typedef void (* ledcontrol_all_fade_to_off_f)(uint16_t, uint16_t);
-typedef void (* ledcontrol_all_fade_to_on_f)(uint16_t, uint16_t);
-typedef void (* ledcontrol_html_data_f)(char *data);		
-typedef void (*func_mqtt_send_cb)(const char *topic, const char *payload);
+typedef void (* ledcontrol_all_fade_to_on_f)(uint16_t, uint16_t);		
 		
 struct ledcontrol_channel {
 		uint8_t pin;
@@ -98,6 +95,8 @@ struct ledcontrol_channel {
 		bool inverted;
 		brightness_table_e bright_tbl;
 		ledcontrol_t *ledc;
+		char *name;
+		uint8_t group;
 };
 
 struct ledcontrol {
@@ -126,19 +125,14 @@ struct ledcontrol {
 	ledcontrol_all_fade_f fade_all;
 	ledcontrol_all_fade_to_off_f fade_to_off_all;
 	ledcontrol_all_fade_to_on_f fade_to_on_all;
-
-    ledcontrol_html_data_f print_html_data;
-    // callback for parse get request
-    char uri[20];
-    httpd_uri_func http_get_handler; //
-	func_mqtt_send_cb mqtt_send;	
+	
 };
 
 
 // здесь укажем только внешние функции
 // создать объект ledcontrol, потом надо создать каналы, потом зарегистрировать каналы, потом ledcontrol_init для инициализации pwm
 ledcontrol_handle_t* ledcontrol_create(uint32_t freq_hz, uint8_t channel_cnt);
-void ledcontrol_set_mqtt_send_cb(func_mqtt_send_cb mqtt_send);
+
 // создать канал, сначала надо создать каналы
 //esp_err_t ledcontrol_register_channel(ledcontrol_channel_t ledc_ch);
 
@@ -174,5 +168,5 @@ to control via http get request you need add a get request handler
     ip/ledc?allon=1
     ip/ledc?alloff=1
 */
-
+#endif
 #endif

@@ -6,15 +6,16 @@
 #include <stdlib.h>
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 #include "esp_system.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
 
 
+#ifdef CONFIG_COMPONENT_RELAY
+
 typedef struct relay relay_t;
 typedef void* relay_handle_t;
-
-typedef void (*func_mqtt_send_cb)(const char *topic, const char *payload);
 
 typedef enum {
     RELAY_LEVEL_LOW = 0,    
@@ -31,11 +32,15 @@ struct relay {
 	  gpio_num_t pin;
     relay_state_t state;
     relay_close_level_t close_level;
-    func_mqtt_send_cb mqtt_send;
+    relay_state_t prev;
+    char *name;
 };   
 
 
 
+extern relay_t *relays;
+uint8_t relay_count;
+extern QueueHandle_t relay_status_queue;
 
 /**
   * @brief create relay object.
@@ -45,7 +50,7 @@ struct relay {
   *
   * @return relay_handle_t the handle of the relay created 
   */
-relay_handle_t relay_create(gpio_num_t io_num, relay_close_level_t level);
+relay_handle_t relay_create(char *name, gpio_num_t io_num, relay_close_level_t level);
 
 /**
   * @brief set state of relay
@@ -79,6 +84,6 @@ relay_state_t relay_read(relay_handle_t relay_handle);
   */
 esp_err_t relay_delete(relay_handle_t relay_handle);
 
-void relay_add_mqtt_send_cb(relay_handle_t relay_handle, func_mqtt_send_cb cb);
 
+#endif
 #endif

@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef __EFFECTS_H__
 #define __EFFECTS_H__
 
@@ -11,6 +13,8 @@
 #include "colors.h"
 #include "rgbcontrol.h"
 
+
+#ifdef CONFIG_RGB_EFFECTS
 
 #define COLOR_EFFECTS_MAX 13
 #define EFFECT_STOP COLOR_EFFECTS_MAX-1
@@ -71,9 +75,6 @@ struct effects {
     effect_f stop;      // stop current effect
     TaskHandle_t task;  // task with effect
     effect_f task_cb;   // effect callback function
-
-
-    
 };
 
 void effect_jump3(void *arg);
@@ -105,10 +106,9 @@ static effect_t color_effects[COLOR_EFFECTS_MAX]  = {
     { "rnd",        RANDOM_CB,      EFFECT_FADE_DELAY,      EFFECT_FADE_NO_DELAY,   effect_rnd},     // 11
     { "stop",       STOP,           EFFECT_FADE_DELAY,      EFFECT_FADE_NO_DELAY,   effect_stop},     // 12
                                 
-                                                        };
+};
 
 effects_t* effects_init(void *rgbctrl, effect_set_color_hsv_f *cb);
-
 /*
 
 At first, create led_controller object
@@ -150,5 +150,5 @@ to control via http get request you need add a get request handler
 */
 
 
-
+#endif
 #endif

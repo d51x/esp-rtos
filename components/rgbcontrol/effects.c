@@ -1,5 +1,7 @@
 #include "effects.h"
 
+#ifdef CONFIG_RGB_EFFECTS
+
 static const char *TAG = "COLOREFFECT";
 
   // current effect
@@ -83,21 +85,29 @@ void effects_set_effect( int8_t id ){
         xTaskCreate( effects->task_cb, "effect_task", 2048, (effect_t *)e, 10, &effects->task);
     }            
 
-    rgbcontrol_t *rgbctl = (rgbcontrol_t *)effects->rgbctrl;
-    if ( rgbctl->ledc->mqtt_send && effects->effect_id != id ) {
-        char topic[12] = MQTT_TOPIC_EFFECT_NAME;
-        rgbctl->ledc->mqtt_send(topic, e->name);
-        char payload[3];
-        itoa(id, payload, 10);
-        strcpy(topic, MQTT_TOPIC_EFFECT_ID);
-        rgbctl->ledc->mqtt_send(topic, payload);
+    if ( effects->effect_id != id ) 
+    {
+        rgbcontrol_queue_t *data = (rgbcontrol_queue_t *) calloc(1, sizeof(rgbcontrol_queue_t));
+
+        data->type = RGB_EFFECT_ID;
+        data->data = (char *) e->name;
+        if ( rgbcontrol_color_queue != NULL ) 
+            xQueueSendToBack(rgbcontrol_color_queue, data, 0);
+
+        data->type = RGB_EFFECT_ID;
+        data->data = id;
+        if (rgbcontrol_color_queue != NULL )
+            xQueueSendToBack(rgbcontrol_color_queue, data, 0);
+
+        free(data);        
     }
 
     effects->effect_id = id;
 
 }
 
-void effect_jump3(void *arg) {
+void effect_jump3(void *arg) 
+{
 
 
     effect_t *e = (effect_t *)arg;
@@ -311,3 +321,7 @@ void effects_stop_effect(){
     effects->effect_id = COLOR_EFFECTS_MAX-1;
 }
 
+
+
+
+#endif

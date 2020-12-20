@@ -7,7 +7,7 @@ irrcv_handle_t ir_rx;
 	int btn_cnt = 2;
 	
 	init IR Receiver
-    ir_rx = irrcv_init(pin, delay, btn_cnt);
+        ir_rx = irrcv_init(pin, delay, btn_cnt);
 	
 	Add button callbacks
     if ( ir_rx != NULL ) {

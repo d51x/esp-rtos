@@ -4,6 +4,22 @@
 
 static const char *TAG = "utils";
 
+char FW_VER[32] = "";
+
+const char *RESET_REASONS[ESP_RST_SDIO+1] = {
+    "undetermined",
+    "power-on event",
+    "by external pin",
+    "esp_restart",
+    "exception/panic",
+    "interrupt watchdog",
+    "task watchdog",
+    "other watchdogs",
+    "after exiting deep sleep mode",
+    "Brownout reset (software or hardware)",
+    "Reset over SDIO",
+};
+
 uint16_t get_adc() {
     uint16_t adc = 0;
     adc_config_t adc_cfg;
@@ -31,8 +47,10 @@ void get_system_info(system_info_t *sys_info) {
 
     m_chip_info_t m_chip_info;
     m_chip_info.chip_id = get_chip_id(wifi_info.mac);
+    //m_chip_info.chip_id = get_chip_id(wifi_get_mac());
     m_chip_info.chip_model = chip_info.model;
     m_chip_info.chip_revision = chip_info.revision;
+    m_chip_info.features = chip_info.features;
     memcpy(&sys_info->chip_info, &m_chip_info, sizeof(m_chip_info_t)); 
 
     m_mem_info_t m_mem_info;
@@ -49,7 +67,8 @@ void get_system_info(system_info_t *sys_info) {
 
     //char *sdk_version = malloc(20);
     //sdk_version = esp_get_idf_version();
-    memcpy(&sys_info->sdk_version, esp_get_idf_version(), 20);
+    memset(&sys_info->sdk_version, 0, 30);
+    memcpy(&sys_info->sdk_version, esp_get_idf_version(), 30);
     //free(sdk_version);
 
     uint32_t vdd33 = esp_wifi_get_vdd33();
@@ -147,6 +166,15 @@ void get_localtime(char* buf){
     //return buf;
 }
 
+void get_timeinfo(struct tm *_timeinfo)
+{
+    time_t now;
+    setenv("TZ", "UTC-3", 1);
+    tzset();    
+    time(&now);
+    localtime_r(&now, _timeinfo);
+}
+
 uint32_t get_time(char* f){
     time_t now;
     struct tm timeinfo;
@@ -216,7 +244,7 @@ uint8_t str_to_int(int *out, char *s, int base) {
     return 0;
 }
 
-uint8_t str_to_uint(uint *out, char *s, int base) {
+uint8_t str_to_uint16(uint16_t *out, char *s, int base) {
     char *end;
     //if (s[0] == '\0' || isspace(s[0]))
     //    return STR2INT_INCONVERTIBLE;
@@ -286,7 +314,7 @@ long map(long x, long in_min, long in_max, long out_min, long out_max) {
 }
 
 
-void systemRebootTask(void * parameter)
+void systemRebootTask(void *arg)
 {
 
 	// Init the event group
@@ -304,8 +332,9 @@ void systemRebootTask(void * parameter)
 		// Did portMAX_DELAY ever timeout, not sure so lets just check to be sure
 		//if ((staBits & REBOOT_BIT) != 0)
 		//{
-			ESP_LOGI("OTA", "Reboot Command, Restarting within %d", (int)parameter);
-			vTaskDelay((int)parameter / portTICK_PERIOD_MS);
+			uint32_t delay = (uint32_t)arg;
+            ESP_LOGE("OTA", "Reboot Command, Restarting within %d", delay);
+			vTaskDelay(delay / portTICK_PERIOD_MS);
 
 			esp_restart();
 		//}
@@ -365,17 +394,16 @@ uint32_t uround(float val) {
     return res;
 }
 
-
 void print_task_stack_depth(const char *TAG, const char *func_name){
+    #if CONFIG_FREERTOS_USE_TRACE_FACILITY  && CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
     TaskStatus_t xTaskDetails;
-    // configUSE_TRACE_FACILITY  CONFIG_FREERTOS_USE_TRACE_FACILITY
-    // #if configGENERATE_RUN_TIME_STATS == 1  CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS
     vTaskGetInfo( NULL, &xTaskDetails, pdTRUE, eInvalid );
     ESP_LOGI(TAG, "Function: %s, Task %s stack depth: %d", func_name, xTaskDetails.pcTaskName, xTaskDetails.usStackHighWaterMark);
 
-        //UBaseType_t uxHighWaterMark;
-        //uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        //ESP_LOGI(TAG, "%s stack depth: %d", task_name, uxHighWaterMark);
+    //UBaseType_t uxHighWaterMark;
+    //uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+    //ESP_LOGI(TAG, "%s stack depth: %d", task_name, uxHighWaterMark);
+    #endif
 }
 
 #ifdef CONFIG_DEBUG_PRINT_TASK_INFO
@@ -417,7 +445,6 @@ void print_tasks_info()
             {
                 
                 ulStatsAsPercentage = ( _total_runtime > 0 ) ?  tasks_info[ i ].ulRunTimeCounter / _total_runtime : 0;
-                
                 ESP_LOGI(TAG, "---- %02d Task name: %20s, state: %c, priority: %2d (%2d), free stack: %5d, run time: %10d\t\t, percent: %lu%%", 
                             tasks_info[ i ].xTaskNumber,
                             tasks_info[ i ].pcTaskName,
@@ -437,3 +464,44 @@ void print_tasks_info()
     free(tasks_info);
 }
 #endif
+
+char* cut_str_from_str(char *str, const char *str2)
+{
+    if ( strlen(str) == 0 ) return NULL;
+    char *p = strstr(str, str2);
+    int pos = 0;
+    if ( p != NULL ) {
+        pos = p - str;
+    } else {
+        pos = strlen(str);
+    }
+
+    char *r = (char *) calloc(1, pos + 1);
+    strncpy(r, str, pos);
+
+    if ( p != NULL ) {
+        strcpy(str, p+1);
+    } else {
+         memset(str, 0, strlen(str)+1);
+    }
+    
+    return r;
+}
+
+char* copy_str_from_str(const char *str, const char *str2)
+{
+    char *p = strstr(str, str2);
+    uint8_t pos = p - str;
+    p = (char *) calloc(1, pos + 1);
+    strncpy(p, str, pos);
+    return p;
+}
+
+int get_buf_size(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    char buf[100];
+    int result = vsnprintf(buf, 100, format, args);
+    va_end(args);
+    return result + 1; // safe byte for \0
+}

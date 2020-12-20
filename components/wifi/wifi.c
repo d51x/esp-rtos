@@ -10,10 +10,15 @@ static const char *TAG = "WIFI";
 #define WIFI_RECONNECT_DELAY 5000
 
 static int retry_num = 0;
-static int reconnect_count = 0;
+static uint32_t reconnect_count = 0;
 
 
 TimerHandle_t xWiFiReconnectTimer;
+
+uint32_t wifi_get_reconnect_count()
+{
+    return reconnect_count;
+}
 
 static void wifi_set_host_name(){
     const char **hostname = calloc(1, TCPIP_HOSTNAME_MAX_SIZE);
@@ -38,7 +43,7 @@ static void wifi_ap_set_ip()
     esp_err_t err = ESP_FAIL;
     if ( ESP_WIFI_AP_IP_ADDR_1 != 0 ) {
         err = tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP);
-        ESP_LOGD(TAG, "tcpip_adapter_dhcps_stop err: %s", esp_err_to_name(err));  
+        ESP_LOGW(TAG, "tcpip_adapter_dhcps_stop err: %s", esp_err_to_name(err));  
 
         tcpip_adapter_ip_info_t ip_info;
         memset(&ip_info, 0, sizeof(ip_info));
@@ -47,14 +52,14 @@ static void wifi_ap_set_ip()
         IP4_ADDR(&ip_info.gw, ESP_WIFI_AP_IP_ADDR_1, ESP_WIFI_AP_IP_ADDR_2, ESP_WIFI_AP_IP_ADDR_3, ESP_WIFI_AP_IP_ADDR_4);
         
         err = tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &ip_info);
-        ESP_LOGD(TAG, "tcpip_adapter_set_ip_info err: %s", esp_err_to_name(err));  
+        ESP_LOGW(TAG, "tcpip_adapter_set_ip_info err: %s", esp_err_to_name(err));  
 
         err = tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP);
-        ESP_LOGD(TAG, "tcpip_adapter_dhcps_start err: %s", esp_err_to_name(err));  
+        ESP_LOGW(TAG, "tcpip_adapter_dhcps_start err: %s", esp_err_to_name(err));  
     }
 
         err = tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_AP, ESP_WIFI_AP_SSID);
-        ESP_LOGD(TAG, "tcpip_adapter_set_hostname err: %s", esp_err_to_name(err));     
+        ESP_LOGW(TAG, "tcpip_adapter_set_hostname err: %s", esp_err_to_name(err));     
 }
 
 static void wifi_connect(){
@@ -99,7 +104,10 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
     {
         ESP_LOGD(TAG, "WIFI EVENT: AP_START");
         wifi_ap_set_ip();
-        
+        if ( strcmp(wifi_cfg->hostname, "") == ESP_OK ) 
+        {
+            strcpy(wifi_cfg->hostname, CONFIG_LWIP_LOCAL_HOSTNAME);
+        }
     }
     /*
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_STOP) 
@@ -134,19 +142,19 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
         }
 
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-        ESP_LOGD(TAG, "got ip: %s", ip4addr_ntoa(&event->ip_info.ip));
-
+        //ESP_LOGD(TAG, "got ip: %s", ip4addr_ntoa(&event->ip_info.ip));
+        strcpy(wifi_cfg->ip, ip4addr_ntoa(&event->ip_info.ip));
+        ESP_LOGD(TAG, "got ip: %s", wifi_cfg->ip);
         retry_num = 0;
         xEventGroupSetBits(xWiFiEventGroup, WIFI_CONNECTED_BIT);
     }
 }
 void wifi_init()
 {
-    ESP_LOGD(TAG, "function %s started", __func__);
 
     wifi_cfg = calloc(1, sizeof(wifi_cfg_t));
     wifi_cfg_load(wifi_cfg);
-
+    strcpy(wifi_cfg->ip, "0.0.0.0");
 
     tcpip_adapter_init();
     xWiFiEventGroup = xEventGroupCreate();
@@ -158,6 +166,7 @@ void wifi_init()
 
 
     if ( wifi_cfg->first) {
+        wifi_cfg->mode = WIFI_MODE_AP;
         if ( strcmp(ESP_WIFI_SSID, "") == ESP_OK ) {
             // start wifi in AP mode
             wifi_init_ap();
@@ -213,6 +222,7 @@ void wifi_init_sta(void) {
     esp_wifi_set_storage(WIFI_STORAGE_RAM);
     esp_wifi_set_mode(WIFI_MODE_STA);
     esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config);
+    esp_wifi_set_ps (WIFI_PS_NONE);
 
     esp_wifi_start();    
 
@@ -266,10 +276,10 @@ void wifi_init_ap(void) {
     ESP_ERROR_CHECK(esp_wifi_start() );   
 }
 
-char *wifi_get_mac()
+void wifi_get_mac(char *mac)
 {
     //static char mac[6];
-    char *mac = calloc(1,6);
+    //char *mac = calloc(1,6);
     if ( wifi_cfg->mode == WIFI_MODE_STA ) {
         esp_read_mac((uint8_t *)mac, ESP_MAC_WIFI_STA);
     }
@@ -277,7 +287,7 @@ char *wifi_get_mac()
     {
         esp_read_mac( (uint8_t *)mac, ESP_MAC_WIFI_SOFTAP);
     }
-    return mac;
+    //return mac;
 }
 
 int8_t wifi_get_rssi(){

@@ -146,7 +146,6 @@ esp_err_t nvs_param_u32_save(const char* space_name, const char* key, uint32_t p
     ret = nvs_set_u32(my_handle, key, param);
     PARAM_ERR_ASSERT(TAG, ret, SAVE_FINISH);
     ret = nvs_commit(my_handle);
-
 SAVE_FINISH:
     nvs_close(my_handle);
 

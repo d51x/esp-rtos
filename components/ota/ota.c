@@ -1,216 +1,40 @@
 #include "ota.h"
+#include "nvsparam.h"
 
 static const char *TAG = "OTA";
 
-/*
-esp_err_t ota_http_event_handler(esp_http_client_event_t *evt)
+#define OTA_NVS_SECTION "ota"
+#define OTA_NVS_KEY "fw"
+
+static void ota_save_nvs(ota_firm_t *fw)
 {
-    switch(evt->event_id) {
-        case HTTP_EVENT_ERROR:
-            ESP_LOGD(TAG, "HTTP_EVENT_ERROR");
-            break;
-        case HTTP_EVENT_ON_CONNECTED:
-            ESP_LOGD(TAG, "HTTP_EVENT_ON_CONNECTED");
-            break;
-        case HTTP_EVENT_HEADER_SENT:
-            ESP_LOGD(TAG, "HTTP_EVENT_HEADER_SENT");
-            break;
-        case HTTP_EVENT_ON_HEADER:
-            ESP_LOGD(TAG, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
-            break;
-        case HTTP_EVENT_ON_DATA:
-            ESP_LOGD(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
-            break;
-        case HTTP_EVENT_ON_FINISH:
-            ESP_LOGD(TAG, "HTTP_EVENT_ON_FINISH");
-            break;
-        case HTTP_EVENT_DISCONNECTED:
-            ESP_LOGD(TAG, "HTTP_EVENT_DISCONNECTED");
-            break;
+    esp_err_t err = nvs_param_save(OTA_NVS_SECTION, OTA_NVS_KEY, fw, sizeof(ota_firm_t));
+    if ( err != ESP_OK ) {
+        ESP_LOGE(TAG, "%s: %s", __func__, esp_err_to_name(err));
     }
-    return ESP_OK;
-}
-*/
-
-void ota_init(){
-    esp_ota.state = ESP_OTA_IDLE;
-    esp_ota.progress = 0;
-    esp_ota.write_bytes = 0;
-    esp_ota.ota_size = 0;
 }
 
-esp_err_t ota_task_upgrade_from_url(char *err_text){
-    int buf_size = CONFIG_OTA_BUF_SIZE;  //default value
-
-    ota_nvs_data_t ota_nvs;
-    esp_err_t nvs_err = get_ota_nvs_data(&ota_nvs);
-
-    if ( nvs_err == ESP_OK ) {
-        buf_size = ota_nvs.buf_size;
-    } 
-    ESP_LOGI(TAG, "OTA OTA_BUF_SIZE: %d", buf_size ); //CONFIG_OTA_BUF_SIZE);
-
-    set_ota_state(ESP_OTA_PREPARE);
-    ESP_LOGI(TAG, "Starting OTA...");
-    esp_http_client_config_t config = {
-        .url = strdup(ota_nvs.uri), //FIRMWARE_UPGRADE_URL,     // указать url прошивки
-    //    .cert_pem = NULL,
-        //.event_handler = ota_http_event_handler,
-        .timeout_ms = 20000,
-        .buffer_size = buf_size,
-        .transport_type = HTTP_TRANSPORT_OVER_TCP,
-    };
-    //esp_http_client_config_t config;
-    
-
-    //ESP_LOGI(TAG, "Downloading firmware from %s....", config.url);
-    esp_http_client_handle_t client = esp_http_client_init(&config);
-    //config.url = strdup(ota_nvs.uri);
-    ESP_LOGI(TAG, "Downloading firmware from %s....", config.url);
-
-    esp_err_t err = esp_http_client_open(client, 0);
-    if (err != ESP_OK) {
-        esp_http_client_cleanup(client);
-        sprintf(err_text, "Failed to open HTTP connection: %d", err);
-        ESP_LOGE(TAG, err_text); 
-        return err;
+esp_err_t ota_load_nvs(ota_firm_t *fw)
+{
+    esp_err_t err = nvs_param_load(OTA_NVS_SECTION, OTA_NVS_KEY, fw);
+    if ( err != ESP_OK ) {
+        ESP_LOGE(TAG, "%s: %s", __func__, esp_err_to_name(err));
     }
-    
-    int total_len = esp_http_client_fetch_headers(client);
-    int remain = total_len;  // осталось загрузить
-    int one_part = total_len / 100;
-    int new_part = one_part;
-
-    set_ota_size(total_len);
-    ESP_LOGI(TAG, "header: Content-Length: %d", total_len);
-
-    esp_ota_handle_t update_handle = 0;
-    const esp_partition_t *update_partition = NULL;
-    
-    update_partition = esp_ota_get_next_update_partition(NULL);
-    if (update_partition == NULL) {
-        strcpy(err_text, "Passive OTA partition not found");
-        ESP_LOGE(TAG, err_text);
-        esp_http_client_close(client);
-        esp_http_client_cleanup(client);
-        set_ota_state(ESP_OTA_IDLE);
-        return ESP_FAIL;
-    }
-    ESP_LOGI(TAG, "Writing to partition subtype %d at offset 0x%x", update_partition->subtype, update_partition->address);
-
-    err = esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle);
-    if (err != ESP_OK) {
-        sprintf(err_text, "esp_ota_begin failed, error=%d", err);
-        ESP_LOGE(TAG, err_text);
-        esp_http_client_close(client);
-        esp_http_client_cleanup(client);
-        set_ota_state(ESP_OTA_IDLE);
-        return err;
-    }
-    ESP_LOGI(TAG, "esp_ota_begin succeeded");
-    ESP_LOGI(TAG, "Please Wait. This may take time");
-
-    esp_err_t ota_write_err = ESP_OK;
-    char *upgrade_data_buf = (char *)malloc(buf_size); //CONFIG_OTA_BUF_SIZE);
-    if (!upgrade_data_buf) {
-        strcpy(err_text, "Couldn't allocate memory to upgrade data buffer");
-        ESP_LOGE(TAG, err_text);
-        set_ota_state(ESP_OTA_IDLE);
-        return ESP_ERR_NO_MEM;
-    }
-
-    //=========================================================================================
-    int binary_file_len = 0;
-    uint8_t retry_count = 0;
-    set_ota_state(ESP_OTA_START);
-    while (remain > 0) {
-        //int data_read = esp_http_client_read(client, upgrade_data_buf, remain > CONFIG_OTA_BUF_SIZE ? CONFIG_OTA_BUF_SIZE : remain);
-        int data_read = esp_http_client_read(client, upgrade_data_buf, remain > buf_size ? buf_size : remain);
-        ESP_LOGD(TAG, "http client read %d --> %d of %d", data_read, binary_file_len, total_len);
-        if (data_read == 0) {
-            //ESP_LOGI(TAG, "Connection closed,all data received");
-            if ( retry_count > 20 ) {
-              ESP_LOGE(TAG, "Timeout ... Max retry count reached %d...  http client read %d --> %d of %d (%d%%)", retry_count, data_read, binary_file_len, total_len, binary_file_len*100/total_len);  
-              break;  
-            }
-            //break;
-            retry_count++;
-            ESP_LOGE(TAG, "Timeout ... Retry count %d...  http client read %d --> %d of %d (%d%%)", retry_count, data_read, binary_file_len, total_len, binary_file_len*100/total_len);
-            vTaskDelay(5 / portTICK_PERIOD_MS);
-            continue;
-        }
-        if (data_read < 0) {
-            ESP_LOGE(TAG, "Error: SSL data read error");
-            set_ota_state(ESP_OTA_IDLE);
-            break;
-        }
-        if (data_read > 0) {
-            retry_count = 0;
-            
-            ota_write_err = esp_ota_write( update_handle, (const void *)upgrade_data_buf, data_read);
-            if (ota_write_err != ESP_OK) {
-                set_ota_state(ESP_OTA_IDLE);
-                break;
-            }
-            
-            binary_file_len += data_read;
-            remain -= data_read;
-            set_ota_state(ESP_OTA_RECVED);
-            set_ota_progress(binary_file_len);
-            ESP_LOGD(TAG, "Written image length %d of (%d)", binary_file_len, total_len);
-
-            if ( new_part < binary_file_len ) {
-                ESP_LOGI(TAG, "uploaded %d %%", new_part*100/total_len);
-                new_part += one_part;
-            }            
-        }
-
-    }
-    //=========================================================================================
-
-    free(upgrade_data_buf);
-        esp_http_client_close(client);
-        esp_http_client_cleanup(client);
-    sprintf(err_text, "Total binary data length writen: %d of %d", binary_file_len, total_len);
-    ESP_LOGD(TAG, err_text);
-    
-    esp_err_t ota_end_err = esp_ota_end(update_handle);
-    if (ota_write_err != ESP_OK) {
-        sprintf(err_text, "Error: esp_ota_write failed! err=0x%d", err);
-        ESP_LOGE(TAG, err_text);
-        set_ota_state(ESP_OTA_IDLE);
-        return ota_write_err;
-    } else if (ota_end_err != ESP_OK) {
-        sprintf(err_text, "Error: esp_ota_end failed! err=0x%d. Image is invalid", ota_end_err);
-        ESP_LOGE(TAG, err_text);
-        set_ota_state(ESP_OTA_IDLE);
-        return ota_end_err;
-    }
-
-    err = esp_ota_set_boot_partition(update_partition);
-    if (err != ESP_OK) {
-        sprintf(err_text, "esp_ota_set_boot_partition failed! err=0x%d", err);
-        ESP_LOGE(TAG, err_text);
-        set_ota_state(ESP_OTA_IDLE);
-        return err;
-    }
-    save_ota_upgrade_dt();
-
-    set_ota_state(ESP_OTA_FINISH);
-    strcpy(err_text+strlen(err_text), "\nesp_ota_set_boot_partition succeeded");
-    strcpy(err_text+strlen(err_text), "\nPlease Restart System...");
-    ESP_LOGI(TAG, err_text); 
-    return ESP_OK;
+    return err;
 }
 
-
-    //xTaskCreate(&simple_ota_example_task, "ota_example_task", 8192, NULL, 5, NULL);
 esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
-    ESP_LOGI(TAG, "Starting OTA...");
+    ESP_LOGW(TAG, "Starting OTA...");
     
-    set_ota_state(ESP_OTA_PREPARE);
-
+    ota_status.state = OTA_START;
+    ota_status.progress = 0;
+    
     int total_len = req->content_len;
+    int file_len = total_len;
+
+    ota_status.total = file_len;
+
+    char fname[32];
     int recv_len;           // принято за раз
     int remain = total_len;  // осталось загрузить
     int received = 0;  // загружено
@@ -221,14 +45,6 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
     int new_part = one_part;
     int buf_size = CONFIG_OTA_BUF_SIZE;  // default
 
-    ota_nvs_data_t ota_nvs;
-    esp_err_t nvs_err = get_ota_nvs_data(&ota_nvs);
-    if ( nvs_err == ESP_OK ) {
-        ESP_LOGI(TAG, "nvs: ota buf size %d", ota_nvs.buf_size);
-        buf_size = ota_nvs.buf_size;
-    } 
-
-    set_ota_size(total_len);
 
     esp_ota_handle_t ota_handle; 
     const esp_partition_t *update_partition = esp_ota_get_next_update_partition(NULL);
@@ -237,23 +53,25 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
     if (!upgrade_data_buf) {
         strcpy(err_text, "Couldn't allocate memory to upgrade data buffer");
         ESP_LOGE(TAG, err_text);
+        ota_status.state = OTA_ERROR;
         return ESP_ERR_NO_MEM;
     }
 
-    ESP_LOGI(TAG, "Start uploading firmware, size %d", total_len);        
-    ESP_LOGI(TAG, "upload buffer size is %d", buf_size);        
+    ESP_LOGW(TAG, "Start uploading firmware, size %d", total_len);        
+    ESP_LOGW(TAG, "upload buffer size is %d", buf_size);        
 
-    set_ota_state(ESP_OTA_PREPARE);
+
     esp_err_t err = esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &ota_handle);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Error With OTA Begin, Cancelling OTA");
-        strcpy(err_text, "Error With OTA Begin, Cancelling OTA");
+        ESP_LOGE(TAG, esp_err_to_name(err));
+        strcpy(err_text, esp_err_to_name(err));
+        strcpy(err_text+strlen(err_text), "Error With OTA Begin, Cancelling OTA");
         ESP_LOGE(TAG, err_text);
-        set_ota_state(ESP_OTA_IDLE);
+        ota_status.state = OTA_ERROR;
         return ESP_ERR_FLASH_OP_FAIL;               
     } 
 
-    set_ota_state(ESP_OTA_START);
     uint8_t retry_count = 0;
     //=========================================================================================
     while (remain > 0) {
@@ -262,6 +80,7 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
             if (recv_len == HTTPD_SOCK_ERR_TIMEOUT) {
                 /* Retry receiving if timeout occurred */
                 if ( retry_count > 20 ) {
+                    ota_status.state = OTA_ERROR;
                 ESP_LOGE(TAG, "Timeout ... Max retry count reached %d...  httpd_req_recv %d (%d%%)", retry_count, received, received*100/total_len);  
                 break;  
                 }                
@@ -271,7 +90,7 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
                 continue;
             }
             sprintf(err_text, "File upload failed, uploaded %d%%", received*100/total_len);
-            set_ota_state(ESP_OTA_IDLE); 
+            ota_status.state = OTA_ERROR;
             ESP_LOGE(TAG, err_text);      
             return ESP_ERR_FLASH_OP_FAIL;             
         }
@@ -283,184 +102,90 @@ esp_err_t ota_task_upgrade_from_web(httpd_req_t *req, char *err_text){
             ESP_LOGD(TAG, "Writing first block to OTA partition");
             
             // Lets find out where the actual data staers after the header info	
+            
             char *body_start_p = strstr(upgrade_data_buf, "\r\n\r\n") + 4;
-            ESP_LOGD(TAG, "body_start_p = %02X", body_start_p - upgrade_data_buf + 1);
+            //ESP_LOGW(TAG, "body_start_p = 0x%02X", body_start_p - upgrade_data_buf + 1);
+
+            char *post_data = malloc(body_start_p - upgrade_data_buf + 1);
+            memset(post_data, 0 , body_start_p - upgrade_data_buf + 1);
+            memcpy(post_data, upgrade_data_buf, body_start_p - upgrade_data_buf);
+            //ESP_LOGW(TAG, "%s", post_data);
+            post_data = strstr(post_data, "filename=") + 10;
+            post_data = copy_str_from_str(post_data, "\"");
+            strncpy(fname, post_data, 32);
+            //file_len = body_start_p - upgrade_data_buf;
+            file_len = total_len - 196;
+            ota_status.total = file_len;
+            
+            ESP_LOGW(TAG, "%s (%d)", fname, file_len);
+            free(post_data);
 
             int body_part_len = recv_len - (body_start_p - upgrade_data_buf); 
-            ESP_LOGD(TAG, "body_part_len = %d", body_part_len);
+            //ESP_LOGW(TAG, "body_part_len = %d", body_part_len);
 
             err = esp_ota_write(ota_handle, (const void *)body_start_p, body_part_len);
             if ( err != ESP_OK) {
-                strcpy(err_text, "OTA write failed");
+                strcpy(err_text, esp_err_to_name(err));
+                strcpy(err_text+strlen(err_text), "ERROR 1: OTA write failed");
                 ESP_LOGE(TAG, err_text);
+                ota_status.state = OTA_ERROR;
                 return err;
             }    
         } else {
             // Write OTA data
+            ota_status.state = OTA_PROGRESS;
             err = esp_ota_write(ota_handle, (const void *)upgrade_data_buf, recv_len);
             if ( err != ESP_OK ) {
-                strcpy(err_text, "OTA write failed");
+                strcpy(err_text, esp_err_to_name(err));
+                strcpy(err_text+strlen(err_text), "ERROR 2: OTA write failed");
                 ESP_LOGE(TAG, err_text);
+                ota_status.state = OTA_ERROR;
                 return err;
             }    
         }
         received += recv_len; 
         remain -= recv_len;
-        set_ota_progress(received);
-        set_ota_state(ESP_OTA_RECVED);
+
         if ( new_part < received ) {
             ESP_LOGI(TAG, "uploaded %d %%", new_part*100/total_len);
             new_part += one_part;
+            ota_status.progress = new_part;
         }
     } // while
     //=========================================================================================
+    ota_status.progress = file_len;
 
     free(upgrade_data_buf);
     if (esp_ota_end(ota_handle) == ESP_OK) {
         // Lets update the partition
+        
         if (esp_ota_set_boot_partition(update_partition) == ESP_OK) {
-            set_ota_state(ESP_OTA_FINISH);
+
             const esp_partition_t *boot_partition = esp_ota_get_boot_partition();
             ESP_LOGI("OTA", "Next boot partition subtype %d at offset 0x%x", boot_partition->subtype, boot_partition->address);
             ESP_LOGI("OTA", "Please Restart System...");
 
-            save_ota_upgrade_dt();
-
+            // save to nvs firmware data: updated datetime, filesize, filename
+            ota_firm_t *fw = malloc( sizeof(ota_firm_t));
+            strcpy(fw->fname, fname);
+            fw->size = file_len; //total_len;
+            get_localtime(&fw->dt);
+            ota_save_nvs(fw);
+            free(fw);
+            ota_status.state = OTA_FINISH;
         } else {
-            strcpy(err_text, "OTA upgrading failed. Flashed Error!");
+            strcpy(err_text, "ERROR1: OTA upgrading failed. Flashed Error!");
             ESP_LOGE(TAG, err_text);
-            set_ota_state(ESP_OTA_IDLE);
+            ota_status.state = OTA_ERROR;
             return ESP_ERR_FLASH_OP_FAIL;
         }
     } else {
-        strcpy(err_text, "OTA upgrading failed. Flashed Error!");
+        strcpy(err_text, esp_err_to_name(err));
+        strcpy(err_text+strlen(err_text), "ERROR2: OTA upgrading failed. Flashed Error!");
         ESP_LOGE(TAG, err_text);
-        set_ota_state(ESP_OTA_IDLE);
+        ota_status.state = OTA_ERROR;
         return ESP_ERR_FLASH_OP_FAIL;
     } 
     return ESP_OK;        
 }
 
-esp_ota_t get_ota_state() {
-    return esp_ota;
-}
-
-void set_ota_state(esp_ota_state_t st){
-    esp_ota.state = st;
-}
-
-void set_ota_size(size_t ota_size){
-    esp_ota.ota_size = ota_size;
-}
-
-void set_ota_progress(size_t bytes){
-    esp_ota.write_bytes = bytes;
-    if (esp_ota.ota_size > 0 )
-        esp_ota.progress = bytes * 100 / esp_ota.ota_size;
-}
-
-esp_err_t get_ota_nvs_data(ota_nvs_data_t *ota_nvs) {
-    ESP_LOGI(TAG, __func__);
-    nvs_handle ota_handle;
-    uint8_t error = 0;
-    esp_err_t err = nvs_open("ota", NVS_READONLY, &ota_handle);
-    if ( err != ESP_OK) {
-        error = 1;
-        ESP_LOGI(TAG, "!!! Unable to open nvs ota !!!");
-        ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-        strcpy(ota_nvs->uri, "");
-        ota_nvs->buf_size = CONFIG_OTA_BUF_SIZE;
-        return err;
-    }
-
-    size_t size_buf = strlen(ota_nvs->uri)-1;
-    err = nvs_get_str(ota_handle, "uri", NULL, &size_buf);
-    err = nvs_get_str(ota_handle, "uri", ota_nvs->uri, &size_buf);
-    ESP_LOGI(TAG, "ota uri size needed %d", size_buf);
-    ESP_LOGI(TAG, "ota uri %s", ota_nvs->uri);
-
-    if ( err != ESP_OK) {
-        error = 1;
-        ESP_LOGI(TAG, "!!! Unable to get ota_uri from nvs ota !!! Error code %d", err);
-        ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-        //err |= err;
-    } else {
-        ESP_LOGI(TAG, "ota uri %s, size %d", ota_nvs->uri, size_buf);
-    }
-   // strcpy(ota_nvs->uri, t);
-    err = nvs_get_u16(ota_handle, "bufsz", &ota_nvs->buf_size); 
-    if ( err != ESP_OK) {
-        error = 1;
-        ESP_LOGI(TAG, "!!! Unable to get ota_bufsz from nvs ota !!! Error code %d", err);
-        ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-        //err |= err;
-    }
-    nvs_close(ota_handle);
-    ESP_LOGI(TAG, "returning from %s", __func__);
-    return error;
-}
-
-void set_ota_nvs_data(const ota_nvs_data_t *ota_nvs) {
-    ESP_LOGI(TAG, __func__);
-    nvs_handle ota_handle;
-    esp_err_t err = 0;
-    if ( nvs_open("ota", NVS_READWRITE, &ota_handle) == ESP_OK) {
-        char t[100];
-        strcpy(t, ota_nvs->uri);
-        err = nvs_set_str(ota_handle, "uri", t);
-        if ( err != ESP_OK ) {
-            ESP_LOGI(TAG, "!!! Unable to write ota_uri to nvs ota !!! Error code %d", err);
-            ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-
-        }
-        err = nvs_set_u16(ota_handle, "bufsz", ota_nvs->buf_size); 
-        if ( err != ESP_OK ) {
-            ESP_LOGI(TAG, "!!! Unable to write ota_bufsz to nvs ota !!! Error code %d", err);
-            ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-        }        
-        nvs_commit(ota_handle);
-        nvs_close(ota_handle);
-    } else {
-        ESP_LOGI(TAG, "!!! Unable to open nvs ota !!! Error code %d", err);
-        ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-    }
-}
-
-void save_ota_upgrade_dt(){
-    ESP_LOGI(TAG, __func__);
-    char * buf = malloc(25);
-    get_localtime(buf);
-    esp_err_t err;
-    nvs_handle ota_handle;
-    err = nvs_open("ota", NVS_READWRITE, &ota_handle);
-    if ( err == ESP_OK) {
-        err = nvs_set_str(ota_handle, "upgrade_dt", buf);
-        if ( err != ESP_OK ) {
-            ESP_LOGE(TAG, "!!!unable to set ota upgraded date time to nvs !!! Error code %d", err);
-            ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-        }
-        err = nvs_commit(ota_handle);
-        if ( err != ESP_OK ) {
-            ESP_LOGE(TAG, "!!!unable to commit ota upgraded date time to nvs !!! Error code %d", err);
-            ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-        }    
-        nvs_close(ota_handle);
-    } else {
-        ESP_LOGE(TAG, "!!!unable to save ota upgraded date time to nvs !!! Error code %d", err);
-        ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-    }
-    free(buf);
-}
-
-esp_err_t get_ota_upgraded_dt(char *buf){
-    ESP_LOGI(TAG, __func__);
-    nvs_handle ota_handle;
-    esp_err_t err = nvs_open("ota", NVS_READONLY, &ota_handle);
-    if ( err != ESP_OK ) return err;
-    size_t required_size;
-    err = nvs_get_str(ota_handle, "upgrade_dt", buf, &required_size);
-    nvs_close(ota_handle);
-    ESP_LOGI(TAG, "error string: %s", esp_err_to_name(err));
-    ESP_LOGI(TAG, "nvs ota upgrade_dt is %s", buf);
-    return err;
-}

@@ -7,7 +7,8 @@ val - 0..100	яркость
 *****************************************************************/
 
 
-void hsv_to_rgb(volatile color_rgb_t *rgb, const color_hsv_t hsv) {
+void hsv_to_rgb(volatile color_rgb_t *rgb, const color_hsv_t hsv) 
+{
 	uint8_t hi,fr, p, q, t;
 	volatile uint8_t h_pr;
 
@@ -40,7 +41,8 @@ void hsv_to_rgb(volatile color_rgb_t *rgb, const color_hsv_t hsv) {
 	}
 }
 
-void  int_to_rgb(uint32_t color32, volatile color_rgb_t *rgb) {
+void  int_to_rgb(uint32_t color32, volatile color_rgb_t *rgb) 
+{
     rgb->r = (color32 >> 16) & 0xff;
     rgb->g = (color32 >> 8) & 0xff;
     rgb->b = color32 & 0xff;
@@ -69,8 +71,8 @@ void  rgb_to_hsv(const color_rgb_t *rgb, color_hsv_t *hsv){
    uint8_t min, max, delta;
    int16_t hsvh;
 
-   min = MIN(rgb->r, MIN(rgb->g, rgb->b));
-   max = MAX(rgb->r, MAX(rgb->g, rgb->b));
+   min = GET_MIN(rgb->r, GET_MIN(rgb->g, rgb->b));
+   max = GET_MAX(rgb->r, GET_MAX(rgb->g, rgb->b));
 
    hsv->v = max;                // v, 0..255
    delta = max - min;                      // 0..255, < v

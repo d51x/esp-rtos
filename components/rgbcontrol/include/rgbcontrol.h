@@ -1,3 +1,4 @@
+
 #ifndef __RGBCONTROL_H__
 #define __RGBCONTROL_H__
 
@@ -12,20 +13,24 @@
 #include "freertos/portmacro.h"
 #include "freertos/timers.h"
 #include "freertos/queue.h"
+#include "freertos/task.h"
 #include "utils.h"
 #include "ledcontrol.h"
 #include "colors.h"
 #include "effects.h"
 #include "http_utils.h"
 
+#ifdef CONFIG_RGB_CONTROLLER
+
 #define RGB_DEFAULT_FADE 1000
 #define RGB_DEFAULT_FADEUP 40
 #define RGB_DEFAULT_FADEDOWN 40
 
-#define RGB_URI "/colors"
-
+#ifdef CONFIG_RGB_EFFECTS
 #define MQTT_TOPIC_EFFECT_NAME "effect/name"
 #define MQTT_TOPIC_EFFECT_ID "effect/id"
+#endif
+
 #define MQTT_TOPIC_COLOR_INT "color/int"
 
 typedef void *rgbcontrol_handle_t;      // rgbcontrol object
@@ -45,8 +50,10 @@ typedef void (* rgbcontrol_set_saturation_f)(int8_t value);
 typedef void (* rgbcontrol_fade_saturation_f)(int8_t saturation_from, int8_t saturation_to, int16_t saturation_delay);
 typedef void (* rgbcontrol_inc_saturation_f)(int8_t step);
 typedef void (* rgbcontrol_dec_saturation_f)(int8_t step);
+
+#ifdef CONFIG_RGB_EFFECTS
 typedef void (* rgbcontrol_set_effects_f)(void *effects);
-typedef void (* rgbcontrol_html_data_f)(char *data);
+#endif
 
 struct rgbcontrol {
 	color_hsv_t hsv;
@@ -57,9 +64,10 @@ struct rgbcontrol {
 	int fade_delay;
     int fadeup_delay;
     int fadedown_delay;
-    int effect_id; // TODO: переделать на указатель 
 
-    void *effects;
+
+
+    
 	// указатели на функции
 	rgbcontrol_set_color_hsv_f      set_color_hsv;
 	rgbcontrol_set_color_rgb_f      set_color_rgb;
@@ -75,18 +83,34 @@ struct rgbcontrol {
     rgbcontrol_fade_saturation_f    fade_saturation;
     rgbcontrol_inc_saturation_f     inc_saturation;
     rgbcontrol_dec_saturation_f     dec_saturation;
-    
-    rgbcontrol_set_effects_f     set_effects;
 
-    rgbcontrol_html_data_f print_html_data;
-    // callback for parse get request
-    char uri[20];
-    httpd_uri_func http_get_handler; // 
+    #ifdef CONFIG_RGB_EFFECTS
+    int effect_id; // TODO: переделать на указатель 
+    void *effects;
+    rgbcontrol_set_effects_f     set_effects;    
+    #endif    
+
+
 };
+
+typedef enum {
+    RGB_COLOR_INT,
+    RGB_EFFECT_ID,
+    RGB_EFFECT_NAME
+} rgbcontrol_queue_type_t;
+
+typedef struct rgbcontrol_queue {
+    uint32_t data;
+    rgbcontrol_queue_type_t type;
+} rgbcontrol_queue_t;
+
+QueueHandle_t rgbcontrol_color_queue;
 
 // здесь укажем только внешние функции
 // создать объект rgbcontrol
 rgbcontrol_t* rgbcontrol_init(ledcontrol_t *ledc, ledcontrol_channel_t *red, ledcontrol_channel_t *green, ledcontrol_channel_t *blue);
+
+
 
 /*
 
@@ -123,9 +147,6 @@ now you can change color and make animations with led
     rgb_ledc->dec_saturation( int )
     rgb_ledc->fade_saturation( from to with delay )
 
-to control via http get request you need add a get request handler
-    add_uri_get_handler( http_server, rgb_ledc->uri, rgb_ledc->http_get_handler);
-
     ip/colors?type=rgb&r=<r>&g=<g>&b=<b>
     ip/colors?type=hsv&h=<h>&s=<s>&v=<v>
     ip/colors?type=int&val=<int_value>
@@ -133,5 +154,6 @@ to control via http get request you need add a get request handler
     ip/colors?rgb=<r>,<g>,<b>
     ip/colors?hsv=<h>,<s>,<v>
 */
+#endif
 
 #endif

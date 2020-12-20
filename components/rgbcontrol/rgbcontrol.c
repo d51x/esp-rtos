@@ -1,6 +1,8 @@
 #include "rgbcontrol.h"
 
-static const char *TAG = "RGBCTRL";
+#ifdef CONFIG_RGB_CONTROLLER
+
+static const char *TAG = "RGB";
 
 volatile  static rgbcontrol_t *rgb_ctrl = NULL;
 
@@ -20,13 +22,13 @@ void rgbcontrol_fade_saturation(int8_t saturation_from, int8_t saturation_to, in
 void rgbcontrol_inc_saturation(int8_t step);
 void rgbcontrol_dec_saturation(int8_t step);
 
+#ifdef CONFIG_RGB_EFFECTS
 void rgbcontrol_set_effects(effects_t *effects);
+#endif
 
 void _rgbcontrol_set_color_rgb(color_rgb_t rgb, bool update);
 void _rgbcontrol_set_color_hsv(color_hsv_t hsv, bool update);
 
-void rgbcontrol_print_html_data(char *data);
-esp_err_t rgbcontrol_http_get_handler(httpd_req_t *req);
 
 rgbcontrol_t* rgbcontrol_init(ledcontrol_t *ledc, ledcontrol_channel_t *red, ledcontrol_channel_t *green, ledcontrol_channel_t *blue)
 {
@@ -43,9 +45,6 @@ rgbcontrol_t* rgbcontrol_init(ledcontrol_t *ledc, ledcontrol_channel_t *red, led
     rgb_ctrl = calloc(1, sizeof(rgbcontrol_t));
     rgb_ctrl->ledc = ledc;
 
-    //memcpy(&rgb_ctrl->red, &red, sizeof(ledcontrol_channel_t));
-    //memcpy(&rgb_ctrl->green, &green, sizeof(ledcontrol_channel_t));
-    //memcpy(&rgb_ctrl->blue, &blue, sizeof(ledcontrol_channel_t));
     rgb_ctrl->red = *red;
     rgb_ctrl->green = *green;
     rgb_ctrl->blue = *blue;
@@ -57,7 +56,6 @@ rgbcontrol_t* rgbcontrol_init(ledcontrol_t *ledc, ledcontrol_channel_t *red, led
     rgb_ctrl->fade_delay = RGB_DEFAULT_FADE;
     rgb_ctrl->fadeup_delay = RGB_DEFAULT_FADEUP;
     rgb_ctrl->fadedown_delay = RGB_DEFAULT_FADEDOWN;
-    rgb_ctrl->effect_id = COLOR_EFFECTS_MAX-1;
 
 	// указатели на функции
 	rgb_ctrl->set_color_hsv = rgbcontrol_set_color_hsv;
@@ -75,11 +73,12 @@ rgbcontrol_t* rgbcontrol_init(ledcontrol_t *ledc, ledcontrol_channel_t *red, led
     rgb_ctrl->inc_saturation = rgbcontrol_inc_saturation;
     rgb_ctrl->dec_saturation = rgbcontrol_dec_saturation;
 
-    rgb_ctrl->set_effects = rgbcontrol_set_effects;
+    #ifdef CONFIG_RGB_EFFECTS
+    rgb_ctrl->effect_id = COLOR_EFFECTS_MAX-1;
+    rgb_ctrl->set_effects = rgbcontrol_set_effects;    
+    #endif
 
-    rgb_ctrl->print_html_data = rgbcontrol_print_html_data;
-    strcpy(rgb_ctrl->uri, RGB_URI);
-    rgb_ctrl->http_get_handler = rgbcontrol_http_get_handler; 
+    rgbcontrol_color_queue = xQueueCreate(5, sizeof(rgbcontrol_queue_t));
 
     return rgb_ctrl;
 }
@@ -113,11 +112,12 @@ void rgbcontrol_set_color_int(uint32_t color32) {
 	int_to_rgb( color32, rgb);
 	rgbcontrol_set_color_rgb(*rgb);
 	free(rgb);
-
-    char topic[12] = MQTT_TOPIC_COLOR_INT;
-    char payload[10];
-    itoa(color32, payload, 10);
-    rgb_ctrl->ledc->mqtt_send(topic, payload);
+    rgbcontrol_queue_t *data = (rgbcontrol_queue_t *) calloc(1, sizeof(rgbcontrol_queue_t));
+    data->type = RGB_COLOR_INT;
+    data->data = color32;
+    if ( rgbcontrol_color_queue != NULL ) 
+        xQueueSendToBack(rgbcontrol_color_queue, data, 0);
+    free(data);
 }
 
 void rgbcontrol_set_color_hex(const char *hex) {
@@ -206,195 +206,17 @@ void rgbcontrol_fade_saturation(int8_t saturation_from, int8_t saturation_to, in
     }  
 }
 
+#ifdef CONFIG_RGB_EFFECTS
 void rgbcontrol_set_effects(effects_t *effects){
     rgb_ctrl->effects = effects;
 }
 
-void rgbcontrol_print_html_data(char *data){
-
-    effects_t *ee = rgb_ctrl->effects;
-    if ( ee == NULL ) return;
-
-    const char *effects_data = "<div class=\"effect\" style=\"display: flow-root;\">"
-                                
-                                "<div style=\"display: inline-block; width: 50%%;\">"
-                                  "<p><span><b>HSV color:</b> %d %d %d</span></p>"
-                                    "<p><span><b>RGB color:</b> %d %d %d</span></p>"  
-                                "</div>"            
-                                "<div style=\"height: 50px;border: 1px solid grey;float: right;display: inline-block;width:  50%%;background: rgb(%d,%d,%d)\"></div>"
-
-                                "<div><p><span><b>Color effect:</b></span>"
-                                //"<span id=\"color\">%s (%d)</span>"
-                                "<select id=\"effects\" onchange=\"effects()\">"
-                                "%s"
-                                "</select>"
-                                "</p></div>"
-                                "</div>";
-
-    const char *effects_item = "<option value=\"%d\" %s>%s</option>";
-    char select[600] = "";
-    for (int i=0; i < COLOR_EFFECTS_MAX; i++ ) {
-        effect_t *e = ee->effect + i;
-        sprintf(select+strlen(select), effects_item, i, 
-                                                     (ee->effect_id == i || ( i == COLOR_EFFECTS_MAX-1 && ee->effect_id == -1) ) ? "selected=\"selected\" " : "",
-                                                     e->name);
-    }
-    
-    effect_t *e = ee->effect + ee->effect_id;
-    color_rgb_t rgb;
-    hsv_to_rgb(&rgb, rgb_ctrl->hsv);
-    sprintf(data+strlen(data), effects_data, rgb_ctrl->hsv.h
-                                           , rgb_ctrl->hsv.s
-                                           , rgb_ctrl->hsv.v
-                                           , rgb.r
-                                           , rgb.g
-                                           , rgb.b
-                                           , rgb.r, rgb.g, rgb.b  // rgb()
-                                             //(ee->effect_id == -1) ? "color" : e->name, ee->effect_id
-                                           , select
-    );
-                                    
+void rgbcontrol_effects_init(rgbcontrol_t *rgbctrl, effects_t* effects)
+{
+    effects_init( rgbctrl, rgbctrl->set_color_hsv );
+    rgbctrl->set_effects( effects );
 }
+#endif
 
 
-esp_err_t http_process_rgb(httpd_req_t *req, char *param, size_t size);
-esp_err_t http_process_rgb2(httpd_req_t *req);
-esp_err_t http_process_hsv(httpd_req_t *req, char *param, size_t size);
-esp_err_t http_process_hsv2(httpd_req_t *reqe);
-esp_err_t http_process_hex(httpd_req_t *req, char *param, size_t size);
-esp_err_t http_process_int(httpd_req_t *req);
-
-esp_err_t rgbcontrol_http_get_handler(httpd_req_t *req){
-    // handle http get request
-    char page[200] = "";
-    if ( http_get_has_params(req) == ESP_OK) {
-        // has http params
-        esp_err_t err = ESP_FAIL;
-        char param[30];
-        if ( http_get_key_str(req, "rgb", param, sizeof(param)) == ESP_OK ) {
-            //  rgb?rgb=r,g,b  
-            err = http_process_rgb(req, param, sizeof(param));
-        } else if ( http_get_key_str(req, "hsv", param, sizeof(param)) == ESP_OK ) {
-            // rgb?hsv=h,s,v
-            err = http_process_hsv(req, param, sizeof(param));
-        } else if ( http_get_key_str(req, "type", param, sizeof(param)) == ESP_OK ) {
-            if ( strcmp(param, "rgb") == ESP_OK ) {
-                err = http_process_rgb2(req); // rgb?type=rgb&r=r&g=g&b=b
-            } else if ( strcmp(param, "hsv") == ESP_OK ) {
-                err = http_process_hsv2(req); // rgb?type=hsv&h=h&s=s&v=v
-            } else if ( strcmp(param, "int") == ESP_OK ) {
-                err = http_process_int(req); // rgb?type=int&val=value
-            } else if ( strcmp(param, "hex") == ESP_OK ) {
-                err = http_process_hex(req, param, sizeof(param));  // rgb?type=hex&val=value
-            } else if ( strcmp(param, "effect") == ESP_OK ) {
-                if ( http_get_key_str(req, "id", param, sizeof(param)) == ESP_OK ) {
-                    effects_t *ef = (effects_t *) rgb_ctrl->effects;
-                    if ( ef != NULL ) {
-                        ef->set( atoi(param) );
-                    }    
-                } else if ( http_get_key_str(req, "name", param, sizeof(param)) == ESP_OK ) {
-                    effects_t *ef = (effects_t *) rgb_ctrl->effects;
-                    if ( ef != NULL )                   
-                        ef->set_by_name( param );
-                }
-            }
-        }
-        strcpy( page, (err == ESP_OK ) ? "OK" : "ERROR");   
-    }
-    // show page data
-    httpd_resp_send(req, page, strlen(page));
-    return ESP_OK;     
-
-}
-
-esp_err_t http_process_hex(httpd_req_t *req, char *param, size_t size) {
-    esp_err_t err = http_get_key_str(req, "val", param, size);
-    if ( err != ESP_OK ) return err;
-    effects_t *ef = (effects_t *) rgb_ctrl->effects;
-    if ( ef != NULL ) ef->stop();     
-    rgb_ctrl->set_color_hex(param);
-    return ESP_OK;
-}
-
-esp_err_t http_process_int(httpd_req_t *req) {
-    long color;
-    esp_err_t err = http_get_key_long(req, "val", &color);
-    if ( err != ESP_OK ) return err;
-    effects_t *ef = (effects_t *) rgb_ctrl->effects;
-    if ( ef != NULL ) ef->stop();       
-    rgb_ctrl->set_color_int(color);
-    return ESP_OK;
-}
-
-esp_err_t http_process_rgb(httpd_req_t *req, char *param, size_t size){
-    esp_err_t err = http_get_key_str(req, "rgb", param, size);
-    if (  err != ESP_OK ) {
-        ESP_LOGE(TAG, "get key param of rgb ERROR");
-        return err;
-    }
-    char *istr = strtok (param,",");
-    color_rgb_t *rgb = malloc(sizeof(color_rgb_t));
-    rgb->r = atoi(istr);
-    istr = strtok (NULL,",");
-    rgb->g = atoi(istr); 
-    istr = strtok (NULL,",");
-    rgb->b = atoi(istr);
-    effects_t *ef = (effects_t *) rgb_ctrl->effects;
-    if ( ef != NULL ) ef->stop();
-    rgb_ctrl->set_color_rgb(*rgb);
-    free(rgb);                
-    return ESP_OK;
-}
-   
-esp_err_t http_process_rgb2(httpd_req_t *req){
-    esp_err_t err = ESP_FAIL;
-    color_rgb_t *rgb = malloc(sizeof(color_rgb_t));
-    if ( http_get_key_uint8(req, "r", &rgb->r) == ESP_OK &&
-         http_get_key_uint8(req, "g", &rgb->g) == ESP_OK &&
-         http_get_key_uint8(req, "b", &rgb->b) == ESP_OK) 
-    {
-        effects_t *ef = (effects_t *) rgb_ctrl->effects;
-        if ( ef != NULL ) ef->stop();
-        rgb_ctrl->set_color_rgb(*rgb);
-        err = ESP_OK;
-    }
-    free(rgb);
-    return err;
-}
-           
-esp_err_t http_process_hsv(httpd_req_t *req, char *param, size_t size) {
-    esp_err_t err = http_get_key_str(req, "hsv", param, size);
-    if (  err != ESP_OK ) {
-        ESP_LOGE(TAG, "get key param of hsv ERROR");
-        return err;
-    }
-    char *istr = strtok (param,",");
-    color_hsv_t *hsv = malloc( sizeof(color_hsv_t));
-    hsv->h = atoi(istr);
-    istr = strtok (NULL,",");
-    hsv->s = atoi(istr);
-    istr = strtok (NULL,",");
-    hsv->v = atoi(istr);
-    effects_t *ef = (effects_t *) rgb_ctrl->effects;
-    if ( ef != NULL ) ef->stop();
-    rgb_ctrl->set_color_hsv(*hsv);
-    err = ESP_OK;
-    free(hsv);
-    return ESP_OK;
-}
-
-esp_err_t http_process_hsv2(httpd_req_t *req) {
-    esp_err_t err = ESP_FAIL;
-    color_hsv_t *hsv = malloc( sizeof(color_hsv_t));
-    if ( http_get_key_uint16(req, "h", &hsv->h) == ESP_OK &&
-            http_get_key_uint8(req, "s", &hsv->s) == ESP_OK &&
-            http_get_key_uint8(req, "v", &hsv->v) == ESP_OK) 
-    {
-        effects_t *ef = (effects_t *) rgb_ctrl->effects;
-        if ( ef != NULL ) ef->stop();
-        rgb_ctrl->set_color_hsv(*hsv);
-        err = ESP_OK;
-    }
-    free(hsv);
-    return err;
-}
+#endif
