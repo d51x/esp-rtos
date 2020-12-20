@@ -69,9 +69,6 @@ inline static int8_t find_uart_by_rx(uint8_t rx_pin)
 
 static void IRAM_ATTR read_rx(softuart_t *uart)
 {
-    // Wait till start bit is half over so we can sample the next one in the center
-    ets_delay_us(uart->bit_time / 2);
-
     // Now sample bits
     uint8_t d = 0;
     uint32_t start_time = 0x7FFFFFFF & esp_get_time();
@@ -112,13 +109,16 @@ static void IRAM_ATTR read_rx(softuart_t *uart)
     // Wait for stop bit
     ets_delay_us(uart->bit_time);
 
+    //*!!!!!!!!! 
     /* from arduino esp8266 software serial */
+    /*
     unsigned long wait = uart->bit_time;
     while ((0x7FFFFFFF & esp_get_time()) - start_time > wait )
     {
         wait += uart->bit_time;
         pauseTask(1);
     }    
+    */
 }
 
 // GPIO interrupt handler
@@ -133,6 +133,9 @@ static void IRAM_ATTR handle_rx(void *arg)
 
     // Disable interrupt
     gpio_set_intr_type(uart->rx_pin, GPIO_INTR_DISABLE);
+
+    // Wait till start bit is half over so we can sample the next one in the center
+    ets_delay_us(uart->bit_time / 2);
 
     read_rx(uart);
 
@@ -343,19 +346,20 @@ uint8_t softuart_read_buf(uint8_t uart_no, char *buf, uint8_t max_len)
     uint8_t next_char;
     uint8_t len = 0;
 
-	WDT_FEED();
+	//WDT_FEED();
     while ( softuart_available(uart_no) > 0)
     {
         next_char = softuart_read(uart_no);
 
-        if ( next_char == '\r') {
-            continue;
-        } else if ( next_char == '\n' ) {
-            if ( len > 0 ) {
-                break;
-            }
-        //} else if ( len < max_len - 1 ) {
-        } else if ( len < max_len ) {
+        /// if ( next_char == '\r') {
+        ///    continue;
+        /// } else if ( next_char == '\n' ) {
+        ///    if ( len > 0 ) {
+        ///        break;
+        ///    }
+        /// //} else if ( len < max_len - 1 ) {
+        /// } else 
+        if ( len < max_len ) {
             *buf++ = next_char;
             len++;
         } else {
@@ -363,8 +367,8 @@ uint8_t softuart_read_buf(uint8_t uart_no, char *buf, uint8_t max_len)
         }
     }
 
-    softuart_t *uart = uarts + uart_no;
-    memset(&uart->buffer, 0, sizeof(softuart_buffer_t));
+    /// softuart_t *uart = uarts + uart_no;
+    /// memset(&uart->buffer, 0, sizeof(softuart_buffer_t));
 
     return len;
 }
