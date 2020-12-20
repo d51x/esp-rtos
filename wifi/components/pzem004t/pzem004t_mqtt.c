@@ -66,7 +66,7 @@ static void pzem_mqtt_send_consunption(char **payload, void *args)
     *payload = (char *) realloc(*payload, 140);
 
     memset(*payload, 0, 140);
-    WDT_FEED();
+    //WDT_FEED();
     snprintf(*payload, 140, "{"
                                 "\"t\":{"
                                     "\"a\":%0.2f,"

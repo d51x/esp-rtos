@@ -38,7 +38,9 @@ static const char *TAG = "PZEM";
 #define TX_BUF_SIZE UART_FIFO_LEN + 1
 
 #define PZEM_PERIODIC_TASK_PRIORITY 13
-#define PZEM_PERIODIC_TASK_STACK_DEPTH 1024  + 512
+#define PZEM_ENERGY_TASK_PRIORITY 14
+#define PZEM_PERIODIC_TASK_STACK_DEPTH 1024 //+ 256 //512
+#define PZEM_ENERGY_TASK_STACK_DEPTH 1024*2
 
 #ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
 	#define PZEM_ENERGY_PERIODIC_DELAY 1 // sec
@@ -169,7 +171,7 @@ void pzem_init(uint8_t uart_num)
     #endif
 }
 
-static void send_buffer(const uint8_t *buffer, uint8_t len)
+static void pzem_send_buffer(const uint8_t *buffer, uint8_t len)
 {
     
 	#ifdef CONFIG_DEBUG_UART1
@@ -190,7 +192,7 @@ static void send_buffer(const uint8_t *buffer, uint8_t len)
 	#endif
 }
 
-static uint8_t read_buffer(uint8_t *buffer, uint8_t cnt)
+static uint8_t pzem_read_buffer(uint8_t *buffer, uint8_t cnt)
 {
 	int8_t result = 0;
 
@@ -235,7 +237,7 @@ static void pzem_send (uint8_t *addr, uint8_t cmd)
 		// }
 		// ESP_LOGW(TAG, wlog);  
 
-	send_buffer(bytes, sizeof(PZEM_Command_t));
+	pzem_send_buffer(bytes, sizeof(PZEM_Command_t));
 	//send_buffer((uint8_t*)&pzem, sizeof(PZEM_Command_t));
 }
 
@@ -243,7 +245,7 @@ static esp_err_t pzem_read(uint8_t resp, uint8_t *data)
 {
 	esp_err_t res = ESP_FAIL;
 	uint8_t *buf = (uint8_t *) malloc(RESPONSE_SIZE);
-	uint8_t len = read_buffer(buf, RESPONSE_SIZE);
+	uint8_t len = pzem_read_buffer(buf, RESPONSE_SIZE);
 	
 
 	#ifdef CONFIG_DEBUG_UART1
@@ -290,7 +292,7 @@ static float pzem_voltage(uint8_t *addr) {
 	uint8_t data[RESPONSE_DATA_SIZE];
 	pzem_send(addr, CMD_VOLTAGE);
 	esp_err_t err = pzem_read( RESP_VOLTAGE, &data);
-	pauseTask(10);
+	//pauseTask(10);
 	float value = (err == ESP_OK ) ? (data[0] << 8) + data[1] + ( data[2] / 10.0) : PZEM_ERROR_VALUE;
 	return value;
 }
@@ -299,7 +301,7 @@ static float pzem_current(uint8_t *addr) {
 	uint8_t data[RESPONSE_DATA_SIZE];
 	pzem_send(addr, CMD_CURRENT);	
 	esp_err_t err = pzem_read( RESP_CURRENT, &data);
-	pauseTask(10);
+	//pauseTask(10);
 	float value = (err == ESP_OK ) ? (data[0] << 8) + data[1] + (data[2] / 100.0) : PZEM_ERROR_VALUE;
 	return value;
 }
@@ -308,7 +310,7 @@ static float pzem_power(uint8_t *addr) {
 	uint8_t data[RESPONSE_DATA_SIZE];
 	pzem_send(addr, CMD_POWER);
 	esp_err_t err = pzem_read( RESP_POWER, &data);
-	pauseTask(10);
+	//pauseTask(10);
 	float value = (err == ESP_OK) ? (data[0] << 8) + data[1] : PZEM_ERROR_VALUE;
 	return value;
 }
@@ -317,7 +319,7 @@ static float pzem_energy(uint8_t *addr) {
 	uint8_t data[RESPONSE_DATA_SIZE];
 	pzem_send(addr, CMD_ENERGY);
 	esp_err_t err = pzem_read( RESP_ENERGY, &data);
-	pauseTask(10);
+	//pauseTask(10);
 	float value = (err == ESP_OK ) ? ((uint32_t)data[0] << 16) + ((uint16_t)data[1] << 8) + data[2] : PZEM_ERROR_VALUE;
 	return value;
 }
@@ -334,7 +336,7 @@ esp_err_t pzem_set_addr(PZEM_Address *_addr)
 		userlog("%s result %s \n", __func__, esp_err_to_name(err) );
 	#endif
 
-    pauseTask(10);
+    //pauseTask(10);
     return err;
 }
 
@@ -353,7 +355,7 @@ float pzem_read_voltage()
 	// #endif
 
 	if ( v == 0 ) _pzem_data.errors++;
-    pauseTask(PZEM_PAUSE_TASK );
+    //pauseTask(PZEM_PAUSE_TASK );
     return _pzem_data.voltage;
 }
 
@@ -371,7 +373,7 @@ float pzem_read_current()
 	// 	userlog("%08d > current \t %0.2f \n", millis(), _pzem_data.current);
 	// #endif
 
-    pauseTask(PZEM_PAUSE_TASK );
+    //pauseTask(PZEM_PAUSE_TASK );
     return _pzem_data.current;    
 }
 
@@ -389,7 +391,7 @@ float pzem_read_power()
 	// 	userlog("%08d > power \t %0.2f \n", millis(), _pzem_data.power);
 	// #endif
 
-    pauseTask(PZEM_PAUSE_TASK );
+    //pauseTask(PZEM_PAUSE_TASK );
     return _pzem_data.power;        
 }
 
@@ -407,7 +409,7 @@ float pzem_read_energy()
 	// 	userlog("%08d > energy \t %0.2f \n", millis(), _pzem_data.energy);
 	// #endif
 
-    pauseTask(PZEM_PAUSE_TASK );
+    //pauseTask(PZEM_PAUSE_TASK );
     return _pzem_data.energy;     
 }
 
@@ -621,7 +623,7 @@ void pzem_task_start(uint32_t delay_sec)
 {
 	xTaskCreate(pzem_periodic_task, "pzem_task", PZEM_PERIODIC_TASK_STACK_DEPTH, delay_sec, PZEM_PERIODIC_TASK_PRIORITY, &xPzemHandle);
 	#ifdef CONFIG_SENSOR_PZEM004_T_CALC_CONSUMPTION
-	xTaskCreate(calc_energy_values, "pzem_enrg", PZEM_PERIODIC_TASK_STACK_DEPTH, PZEM_ENERGY_PERIODIC_DELAY, PZEM_PERIODIC_TASK_PRIORITY, NULL);
+	xTaskCreate(calc_energy_values, "pzem_enrg", PZEM_ENERGY_TASK_STACK_DEPTH, PZEM_ENERGY_PERIODIC_DELAY, PZEM_ENERGY_TASK_PRIORITY, NULL);
 	#endif
 }
 
