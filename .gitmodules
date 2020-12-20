@@ -1,3 +1,3 @@
-[submodule "components"]
+[submodule "wifi/components"]
 	path = wifi/components
 	url = https://github.com/d51x/esp_rtos_components.git
